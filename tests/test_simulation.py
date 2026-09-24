@@ -753,6 +753,7 @@ def test_world_event_history_is_not_enough_for_an_unaware_character_to_pay_repet
 def test_known_past_action_can_still_create_repetition_pressure():
     from engine.core.models import ActionCandidate, ActionResult, Event
     from engine.core.decision import DecisionKernel
+    from engine.memory.kernel import MemoryKernel
 
     world = build_demo_world()
     world.characters["lin"].goals.clear()
