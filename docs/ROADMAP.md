@@ -14,7 +14,7 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [ ] Structured preconditions
 - [ ] Success / failure / blocked action resolution
 - [ ] Deterministic seeded outcomes
-- [ ] Time advancement
+- [x] Time advancement
 - [ ] Local knowledge model
 - [ ] Memory model
 - [ ] Rumor and information propagation
@@ -31,7 +31,7 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [x] Cue-driven memory recall
 - [x] Desire opportunity windows and missed chances
 - [x] Vendor-neutral memory store interface
-- [ ] Integrate structured memory into authoritative simulation events
+- [x] Integrate structured memory into authoritative simulation events
 - [ ] Relationship-history event model
 - [ ] Memory revision/reinterpretation events
 - [ ] Persistent SQLite memory adapter
