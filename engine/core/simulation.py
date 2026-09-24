@@ -46,10 +46,20 @@ class SimulationEngine:
 
             elif action.action_type == "contact_person":
                 target = state.characters.get(action.targets[0])
-                if target is not None:
-                    facts.append(f"{actor.name} seeks contact with {target.name}.")
-                    actor.memory.append(f"Contact attempt with {target.name}.")
-                    target.memory.append(f"{actor.name} contacted you.")
+                relationship = state.get_relationship(actor.id, target.id) if target else None
+                if target is not None and relationship is not None and target.location == actor.location:
+                    old_trust = relationship.trust
+                    old_affection = relationship.affection
+                    relationship.trust = min(100.0, relationship.trust + 2.0)
+                    relationship.affection = min(100.0, relationship.affection + 1.0)
+                    actor.relationships[target.id] = relationship.trust
+                    facts.append(f"{actor.name} speaks with {target.name} at {actor.location}.")
+                    actor.memory.append(f"Spoke with {target.name}.")
+                    target.memory.append(f"Spoke with {actor.name}.")
+                    consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "trust", old_trust, relationship.trust, "successful contact"))
+                    consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "affection", old_affection, relationship.affection, "successful contact"))
+                elif target is not None:
+                    facts.append(f"{actor.name} cannot meet {target.name}; they are in different locations.")
 
             elif action.action_type == "help_person":
                 target = state.characters.get(action.targets[0])
@@ -62,7 +72,7 @@ class SimulationEngine:
                 actor.memory.append(facts[0])
 
             events.append(Event(
-                id=f"event-{state.tick}-{actor.id}",
+                id=f"event-{state.tick}-{actor.id}-{action.action_type}",
                 tick=state.tick,
                 timestamp=state.timestamp,
                 location=actor.location,
