@@ -48,10 +48,10 @@ The narrative layer observes the autonomous world; it does not secretly write ou
 - [x] Narrative Thread Engine
 - [x] Information asymmetry / mystery / revelation
 - [x] Character arc detection
-- [ ] Foreshadowing and payoff tracking
-- [ ] Narrative importance vs historical importance
+- [x] Foreshadowing and payoff tracking
+- [x] Narrative importance vs historical importance
 - [ ] Narrative resource allocation
-- [ ] Multi-thread convergence
+- [x] Multi-thread convergence
 - [ ] Story completion criteria
 
 ## Phase 4 — Story structure and discovery

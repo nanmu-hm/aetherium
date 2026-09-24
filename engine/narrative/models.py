@@ -78,6 +78,45 @@ class CharacterArc:
 
 
 @dataclass
+class NarrativeImportance:
+    """Derived importance of an event to an emerging story."""
+
+    event_id: str
+    historical_size: float = 0.0
+    narrative_score: float = 0.0
+    pressure_factor: float = 0.0
+    relationship_factor: float = 0.0
+    character_change_factor: float = 0.0
+    information_factor: float = 0.0
+    causal_reach_factor: float = 0.0
+    description: str = ""
+
+
+@dataclass
+class ThreadConvergence:
+    """A derived point where previously separate threads begin to interact."""
+
+    id: str
+    thread_ids: list[str] = field(default_factory=list)
+    event_ids: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    strength: float = 0.0
+    description: str = ""
+
+
+@dataclass
+class ForeshadowingLink:
+    """A candidate setup/callback relation discovered after both events exist."""
+
+    setup_event_id: str
+    payoff_event_id: str
+    shared_keys: list[str] = field(default_factory=list)
+    confidence: float = 0.0
+    causal: bool = False
+    description: str = ""
+
+
+@dataclass
 class NarrativeDilemma:
     """A derived conflict between viable actions aligned with different values."""
 
@@ -130,3 +169,6 @@ class NarrativeState:
     arcs: list[CharacterArc] = field(default_factory=list)
     information_gaps: list[InformationGap] = field(default_factory=list)
     revelations: list[RevelationCandidate] = field(default_factory=list)
+    importance: list[NarrativeImportance] = field(default_factory=list)
+    convergences: list[ThreadConvergence] = field(default_factory=list)
+    foreshadowing: list[ForeshadowingLink] = field(default_factory=list)

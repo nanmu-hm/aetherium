@@ -5,6 +5,9 @@ from __future__ import annotations
 from .arcs import CharacterArcDetector
 from .dilemma import DilemmaDetector
 from .information import KnowledgeAsymmetryAnalyzer, RevelationDetector
+from .convergence import ThreadConvergenceDetector
+from .foreshadowing import ForeshadowingTracker
+from .importance import NarrativeImportanceAnalyzer
 from .threads import CausalThreadEngine
 from .models import NarrativeBeat, NarrativeSignal, NarrativeState
 from .rhythm import NarrativeRhythmAnalyzer
@@ -22,6 +25,9 @@ class NarrativeObserver:
         arc_detector: CharacterArcDetector | None = None,
         knowledge_analyzer: KnowledgeAsymmetryAnalyzer | None = None,
         revelation_detector: RevelationDetector | None = None,
+        importance_analyzer: NarrativeImportanceAnalyzer | None = None,
+        convergence_detector: ThreadConvergenceDetector | None = None,
+        foreshadowing_tracker: ForeshadowingTracker | None = None,
     ) -> None:
         self.dilemma_detector = dilemma_detector or DilemmaDetector()
         self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
@@ -29,6 +35,9 @@ class NarrativeObserver:
         self.arc_detector = arc_detector or CharacterArcDetector()
         self.knowledge_analyzer = knowledge_analyzer or KnowledgeAsymmetryAnalyzer()
         self.revelation_detector = revelation_detector or RevelationDetector()
+        self.importance_analyzer = importance_analyzer or NarrativeImportanceAnalyzer()
+        self.convergence_detector = convergence_detector or ThreadConvergenceDetector()
+        self.foreshadowing_tracker = foreshadowing_tracker or ForeshadowingTracker()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -88,6 +97,11 @@ class NarrativeObserver:
         arcs = self.arc_detector.detect(state, events)
         information_gaps = self.knowledge_analyzer.analyze(state)
         revelations = self.revelation_detector.detect(state, information_gaps)
+        importance = self.importance_analyzer.score(state, events)
+        event_ticks = {event.id:event.tick for event in state.event_log}
+        event_ticks.update({event.id:event.tick for event in events})
+        convergences = self.convergence_detector.detect(threads, event_ticks)
+        foreshadowing = self.foreshadowing_tracker.detect(state)
 
         return NarrativeState(
             pressure=pressure,
@@ -101,4 +115,7 @@ class NarrativeObserver:
             information_gaps=information_gaps,
             revelations=revelations,
             unresolved_threads=[thread for thread in threads if thread.status == "open"],
+            importance=importance,
+            convergences=convergences,
+            foreshadowing=foreshadowing,
         )

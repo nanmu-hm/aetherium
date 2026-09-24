@@ -2,7 +2,10 @@
 
 from .archaeologist import StoryArchaeologist, StoryCandidate
 from .arcs import CharacterArcDetector
+from .convergence import ThreadConvergenceDetector
 from .dilemma import DilemmaDetector
+from .foreshadowing import ForeshadowingTracker
+from .importance import NarrativeImportanceAnalyzer
 from .information import KnowledgeAsymmetryAnalyzer, RevelationDetector
 from .pressure import NarrativePressureAnalyzer
 from .rhythm import NarrativeRhythmAnalyzer
@@ -12,10 +15,13 @@ __all__ = [
     "CausalThreadEngine",
     "CharacterArcDetector",
     "DilemmaDetector",
+    "ForeshadowingTracker",
     "KnowledgeAsymmetryAnalyzer",
+    "NarrativeImportanceAnalyzer",
     "NarrativePressureAnalyzer",
     "NarrativeRhythmAnalyzer",
     "RevelationDetector",
     "StoryArchaeologist",
     "StoryCandidate",
+    "ThreadConvergenceDetector",
 ]
