@@ -436,3 +436,100 @@ def test_failed_help_disappoints_the_recipient():
     assert events[0].action_result.status == "failure"
     assert relationship.trust == 33.0
     assert relationship.loyalty == 24.0
+
+
+def test_successful_experience_builds_a_behavioral_habit():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "help",
+        "lin",
+        "help_person",
+        targets=["mei"],
+        confidence=1.0,
+        difficulty=0.1,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "success"
+    assert world.characters["lin"].habits["help_person"] == 0.1
+    assert any(
+        consequence.field == "habits.help_person"
+        and consequence.new_value == 0.1
+        for consequence in events[0].consequences
+    )
+
+
+def test_failed_experience_builds_a_behavioral_avoidance():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "hard-travel",
+        "mei",
+        "travel",
+        targets=["town"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert world.characters["mei"].habits["travel"] == -0.1
+    assert any(
+        consequence.field == "habits.travel"
+        and consequence.new_value == -0.1
+        for consequence in events[0].consequences
+    )
+
+
+def test_learned_habit_changes_later_action_utility():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "help",
+        "lin",
+        "help_person",
+        targets=["mei"],
+        confidence=0.8,
+        difficulty=0.4,
+    )
+
+    neutral = DecisionKernel(seed=1).evaluate(world, action)
+    world.characters["lin"].habits["help_person"] = 0.8
+    preferred = DecisionKernel(seed=1).evaluate(world, action)
+    world.characters["lin"].habits["help_person"] = -0.8
+    avoidant = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert preferred.utility > neutral.utility > avoidant.utility
+    assert "learned preference" in preferred.reasons
+    assert "learned avoidance" in avoidant.reasons
+
+
+def test_blocked_action_does_not_create_a_behavioral_habit():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    action = ActionCandidate(
+        "blocked",
+        "mei",
+        "travel",
+        targets=["missing-place"],
+        confidence=1.0,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert "travel" not in world.characters["mei"].habits
