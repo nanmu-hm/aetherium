@@ -133,8 +133,9 @@ def test_achieved_goal_no_longer_generates_matching_help_action():
     assert not any(action.action_type == "help_person" for action in pool)
 
 
-def test_repeated_contact_gets_a_temporary_social_cooldown():
+def test_repeated_successful_contact_gets_a_temporary_social_cooldown():
     from engine.core.actions import generate_action_pool
+    from engine.core.models import Event, ActionResult
 
     world = build_demo_world()
     world.characters["lin"].goals[0].status = "achieved"
@@ -142,7 +143,7 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
 
     world.event_log.extend(
         [
-            __import__("engine.core.models", fromlist=["Event"]).Event(
+            Event(
                 id="contact-1",
                 tick=1,
                 timestamp="0001-01-02T00:00:00",
@@ -150,8 +151,9 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
                 participants=["lin", "mei"],
                 causes=["tick-1-lin-contact"],
                 facts=["contact"],
+                action_result=ActionResult("success"),
             ),
-            __import__("engine.core.models", fromlist=["Event"]).Event(
+            Event(
                 id="contact-2",
                 tick=2,
                 timestamp="0001-01-03T00:00:00",
@@ -159,13 +161,13 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
                 participants=["lin", "mei"],
                 causes=["tick-2-lin-contact"],
                 facts=["contact"],
+                action_result=ActionResult("success"),
             ),
         ]
     )
 
     pool = generate_action_pool(world, "lin")
     assert not any(action.action_type == "contact_person" for action in pool)
-
 
 def test_successful_contact_reduces_reconciliation_pressure():
     from engine.core.models import ActionCandidate
