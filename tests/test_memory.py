@@ -34,3 +34,23 @@ def test_recall_prefers_cued_memory() -> None:
     kernel.remember_event(state, "lin", e1, "bridge collapsed", tags={"bridge"})
     kernel.remember_event(state, "lin", e2, "met Mei", tags={"mei"})
     assert kernel.recall(state, "lin", "mei", 1)[0].summary == "met Mei"
+
+
+def test_lived_event_creates_owner_scoped_belief():
+    state = MemoryState()
+    event = Event(
+        "e1",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin", "mei"],
+        ["tick-0-lin-contact"],
+        ["Lin speaks with Mei."],
+        action_result=__import__("engine.core.models", fromlist=["ActionResult"]).ActionResult("failure"),
+    )
+    kernel = MemoryKernel()
+    memory = kernel.remember_event(state, "lin", event, "failed conversation")
+    belief = kernel.record_event_belief(state, "lin", event, memory.id)
+    assert belief.owner_id == "lin"
+    assert belief.source_memory_ids == [memory.id]
+    assert "failure" in belief.proposition
