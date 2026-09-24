@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
+from .dilemma import DilemmaDetector
 from .models import NarrativeBeat, NarrativeSignal, NarrativeState
+from .rhythm import NarrativeRhythmAnalyzer
 from ..core.models import Event, WorldState
 
 
 class NarrativeObserver:
     """Detect tension and story-bearing changes without forcing a plot."""
+
+    def __init__(
+        self,
+        dilemma_detector: DilemmaDetector | None = None,
+        rhythm_analyzer: NarrativeRhythmAnalyzer | None = None,
+    ) -> None:
+        self.dilemma_detector = dilemma_detector or DilemmaDetector()
+        self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -61,9 +71,14 @@ class NarrativeObserver:
             if strongest.pressure >= 0.7:
                 climax_tick = strongest.tick
 
+        dilemmas = self.dilemma_detector.detect(state)
+        rhythm = self.rhythm_analyzer.analyze(state, events)
+
         return NarrativeState(
             pressure=pressure,
             recent_climax_tick=climax_tick,
             signals=signals,
             beats=beats,
+            dilemmas=dilemmas,
+            rhythm=rhythm,
         )

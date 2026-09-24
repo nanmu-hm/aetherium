@@ -34,6 +34,31 @@ class NarrativeThread:
 
 
 @dataclass
+class NarrativeDilemma:
+    """A derived conflict between viable actions aligned with different values."""
+
+    id: str
+    character_id: str
+    action_ids: list[str] = field(default_factory=list)
+    competing_values: list[str] = field(default_factory=list)
+    strength: float = 0.0
+    utility_gap: float = 0.0
+    description: str = ""
+
+
+@dataclass
+class RhythmState:
+    """Derived narrative rhythm; it never changes authoritative world state."""
+
+    phase: str = "calm"
+    pressure: float = 0.0
+    previous_pressure: float = 0.0
+    trend: str = "flat"
+    breathing_needed: bool = False
+    high_pressure_streak: int = 0
+
+
+@dataclass
 class NarrativeBeat:
     """A compact story unit selected from simulation history."""
 
@@ -55,3 +80,5 @@ class NarrativeState:
     unresolved_threads: list[NarrativeThread] = field(default_factory=list)
     signals: list[NarrativeSignal] = field(default_factory=list)
     beats: list[NarrativeBeat] = field(default_factory=list)
+    dilemmas: list[NarrativeDilemma] = field(default_factory=list)
+    rhythm: RhythmState = field(default_factory=RhythmState)

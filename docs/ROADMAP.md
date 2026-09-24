@@ -41,9 +41,9 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 ## Phase 3 — Narrative intelligence
 The narrative layer observes the autonomous world; it does not secretly write outcomes into the simulation.
 
-- [ ] Dilemma detection and competing-value modeling
-- [ ] Narrative pressure and unresolved-tension model
-- [ ] Rhythm / breathing model
+- [x] Dilemma detection and competing-value modeling
+- [x] Narrative pressure and unresolved-tension model
+- [x] Rhythm / breathing model
 - [ ] Causal Thread Engine
 - [ ] Narrative Thread Engine
 - [ ] Information asymmetry / mystery / revelation
