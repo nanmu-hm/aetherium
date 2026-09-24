@@ -41,7 +41,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id,
             action_type="pursue_goal", motivation=goal.description,
-            confidence=0.8, score=goal.priority,
+            confidence=0.8, difficulty=0.5, score=goal.priority,
         ))
 
     nearby = [
@@ -56,7 +56,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             action_type="contact_person", targets=[target_id],
             motivation="address an important relationship",
             preconditions=["target is at the same location"],
-            expected_outcomes=["relationship may change"], confidence=0.65,
+            expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35, score=
             score=(100.0 - trust) / 100.0,
         ))
 
