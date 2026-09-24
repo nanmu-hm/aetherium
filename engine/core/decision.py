@@ -18,7 +18,7 @@ class DecisionWeights:
     risk: float = 0.45
     cost: float = 0.35
     uncertainty: float = 0.20
-    habit: float = 0.10
+    habit: float = 0.35
 
 
 @dataclass(frozen=True)
@@ -46,7 +46,26 @@ class DecisionKernel:
         text = f"{action.action_type} {action.motivation}".lower()
         if not character.values:
             return 0.0
-        return sum(1.0 for value in character.values if value.lower() in text) / len(character.values)
+
+        # Values affect choices through semantic affordances rather than
+        # requiring the exact value word to appear in an action description.
+        affordances = {
+            "freedom": {"travel"},
+            "loyalty": {"help_person", "contact_person"},
+            "responsibility": {"help_person", "pursue_goal"},
+            "friendship": {"contact_person", "help_person"},
+            "courage": {"travel", "help_person"},
+        }
+
+        matches = 0.0
+        for value in character.values:
+            normalized = value.lower()
+            if normalized in text:
+                matches += 1.0
+            elif action.action_type in affordances.get(normalized, set()):
+                matches += 1.0
+
+        return min(1.0, matches / len(character.values))
 
     @staticmethod
     def _relationship_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -58,6 +77,23 @@ class DecisionKernel:
             if rel is not None:
                 scores.append((rel.loyalty + rel.affection + rel.respect - rel.resentment - rel.fear) / 300.0)
         return sum(scores) / len(scores) if scores else 0.0
+
+    @staticmethod
+    def _repetition_penalty(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
+        recent = [
+            event
+            for event in reversed(state.event_log)
+            if event.participants and event.participants[0] == character.id
+        ][:3]
+        if not recent:
+            return 0.0
+
+        repeated = sum(
+            1
+            for event in recent
+            if event.causes and action.action_type in event.causes[0]
+        )
+        return min(1.0, repeated / 3.0)
 
     @staticmethod
     def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -95,6 +131,7 @@ class DecisionKernel:
         risk = min(1.0, len(action.risks) / 3.0)
         cost = min(1.0, sum(1.0 for _ in action.risks) * 0.25)
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
+        repetition = self._repetition_penalty(state, character, action)
         score = (
             self.weights.goal * goal
             + self.weights.values * values
@@ -104,6 +141,7 @@ class DecisionKernel:
             - self.weights.risk * risk
             - self.weights.cost * cost
             - self.weights.uncertainty * uncertainty
+            - self.weights.habit * repetition
         )
         reasons = []
         if goal > 0: reasons.append("goal alignment")
@@ -111,6 +149,7 @@ class DecisionKernel:
         if relationship > 0: reasons.append("relationship pull")
         if urgency > 0: reasons.append("time pressure")
         if risk > 0: reasons.append("perceived risk")
+        if repetition > 0: reasons.append("recently repeated action")
         return DecisionEvaluation(action.id, score, tuple(reasons), uncertainty)
 
     def choose(self, state: WorldState, pool: list[ActionCandidate]) -> tuple[ActionCandidate | None, list[DecisionEvaluation]]:
