@@ -234,3 +234,42 @@ def test_remembered_failure_reduces_repeat_action_utility():
     remembered = DecisionKernel(seed=1).evaluate(world, action)
 
     assert remembered.utility < plain.utility
+
+
+def test_remembered_contact_failure_reduces_contact_utility():
+    from engine.core.actions import ActionCandidate
+    from engine.core.models import ActionResult, Event
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
+    action = ActionCandidate(
+        "retry-contact",
+        "lin",
+        "contact_person",
+        targets=["mei"],
+        confidence=0.8,
+        difficulty=0.4,
+    )
+    plain = DecisionKernel(seed=1).evaluate(world, action)
+
+    event = Event(
+        "past-contact-failure",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin", "mei"],
+        ["tick-0-lin-contact"],
+        ["Lin's conversation with Mei failed."],
+        action_result=ActionResult("failure"),
+    )
+    memory = SimulationEngine(seed=1).memory_kernel.remember_event(
+        world.memory_state, "lin", event, "failed conversation"
+    )
+    SimulationEngine(seed=1).memory_kernel.record_event_belief(
+        world.memory_state, "lin", event, memory.id
+    )
+    remembered = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert remembered.utility < plain.utility
