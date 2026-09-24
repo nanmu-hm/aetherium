@@ -34,6 +34,50 @@ class NarrativeThread:
 
 
 @dataclass
+class InformationGap:
+    """A proposition known by some characters but not others."""
+
+    id: str
+    proposition: str
+    source_event_ids: list[str] = field(default_factory=list)
+    known_by: list[str] = field(default_factory=list)
+    unknown_by: list[str] = field(default_factory=list)
+    confidence_range: tuple[float, float] = (0.0, 0.0)
+    strength: float = 0.0
+    description: str = ""
+
+
+@dataclass
+class RevelationCandidate:
+    """A causally grounded opportunity for one character to learn an asymmetric fact."""
+
+    id: str
+    proposition: str
+    source_character_id: str
+    target_character_id: str
+    source_event_id: str | None = None
+    confidence: float = 0.0
+    strength: float = 0.0
+    reason: str = ""
+
+
+@dataclass
+class CharacterArc:
+    """A derived trajectory from persistent character changes."""
+
+    id: str
+    character_id: str
+    event_ids: list[str] = field(default_factory=list)
+    identity_changes: list[str] = field(default_factory=list)
+    emotional_changes: list[str] = field(default_factory=list)
+    goal_changes: list[str] = field(default_factory=list)
+    relationship_changes: list[str] = field(default_factory=list)
+    change_score: float = 0.0
+    phase: str = "stable"
+    description: str = ""
+
+
+@dataclass
 class NarrativeDilemma:
     """A derived conflict between viable actions aligned with different values."""
 
@@ -82,3 +126,7 @@ class NarrativeState:
     beats: list[NarrativeBeat] = field(default_factory=list)
     dilemmas: list[NarrativeDilemma] = field(default_factory=list)
     rhythm: RhythmState = field(default_factory=RhythmState)
+    threads: list[NarrativeThread] = field(default_factory=list)
+    arcs: list[CharacterArc] = field(default_factory=list)
+    information_gaps: list[InformationGap] = field(default_factory=list)
+    revelations: list[RevelationCandidate] = field(default_factory=list)

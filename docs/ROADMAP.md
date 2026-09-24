@@ -44,10 +44,10 @@ The narrative layer observes the autonomous world; it does not secretly write ou
 - [x] Dilemma detection and competing-value modeling
 - [x] Narrative pressure and unresolved-tension model
 - [x] Rhythm / breathing model
-- [ ] Causal Thread Engine
-- [ ] Narrative Thread Engine
-- [ ] Information asymmetry / mystery / revelation
-- [ ] Character arc detection
+- [x] Causal Thread Engine
+- [x] Narrative Thread Engine
+- [x] Information asymmetry / mystery / revelation
+- [x] Character arc detection
 - [ ] Foreshadowing and payoff tracking
 - [ ] Narrative importance vs historical importance
 - [ ] Narrative resource allocation

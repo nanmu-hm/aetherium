@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from .arcs import CharacterArcDetector
 from .dilemma import DilemmaDetector
+from .information import KnowledgeAsymmetryAnalyzer, RevelationDetector
+from .threads import CausalThreadEngine
 from .models import NarrativeBeat, NarrativeSignal, NarrativeState
 from .rhythm import NarrativeRhythmAnalyzer
 from ..core.models import Event, WorldState
@@ -15,9 +18,17 @@ class NarrativeObserver:
         self,
         dilemma_detector: DilemmaDetector | None = None,
         rhythm_analyzer: NarrativeRhythmAnalyzer | None = None,
+        thread_engine: CausalThreadEngine | None = None,
+        arc_detector: CharacterArcDetector | None = None,
+        knowledge_analyzer: KnowledgeAsymmetryAnalyzer | None = None,
+        revelation_detector: RevelationDetector | None = None,
     ) -> None:
         self.dilemma_detector = dilemma_detector or DilemmaDetector()
         self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
+        self.thread_engine = thread_engine or CausalThreadEngine()
+        self.arc_detector = arc_detector or CharacterArcDetector()
+        self.knowledge_analyzer = knowledge_analyzer or KnowledgeAsymmetryAnalyzer()
+        self.revelation_detector = revelation_detector or RevelationDetector()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -73,6 +84,10 @@ class NarrativeObserver:
 
         dilemmas = self.dilemma_detector.detect(state)
         rhythm = self.rhythm_analyzer.analyze(state, events)
+        threads = self.thread_engine.discover(state, events)
+        arcs = self.arc_detector.detect(state, events)
+        information_gaps = self.knowledge_analyzer.analyze(state)
+        revelations = self.revelation_detector.detect(state, information_gaps)
 
         return NarrativeState(
             pressure=pressure,
@@ -81,4 +96,9 @@ class NarrativeObserver:
             beats=beats,
             dilemmas=dilemmas,
             rhythm=rhythm,
+            threads=threads,
+            arcs=arcs,
+            information_gaps=information_gaps,
+            revelations=revelations,
+            unresolved_threads=[thread for thread in threads if thread.status == "open"],
         )
