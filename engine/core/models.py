@@ -82,7 +82,6 @@ class ActionCandidate:
 
 
 @dataclass
-@dataclass
 class ActionResult:
     status: str  # success / failure / blocked
     reason: str = ""
@@ -108,6 +107,7 @@ class Event:
     participants: list[str]
     causes: list[str]
     facts: list[str]
+    action_result: ActionResult | None = None
     consequences: list[Consequence] = field(default_factory=list)
 
 
