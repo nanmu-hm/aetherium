@@ -1,4 +1,4 @@
-"""Character decision kernel: evaluate choices from internal state without knowing the future."""
+""""Character decision kernel: evaluate choices from internal state without knowing the future."""
 
 from __future__ import annotations
 
@@ -159,13 +159,34 @@ class DecisionKernel:
 
         return alignment
 
+    @staticmethod
+    def _human_condition_urgency(character: CharacterState, action: ActionCandidate) -> float:
+        """Translate intrinsic human-condition pressure into action-specific urgency.
+
+        Human-condition desires live on a character because they are continuous
+        pressures, not just scheduled goals. They therefore influence both action
+        generation and the final decision instead of acting as mere availability flags.
+        """
+        desires = character.human_condition.desires
+        mapping = {
+            "travel": ("freedom",),
+            "contact_person": ("reconciliation", "belonging"),
+            "help_person": ("responsibility",),
+        }
+        relevant = mapping.get(canonical_action_type(action.action_type), ())
+        if not relevant:
+            return 0.0
+        return max((max(0.0, min(100.0, desires.get(name, 0.0))) / 100.0 for name in relevant), default=0.0)
+
     def evaluate(self, state: WorldState, action: ActionCandidate) -> DecisionEvaluation:
         character = state.characters[action.actor_id]
         goal = self._goal_alignment(state, character, action)
         values = self._value_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
-        urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
-                       if d.owner_id == character.id and d.status == "active"), default=0.0)
+        memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
+                              if d.owner_id == character.id and d.status == "active"), default=0.0)
+        human_condition_urgency = self._human_condition_urgency(character, action)
+        urgency = max(memory_urgency, human_condition_urgency)
         risk = min(1.0, len(action.risks) / 3.0)
         cost = min(1.0, sum(1.0 for _ in action.risks) * 0.25)
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
