@@ -165,3 +165,20 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
 
     pool = generate_action_pool(world, "lin")
     assert not any(action.action_type == "contact_person" for action in pool)
+
+
+def test_successful_contact_reduces_reconciliation_pressure():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.characters["lin"].human_condition.desires["reconciliation"] = 70.0
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
+    action = ActionCandidate(
+        "contact", "lin", "contact_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+
+    engine = SimulationEngine(seed=1)
+    events = engine.resolve(world, [action])
+    engine._advance_human_pressures(world, events)
+    assert world.characters["lin"].human_condition.desires["reconciliation"] < 70.0
