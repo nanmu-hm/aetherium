@@ -131,3 +131,37 @@ def test_achieved_goal_no_longer_generates_matching_help_action():
         world, "lin"
     )
     assert not any(action.action_type == "help_person" for action in pool)
+
+
+def test_repeated_contact_gets_a_temporary_social_cooldown():
+    from engine.core.actions import generate_action_pool
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=60.0))
+
+    world.event_log.extend(
+        [
+            __import__("engine.core.models", fromlist=["Event"]).Event(
+                id="contact-1",
+                tick=1,
+                timestamp="0001-01-02T00:00:00",
+                location="town",
+                participants=["lin", "mei"],
+                causes=["tick-1-lin-contact_person"],
+                facts=["contact"],
+            ),
+            __import__("engine.core.models", fromlist=["Event"]).Event(
+                id="contact-2",
+                tick=2,
+                timestamp="0001-01-03T00:00:00",
+                location="town",
+                participants=["lin", "mei"],
+                causes=["tick-2-lin-contact_person"],
+                facts=["contact"],
+            ),
+        ]
+    )
+
+    pool = generate_action_pool(world, "lin")
+    assert not any(action.action_type == "contact_person" for action in pool)
