@@ -34,6 +34,11 @@ class CharacterState:
     # Procedural memory: learned behavioral tendencies by canonical action type.
     # Values range from -1 (avoid) to +1 (prefer) and change through lived outcomes.
     habits: dict[str, float] = field(default_factory=dict)
+    # Identity memory: gradual self-beliefs formed from lived evidence.
+    # Values range from -1 (the character rejects the identity) to +1
+    # (the character strongly identifies with it). This is descriptive
+    # self-concept, distinct from normative values.
+    identity_beliefs: dict[str, float] = field(default_factory=dict)
     # Deprecated mirror; authoritative relationship state is WorldState.relationships.
     relationships: dict[str, float] = field(default_factory=dict)
     possessions: dict[str, int] = field(default_factory=dict)
