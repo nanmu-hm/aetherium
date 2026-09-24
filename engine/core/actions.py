@@ -73,7 +73,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         recent_contact = 0
         for event in reversed(state.event_log):
             if event.participants and event.participants[0] == character.id:
-                if event.causes and event.causes[0].endswith("contact_person"):
+                if event.causes and event.causes[0].endswith("-contact"):
                     recent_contact += 1
                     if recent_contact >= 2:
                         break
