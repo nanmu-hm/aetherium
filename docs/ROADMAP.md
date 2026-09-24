@@ -27,6 +27,7 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 
 - [x] Structured episodic memory model
 - [x] Character belief/misbelief model
+- [x] Gradual identity self-concept model
 - [x] Memory salience and recall decay
 - [x] Cue-driven memory recall
 - [x] Desire opportunity windows and missed chances
