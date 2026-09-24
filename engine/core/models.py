@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from ..memory.models import MemoryState
+from .human_condition import HumanCondition
 
 
 @dataclass
@@ -25,6 +26,7 @@ class CharacterState:
     goals: list[Goal] = field(default_factory=list)
     needs: list[str] = field(default_factory=list)
     emotions: dict[str, float] = field(default_factory=dict)
+    human_condition: HumanCondition = field(default_factory=HumanCondition)
     location: str = ""
     knowledge: set[str] = field(default_factory=set)
     memory: list[str] = field(default_factory=list)
