@@ -14,14 +14,29 @@ def test_inactive_contact_target_is_blocked_before_resolution():
     assert "contact target is not active" in result.reasons
 
 
-def test_travel_to_current_location_is_blocked_as_meaningless_action():
+def test_same_location_travel_is_allowed_unless_explicitly_forbidden():
     world = build_demo_world()
     action = ActionCandidate("stay", "lin", "travel", targets=[world.characters["lin"].location])
 
     result = PreconditionEngine().check(world, action)
 
+    assert result.satisfied
+
+
+def test_destination_differs_precondition_can_forbid_same_location_travel():
+    world = build_demo_world()
+    action = ActionCandidate(
+        "stay",
+        "lin",
+        "travel",
+        targets=[world.characters["lin"].location],
+        preconditions=["destination_differs"],
+    )
+
+    result = PreconditionEngine().check(world, action)
+
     assert not result.satisfied
-    assert "destination is already the actor's current location" in result.reasons
+    assert "destination must differ" in result.reasons[0]
 
 
 def test_declared_ability_and_possession_preconditions_are_structured():

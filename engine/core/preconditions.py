@@ -54,8 +54,6 @@ class PreconditionEngine:
             destination = action.targets[0]
             if destination not in state.locations:
                 reasons.append("destination does not exist")
-            elif destination == actor.location:
-                reasons.append("destination is already the actor's current location")
 
         for declared in action.preconditions:
             rule = declared.strip().lower()
