@@ -129,6 +129,47 @@ class DecisionKernel:
         return max(-1.0, min(1.0, character.habits.get(action_type, 0.0)))
 
     @staticmethod
+    def _emotion_alignment(character: CharacterState, action: ActionCandidate) -> float:
+        """Translate current emotions into action-specific pressure."""
+        emotions = character.emotions
+        action_type = canonical_action_type(action.action_type)
+        mappings = {
+            "travel": {
+                "hope": 1.0,
+                "longing": 0.5,
+                "fear": -1.0,
+                "regret": 0.25,
+            },
+            "contact_person": {
+                "love": 1.0,
+                "longing": 1.0,
+                "hope": 0.5,
+                "fear": -0.5,
+                "resentment": -0.8,
+            },
+            "help_person": {
+                "love": 0.7,
+                "hope": 0.5,
+                "joy": 0.2,
+                "fear": -0.4,
+                "resentment": -0.5,
+                "regret": 0.3,
+            },
+        }
+        weights = mappings.get(action_type, {})
+        if not weights:
+            return 0.0
+
+        total_weight = sum(abs(value) for value in weights.values())
+        if total_weight == 0:
+            return 0.0
+        pressure = sum(
+            max(-100.0, min(100.0, emotions.get(name, 0.0))) * weight
+            for name, weight in weights.items()
+        )
+        return max(-1.0, min(1.0, pressure / (100.0 * total_weight) * 2.0))
+
+    @staticmethod
     def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
         goal = max((g for g in character.goals if g.status == "active"), key=lambda g: g.priority, default=None)
         if goal is None:
@@ -187,6 +228,7 @@ class DecisionKernel:
         character = state.characters[action.actor_id]
         goal = self._goal_alignment(state, character, action)
         values = self._value_alignment(character, action)
+        emotion = self._emotion_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
         memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
                               if d.owner_id == character.id and d.status == "active"), default=0.0)
@@ -201,7 +243,7 @@ class DecisionKernel:
         score = (
             self.weights.goal * goal
             + self.weights.values * values
-            + self.weights.emotion * sum(character.emotions.values()) / max(1, len(character.emotions))
+            + self.weights.emotion * emotion
             + self.weights.relationship * relationship
             + self.weights.urgency * urgency
             - self.weights.risk * risk
@@ -215,6 +257,8 @@ class DecisionKernel:
         reasons = []
         if goal > 0: reasons.append("goal alignment")
         if values > 0: reasons.append("value alignment")
+        if emotion > 0: reasons.append("emotional pull")
+        if emotion < 0: reasons.append("emotional resistance")
         if relationship > 0: reasons.append("relationship pull")
         if urgency > 0: reasons.append("time pressure")
         if risk > 0: reasons.append("perceived risk")
