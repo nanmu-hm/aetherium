@@ -48,7 +48,7 @@ class Desire:
     opportunity_window_end: int | None = None
     cost: float = 0.0
     urgency: float = 0.0
-    status: str = "active"  # active / achieved / missed / abandoned / impossible
+    status: str = "active"
     reason: str = ""
 
 
