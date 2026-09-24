@@ -96,6 +96,33 @@ class DecisionKernel:
         return min(1.0, repeated / 3.0)
 
     @staticmethod
+    def _belief_friction(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
+        target_text = ",".join(action.targets)
+        penalties: list[float] = []
+        for belief in state.memory_state.beliefs.values():
+            if belief.owner_id != character.id:
+                continue
+            proposition = belief.proposition
+            if not proposition.startswith("experience:"):
+                continue
+            parts = proposition.split(":", 3)
+            if len(parts) != 4:
+                continue
+            _, action_type, belief_targets, outcome = parts
+            if action_type != action.action_type:
+                continue
+            if belief_targets != target_text:
+                continue
+            if outcome == "failure":
+                penalties.append(belief.confidence)
+            elif outcome == "success":
+                penalties.append(-0.5 * belief.confidence)
+
+        if not penalties:
+            return 0.0
+        return max(-0.5, min(1.0, sum(penalties) / min(3, len(penalties))))
+
+    @staticmethod
     def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
         goal = max((g for g in character.goals if g.status == "active"), key=lambda g: g.priority, default=None)
         if goal is None:
@@ -142,6 +169,7 @@ class DecisionKernel:
         cost = min(1.0, sum(1.0 for _ in action.risks) * 0.25)
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
         repetition = self._repetition_penalty(state, character, action)
+        belief_friction = self._belief_friction(state, character, action)
         score = (
             self.weights.goal * goal
             + self.weights.values * values
@@ -152,6 +180,8 @@ class DecisionKernel:
             - self.weights.cost * cost
             - self.weights.uncertainty * uncertainty
             - self.weights.habit * repetition
+            - self.weights.uncertainty * max(0.0, belief_friction)
+            + self.weights.uncertainty * min(0.0, belief_friction)
         )
         reasons = []
         if goal > 0: reasons.append("goal alignment")
@@ -160,6 +190,8 @@ class DecisionKernel:
         if urgency > 0: reasons.append("time pressure")
         if risk > 0: reasons.append("perceived risk")
         if repetition > 0: reasons.append("recently repeated action")
+        if belief_friction > 0: reasons.append("past failure remembered")
+        if belief_friction < 0: reasons.append("past success remembered")
         return DecisionEvaluation(action.id, score, tuple(reasons), uncertainty)
 
     def choose(self, state: WorldState, pool: list[ActionCandidate]) -> tuple[ActionCandidate | None, list[DecisionEvaluation]]:
