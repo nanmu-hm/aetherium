@@ -116,6 +116,99 @@ class SimulationEngine:
         )
         return f"{actor.name} achieves the goal: {goal.description}."
 
+    def _apply_failure_consequences(
+        self,
+        state: WorldState,
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Turn a failed attempt into persistent state pressure when the model supports it."""
+        if outcome.status != "failure":
+            return
+
+        pressure_map = {
+            "travel": (("freedom", 8.0),),
+            "contact_person": (("reconciliation", 8.0), ("belonging", 4.0)),
+            "help_person": (("responsibility", 8.0),),
+        }
+        for desire_name, amount in pressure_map.get(canonical_action_type(action.action_type), ()):
+            if desire_name not in actor.human_condition.desires:
+                continue
+            old_value = actor.human_condition.desires[desire_name]
+            new_value = min(100.0, old_value + amount)
+            actor.human_condition.desires[desire_name] = new_value
+            consequences.append(
+                Consequence(
+                    "character",
+                    actor.id,
+                    f"human_condition.desires.{desire_name}",
+                    old_value,
+                    new_value,
+                    "failed attempt increases unresolved pressure",
+                )
+            )
+
+        if not action.targets:
+            return
+        target = state.characters.get(action.targets[0])
+        if target is None:
+            return
+
+        relationship = state.get_relationship(actor.id, target.id)
+        reciprocal = state.get_relationship(target.id, actor.id)
+        if canonical_action_type(action.action_type) == "contact_person" and relationship is not None:
+            old_trust = relationship.trust
+            old_resentment = relationship.resentment
+            relationship.trust = max(0.0, relationship.trust - 1.0)
+            relationship.resentment = min(100.0, relationship.resentment + 1.0)
+            consequences.extend(
+                [
+                    Consequence(
+                        "relationship",
+                        f"{actor.id}:{target.id}",
+                        "trust",
+                        old_trust,
+                        relationship.trust,
+                        "failed contact creates relational friction",
+                    ),
+                    Consequence(
+                        "relationship",
+                        f"{actor.id}:{target.id}",
+                        "resentment",
+                        old_resentment,
+                        relationship.resentment,
+                        "failed contact creates unresolved friction",
+                    ),
+                ]
+            )
+        elif canonical_action_type(action.action_type) == "help_person" and reciprocal is not None:
+            old_trust = reciprocal.trust
+            old_loyalty = reciprocal.loyalty
+            reciprocal.trust = max(0.0, reciprocal.trust - 2.0)
+            reciprocal.loyalty = max(0.0, reciprocal.loyalty - 1.0)
+            consequences.extend(
+                [
+                    Consequence(
+                        "relationship",
+                        f"{target.id}:{actor.id}",
+                        "trust",
+                        old_trust,
+                        reciprocal.trust,
+                        "failed help weakens confidence",
+                    ),
+                    Consequence(
+                        "relationship",
+                        f"{target.id}:{actor.id}",
+                        "loyalty",
+                        old_loyalty,
+                        reciprocal.loyalty,
+                        "failed help disappoints the recipient",
+                    ),
+                ]
+            )
+
     def resolve(self, state: WorldState, actions: list[ActionCandidate]) -> list[Event]:
         events: list[Event] = []
         for action in actions:
@@ -233,6 +326,8 @@ class SimulationEngine:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
+
+            self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
             goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
             if goal_fact:
