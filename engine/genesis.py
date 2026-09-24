@@ -89,9 +89,22 @@ if __name__ == "__main__":
     print(f"events={len(world.event_log)}")
     print(f"memories={len(world.memory_state.memories)}")
     print(f"story_candidates={len(candidates)}")
+    print("history:")
+    for event in world.event_log:
+        status = event.action_result.status if event.action_result else "unknown"
+        fact = event.facts[0] if event.facts else "(no fact)"
+        print(
+            f"  tick={event.tick:02d} "
+            f"status={status:<7} "
+            f"participants={','.join(event.participants)} "
+            f"fact={fact}"
+        )
+
+    print("story_threads:")
     for candidate in candidates[:5]:
         print(
-            f"score={candidate.score:.3f} "
+            f"  score={candidate.score:.3f} "
             f"events={len(candidate.event_ids)} "
-            f"participants={','.join(candidate.participants)}"
+            f"participants={','.join(candidate.participants)} "
+            f"event_ids={','.join(candidate.event_ids)}"
         )
