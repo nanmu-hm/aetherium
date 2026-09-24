@@ -39,7 +39,7 @@ class KnowledgeAsymmetryAnalyzer:
                 unknown_by=unknown_by,
                 confidence_range=spread,
                 strength=strength,
-                description=f"{", ".join(known_by)} know this proposition while {", ".join(unknown_by)} do not.",
+                description=", ".join(known_by) + " know this proposition while " + ", ".join(unknown_by) + " do not.",
             ))
         gaps.sort(key=lambda item: (-item.strength, item.proposition))
         return gaps
