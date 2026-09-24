@@ -1,3 +1,4 @@
+import pytest
 from engine.core.models import Event
 from engine.memory.kernel import MemoryKernel
 from engine.memory.models import Belief, Desire, MemoryState
