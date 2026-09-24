@@ -5,6 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from ..memory.models import MemoryState
+
 
 @dataclass
 class Goal:
@@ -25,7 +27,6 @@ class CharacterState:
     emotions: dict[str, float] = field(default_factory=dict)
     location: str = ""
     knowledge: set[str] = field(default_factory=set)
-    # Legacy summaries remain for compatibility; structured memories live in MemoryState.
     memory: list[str] = field(default_factory=list)
     memory_ids: list[str] = field(default_factory=list)
     # Deprecated mirror; authoritative relationship state is WorldState.relationships.
@@ -111,6 +112,7 @@ class WorldState:
     factions: dict[str, FactionState] = field(default_factory=dict)
     resources: dict[str, float] = field(default_factory=dict)
     event_log: list[Event] = field(default_factory=list)
+    memory_state: MemoryState = field(default_factory=MemoryState)
     active_branch: str = "main"
 
     def add_character(self, character: CharacterState) -> None:
