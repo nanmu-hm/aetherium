@@ -73,3 +73,20 @@ def test_genesis_clock_advances_with_simulation_ticks():
     world = run_genesis(ticks=12, seed=7)
     assert world.timestamp == "0001-01-13T00:00:00"
     assert len({event.timestamp for event in world.event_log}) > 1
+
+
+def test_genesis_long_run_is_reproducible_and_valid():
+    first = run_genesis(ticks=100, seed=7)
+    second = run_genesis(ticks=100, seed=7)
+
+    assert first.tick == 100
+    assert first.timestamp == "0001-04-11T00:00:00"
+    assert first.event_log
+    assert len(first.memory_state.beliefs) > 0
+    assert [event.facts for event in first.event_log] == [
+        event.facts for event in second.event_log
+    ]
+    assert all(
+        character.location in first.locations
+        for character in first.characters.values()
+    )
