@@ -31,13 +31,18 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         )
 
     if character.relationships:
-        target_id, trust = min(character.relationships.items(), key=lambda item: item[1])
-        pool.append(
-            ActionCandidate(
-                id=f"tick-{state.tick}-{character.id}-contact",
-                actor_id=character.id,
-                action_type="contact_person",
-                targets=[target_id],
+        nearby = [target_id for target_id in character.relationships if target_id in state.characters and state.characters[target_id].location == character.location]
+        if not nearby:
+            nearby = []
+        target_id = min(nearby, key=lambda item: character.relationships[item]) if nearby else None
+        trust = character.relationships[target_id] if target_id else 0.0
+        if target_id:
+            pool.append(
+                ActionCandidate(
+                    id=f"tick-{state.tick}-{character.id}-contact",
+                    actor_id=character.id,
+                    action_type="contact_person",
+                    targets=[target_id],
                 motivation="address an important relationship",
                 confidence=0.65,
                 score=(100.0 - trust) / 100.0,
