@@ -124,6 +124,11 @@ class DecisionKernel:
         return max(-0.5, min(1.0, sum(penalties) / min(3, len(penalties))))
 
     @staticmethod
+    def _habit_alignment(character: CharacterState, action: ActionCandidate) -> float:
+        action_type = canonical_action_type(action.action_type)
+        return max(-1.0, min(1.0, character.habits.get(action_type, 0.0)))
+
+    @staticmethod
     def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
         goal = max((g for g in character.goals if g.status == "active"), key=lambda g: g.priority, default=None)
         if goal is None:
@@ -192,6 +197,7 @@ class DecisionKernel:
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
         repetition = self._repetition_penalty(state, character, action)
         belief_friction = self._belief_friction(state, character, action)
+        habit = self._habit_alignment(character, action)
         score = (
             self.weights.goal * goal
             + self.weights.values * values
@@ -201,6 +207,7 @@ class DecisionKernel:
             - self.weights.risk * risk
             - self.weights.cost * cost
             - self.weights.uncertainty * uncertainty
+            + self.weights.habit * habit
             - self.weights.habit * repetition
             - self.weights.uncertainty * max(0.0, belief_friction)
             + self.weights.uncertainty * min(0.0, belief_friction)
@@ -211,6 +218,8 @@ class DecisionKernel:
         if relationship > 0: reasons.append("relationship pull")
         if urgency > 0: reasons.append("time pressure")
         if risk > 0: reasons.append("perceived risk")
+        if habit > 0: reasons.append("learned preference")
+        if habit < 0: reasons.append("learned avoidance")
         if repetition > 0: reasons.append("recently repeated action")
         if belief_friction > 0: reasons.append("past failure remembered")
         if belief_friction < 0: reasons.append("past success remembered")
