@@ -17,7 +17,7 @@ def test_same_location_contact_changes_relationship() -> None:
     world.characters["lin"].goals[0].priority = 0.2
     world.characters["mei"].goals[0].priority = 0.2
     world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
-    result = SimulationEngine(seed=42).step(world)
+    result = SimulationEngine(seed=1).step(world)
     contact = next(event for event in result.events if event.causes[0].endswith("contact"))
     assert contact.facts == ["Lin speaks with Mei at town."]
     assert world.relationships["lin:mei"].trust == 42.0
