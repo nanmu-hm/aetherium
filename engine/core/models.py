@@ -39,6 +39,9 @@ class CharacterState:
     # (the character strongly identifies with it). This is descriptive
     # self-concept, distinct from normative values.
     identity_beliefs: dict[str, float] = field(default_factory=dict)
+    # Bounded-rationality controls. Defaults preserve deterministic utility-only choice.
+    decision_noise: float = 0.0
+    risk_tolerance: float = 0.0
     # Deprecated mirror; authoritative relationship state is WorldState.relationships.
     relationships: dict[str, float] = field(default_factory=dict)
     possessions: dict[str, int] = field(default_factory=dict)

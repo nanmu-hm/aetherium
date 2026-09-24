@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import random
+import zlib
 
 from .models import ActionCandidate, CharacterState, WorldState
 from .action_types import canonical_action_type
@@ -29,6 +31,7 @@ class DecisionEvaluation:
     utility: float
     reasons: tuple[str, ...] = ()
     uncertainty: float = 0.0
+    selection_score: float | None = None
 
 
 class DecisionKernel:
@@ -261,6 +264,8 @@ class DecisionKernel:
         human_condition_urgency = self._human_condition_urgency(character, action)
         urgency = max(memory_urgency, human_condition_urgency)
         risk = min(1.0, len(action.risks) / 3.0)
+        risk_tolerance = max(0.0, min(1.0, character.risk_tolerance))
+        perceived_risk = risk * (1.0 - 0.75 * risk_tolerance)
         cost = min(1.0, sum(1.0 for _ in action.risks) * 0.25)
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
         repetition = self._repetition_penalty(state, character, action)
@@ -273,7 +278,7 @@ class DecisionKernel:
             + self.weights.emotion * emotion
             + self.weights.relationship * relationship
             + self.weights.urgency * urgency
-            - self.weights.risk * risk
+            - self.weights.risk * perceived_risk
             - self.weights.cost * cost
             - self.weights.uncertainty * uncertainty
             + self.weights.habit * habit
@@ -289,7 +294,7 @@ class DecisionKernel:
         if emotion < 0: reasons.append("emotional resistance")
         if relationship > 0: reasons.append("relationship pull")
         if urgency > 0: reasons.append("time pressure")
-        if risk > 0: reasons.append("perceived risk")
+        if perceived_risk > 0: reasons.append("perceived risk")
         if habit > 0: reasons.append("learned preference")
         if habit < 0: reasons.append("learned avoidance")
         if identity > 0: reasons.append("self-concept alignment")
@@ -299,10 +304,46 @@ class DecisionKernel:
         if belief_friction < 0: reasons.append("past success remembered")
         return DecisionEvaluation(action.id, score, tuple(reasons), uncertainty)
 
+    def _choice_noise(self, state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
+        """Return a reproducible bounded perturbation for imperfect decisions."""
+        noise_level = max(0.0, min(1.0, character.decision_noise))
+        if noise_level <= 0.0:
+            return 0.0
+        stable_seed = (
+            self.seed
+            + state.tick * 1009
+            + zlib.crc32(f"{character.id}:{action.id}".encode("utf-8"))
+        )
+        rng = random.Random(stable_seed)
+        return (rng.random() * 2.0 - 1.0) * noise_level
+
     def choose(self, state: WorldState, pool: list[ActionCandidate]) -> tuple[ActionCandidate | None, list[DecisionEvaluation]]:
         evaluations = [self.evaluate(state, action) for action in pool]
         if not evaluations:
             return None, []
+
+        selected: list[DecisionEvaluation] = []
+        for evaluation in evaluations:
+            action = next(item for item in pool if item.id == evaluation.action_id)
+            character = state.characters[action.actor_id]
+            noise = self._choice_noise(state, character, action)
+            selected.append(
+                DecisionEvaluation(
+                    action_id=evaluation.action_id,
+                    utility=evaluation.utility,
+                    reasons=evaluation.reasons,
+                    uncertainty=evaluation.uncertainty,
+                    selection_score=evaluation.utility + noise,
+                )
+            )
+
         # Stable tie-breaking keeps simulations reproducible; no narrative knowledge is used.
-        best = max(evaluations, key=lambda item: (item.utility, -item.uncertainty, item.action_id))
-        return next(action for action in pool if action.id == best.action_id), evaluations
+        best = max(
+            selected,
+            key=lambda item: (
+                item.selection_score if item.selection_score is not None else item.utility,
+                -item.uncertainty,
+                item.action_id,
+            ),
+        )
+        return next(action for action in pool if action.id == best.action_id), selected

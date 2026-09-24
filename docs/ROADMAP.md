@@ -11,16 +11,16 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [x] Narrative observation prototype
 
 ## Phase 2 — Causal character simulation
-- [ ] Structured preconditions
-- [ ] Success / failure / blocked action resolution
-- [ ] Deterministic seeded outcomes
+- [x] Structured preconditions
+- [x] Success / failure / blocked action resolution
+- [x] Deterministic seeded outcomes
 - [x] Time advancement
 - [x] Local knowledge model
 - [ ] Memory model
 - [x] Rumor and information propagation
-- [ ] Authoritative relationship representation
+- [x] Authoritative relationship representation
 - [ ] Character-state transitions caused by consequences
-- [ ] Decision errors, uncertainty, and bounded rationality
+- [x] Decision errors, uncertainty, and bounded rationality
 
 
 ### Phase 2 character-life kernel detail
