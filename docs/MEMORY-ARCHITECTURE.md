@@ -47,7 +47,17 @@ Salience attached to experiences. Emotion can preserve memories that have little
 
 ### Procedural memory
 
-Habits and learned responses. These influence future action generation without requiring conscious recall.
+Habits and learned responses. These influence future action generation and decision utility without requiring conscious recall.
+
+In the MVP, each character stores a small learned tendency per canonical action type:
+
+- `+1` means a strong learned preference;
+- `0` means no learned tendency;
+- `-1` means a learned avoidance.
+
+Successful lived actions move the tendency gradually toward preference; failed attempted actions move it gradually toward avoidance. Blocked actions do not create learning because the character did not actually experience the action outcome.
+
+Procedural learning must remain gradual. One event should not rewrite personality. Repeated lived experience can accumulate into a durable behavioral pattern.
 
 ### Identity memory
 
