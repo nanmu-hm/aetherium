@@ -117,7 +117,6 @@ class SimulationEngine:
         return f"{actor.name} achieves the goal: {goal.description}."
 
     @staticmethod
-    @staticmethod
     def _apply_emotional_consequences(
         state: WorldState,
         actor,
@@ -188,6 +187,7 @@ class SimulationEngine:
             )
             apply(target, target_effects, f"emotional response to help {outcome.status}")
 
+    @staticmethod
     def _update_procedural_habit(
         actor,
         action: ActionCandidate,
