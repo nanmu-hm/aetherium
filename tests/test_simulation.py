@@ -85,3 +85,15 @@ def test_blocked_contact_is_explicit() -> None:
     assert events[0].action_result is not None
     assert events[0].action_result.status == "blocked"
     assert events[0].consequences == []
+
+
+def test_action_resolver_can_fail_and_is_seed_reproducible() -> None:
+    from engine.core.models import ActionCandidate
+    from engine.core.simulation import ActionResolver
+    world = build_demo_world()
+    action = ActionCandidate("hard", "mei", "travel", targets=["town"], confidence=0.1, difficulty=0.99)
+    first = ActionResolver(__import__("random").Random(1)).resolve_outcome(world, action)
+    second = ActionResolver(__import__("random").Random(1)).resolve_outcome(world, action)
+    assert first.status == second.status
+    assert first.probability == second.probability
+    assert first.status == "failure"
