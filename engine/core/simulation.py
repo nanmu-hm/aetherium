@@ -1,15 +1,12 @@
-"""Deterministic first-pass simulation loop.
-
-This module deliberately contains no LLM calls. It establishes the
-authoritative state-transition boundary before model integration.
-"""
+"""Deterministic first-pass simulation loop."""
 
 from __future__ import annotations
 
 from dataclasses import dataclass
 import random
 
-from .models import ActionCandidate, Event, WorldState
+from .actions import choose_action, generate_action_pool
+from .models import ActionCandidate, Consequence, Event, WorldState
 
 
 @dataclass
@@ -25,52 +22,62 @@ class SimulationEngine:
         self.random = random.Random(seed)
 
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
-        candidates: list[ActionCandidate] = []
+        """Generate and select one action per active character."""
+        selected: list[ActionCandidate] = []
         for character in state.characters.values():
-            if character.status != "active":
-                continue
-            if not character.goals:
-                continue
-            goal = max(character.goals, key=lambda item: item.priority)
-            action_id = f"tick-{state.tick}-{character.id}-pursue"
-            candidates.append(
-                ActionCandidate(
-                    id=action_id,
-                    actor_id=character.id,
-                    action_type="pursue_goal",
-                    motivation=goal.description,
-                    confidence=0.8,
-                    score=goal.priority,
-                )
-            )
-        return candidates
+            action = choose_action(generate_action_pool(state, character.id))
+            if action is not None:
+                selected.append(action)
+        return selected
 
     def resolve(self, state: WorldState, actions: list[ActionCandidate]) -> list[Event]:
         events: list[Event] = []
         for action in actions:
             actor = state.characters[action.actor_id]
-            goal_text = action.motivation or "pursue a goal"
-            fact = f"{actor.name} attempts to {goal_text}."
-            event = Event(
-                id=f"event-{state.tick}-{action.actor_id}",
+            consequences: list[Consequence] = []
+            facts: list[str] = []
+
+            if action.action_type == "travel":
+                destination = action.targets[0]
+                old = actor.location
+                actor.location = destination
+                consequences.append(Consequence("character", actor.id, "location", old, destination, "travel"))
+                facts.append(f"{actor.name} travels from {old} to {destination}.")
+
+            elif action.action_type == "contact_person":
+                target = state.characters.get(action.targets[0])
+                if target is not None:
+                    facts.append(f"{actor.name} seeks contact with {target.name}.")
+                    actor.memory.append(f"Contact attempt with {target.name}.")
+                    target.memory.append(f"{actor.name} contacted you.")
+
+            elif action.action_type == "help_person":
+                target = state.characters.get(action.targets[0])
+                if target is not None:
+                    facts.append(f"{actor.name} decides to help {target.name}.")
+                    actor.memory.append(f"Helped {target.name}.")
+
+            else:
+                facts.append(f"{actor.name} attempts to {action.motivation}.")
+                actor.memory.append(facts[0])
+
+            events.append(Event(
+                id=f"event-{state.tick}-{actor.id}",
                 tick=state.tick,
                 timestamp=state.timestamp,
                 location=actor.location,
-                participants=[actor.id],
+                participants=[actor.id, *action.targets],
                 causes=[action.id],
-                facts=[fact],
-            )
-            actor.memory.append(fact)
-            events.append(event)
+                facts=facts,
+                consequences=consequences,
+            ))
         return events
 
     def validate(self, state: WorldState) -> list[str]:
         errors: list[str] = []
         for character in state.characters.values():
             if character.location and character.location not in state.locations:
-                errors.append(
-                    f"{character.id} is at unknown location {character.location!r}"
-                )
+                errors.append(f"{character.id} is at unknown location {character.location!r}")
         return errors
 
     def step(self, state: WorldState) -> SimulationResult:
@@ -79,9 +86,4 @@ class SimulationEngine:
         state.event_log.extend(events)
         errors = self.validate(state)
         state.tick += 1
-        return SimulationResult(
-            tick=state.tick - 1,
-            actions=actions,
-            events=events,
-            validation_errors=errors,
-        )
+        return SimulationResult(state.tick - 1, actions, events, errors)
