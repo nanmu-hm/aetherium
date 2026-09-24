@@ -189,6 +189,43 @@ class SimulationEngine:
                     target = state.characters[action.targets[0]]
                     if outcome.status == "success":
                         facts.append(f"{actor.name} successfully helps {target.name}.")
+                        reciprocal = state.get_relationship(target.id, actor.id)
+                        if reciprocal is not None:
+                            old_trust = reciprocal.trust
+                            old_affection = reciprocal.affection
+                            old_loyalty = reciprocal.loyalty
+                            reciprocal.trust = min(100.0, reciprocal.trust + 5.0)
+                            reciprocal.affection = min(100.0, reciprocal.affection + 2.0)
+                            reciprocal.loyalty = min(100.0, reciprocal.loyalty + 3.0)
+                            relationship_id = f"{target.id}:{actor.id}"
+                            consequences.extend(
+                                [
+                                    Consequence(
+                                        "relationship",
+                                        relationship_id,
+                                        "trust",
+                                        old_trust,
+                                        reciprocal.trust,
+                                        "successful help received",
+                                    ),
+                                    Consequence(
+                                        "relationship",
+                                        relationship_id,
+                                        "affection",
+                                        old_affection,
+                                        reciprocal.affection,
+                                        "successful help received",
+                                    ),
+                                    Consequence(
+                                        "relationship",
+                                        relationship_id,
+                                        "loyalty",
+                                        old_loyalty,
+                                        reciprocal.loyalty,
+                                        "successful help received",
+                                    ),
+                                ]
+                            )
                     else:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
