@@ -52,7 +52,14 @@ def test_dilemma_detector_ignores_far_apart_choices():
     )
     actions = [
         ActionCandidate("travel", "lin", "travel", targets=["road"], confidence=0.8),
-        ActionCandidate("contact", "lin", "contact_person", targets=["ghost"], confidence=0.1),
+        ActionCandidate(
+            "contact",
+            "lin",
+            "contact_person",
+            targets=["ghost"],
+            confidence=0.1,
+            risks=["danger", "loss", "delay"],
+        ),
     ]
 
     dilemmas = DilemmaDetector().detect(state, {"lin": actions})
@@ -63,32 +70,28 @@ def test_dilemma_detector_ignores_far_apart_choices():
 def test_rhythm_analyzer_detects_rising_pressure_and_peak():
     state = WorldState(world_id="rhythm")
     state.add_character(CharacterState(id="a", name="A"))
-    state.add_character(CharacterState(id="b", name="B"))
 
-    for tick, trust in [(1, 45), (2, 20), (3, 0)]:
+    for tick in range(1, 4):
         state.event_log.append(
             Event(
                 id=f"e{tick}",
                 tick=tick,
                 timestamp=f"0001-01-0{tick + 1}T00:00:00",
                 location="town",
-                participants=["a", "b"],
+                participants=["a"],
                 causes=[f"choice-{tick}"],
                 facts=[f"pressure event {tick}"],
-                consequences=[
-                    Consequence(
-                        "relationship",
-                        "a:b",
-                        "resentment",
-                        0,
-                        100 - trust,
-                        "rising conflict",
-                    )
-                ],
+                consequences=[Consequence("character", "a", "cost", 0, tick, "pressure")],
             )
         )
 
-    rhythm = NarrativeRhythmAnalyzer().analyze(state, [])
+    class ScriptedPressure:
+        values = {"e1": 0.10, "e2": 0.40, "e3": 0.80}
+
+        def score_event(self, state, event):
+            return self.values[event.id]
+
+    rhythm = NarrativeRhythmAnalyzer(ScriptedPressure()).analyze(state, [])
     assert rhythm.trend == "rising"
     assert rhythm.phase == "peak"
     assert rhythm.pressure >= 0.70
@@ -96,13 +99,7 @@ def test_rhythm_analyzer_detects_rising_pressure_and_peak():
 
 def test_rhythm_requests_breathing_after_sustained_pressure():
     state = WorldState(world_id="rhythm")
-    state.add_character(
-        CharacterState(
-            id="a",
-            name="A",
-            human_condition=HumanCondition(desires={"responsibility": 100}),
-        )
-    )
+    state.add_character(CharacterState(id="a", name="A"))
 
     for tick in range(1, 4):
         state.event_log.append(
@@ -114,14 +111,17 @@ def test_rhythm_requests_breathing_after_sustained_pressure():
                 participants=["a"],
                 causes=[f"choice-{tick}"],
                 facts=["pressure"],
-                consequences=[
-                    Consequence("character", "a", "reputation", 50, 20, "cost"),
-                    Consequence("character", "a", "fear", 0, 20, "pressure"),
-                ],
+                consequences=[Consequence("character", "a", "cost", 0, tick, "pressure")],
             )
         )
 
-    rhythm = NarrativeRhythmAnalyzer().analyze(state, [])
+    class ScriptedPressure:
+        values = {"e1": 0.70, "e2": 0.80, "e3": 0.90}
+
+        def score_event(self, state, event):
+            return self.values[event.id]
+
+    rhythm = NarrativeRhythmAnalyzer(ScriptedPressure()).analyze(state, [])
     assert rhythm.high_pressure_streak == 3
     assert rhythm.breathing_needed
 
