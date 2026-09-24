@@ -355,3 +355,59 @@ def test_relationship_consequence_is_visible_to_later_action_generation():
     )
 
     assert after.score < before.score
+
+
+def test_failed_attempt_increases_unresolved_desire_pressure():
+    from engine.core.models import ActionCandidate
+    from engine.core.simulation import SimulationEngine
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    world.characters["mei"].human_condition.desires["freedom"] = 40.0
+    action = ActionCandidate(
+        "hard-travel",
+        "mei",
+        "travel",
+        targets=["town"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert world.characters["mei"].human_condition.desires["freedom"] == 48.0
+    assert any(
+        consequence.field == "human_condition.desires.freedom"
+        for consequence in events[0].consequences
+    )
+
+
+def test_failed_contact_creates_persistent_relational_friction():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0, resentment=5.0))
+    action = ActionCandidate(
+        "failed-contact",
+        "lin",
+        "contact_person",
+        targets=["mei"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    relationship = world.relationships["lin:mei"]
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert relationship.trust == 39.0
+    assert relationship.resentment == 6.0
+    assert any(
+        consequence.field == "resentment"
+        and consequence.target_id == "lin:mei"
+        for consequence in events[0].consequences
+    )
