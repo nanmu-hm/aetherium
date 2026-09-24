@@ -704,3 +704,77 @@ def test_self_concept_influences_matching_action_utility():
 
     assert high.utility > low.utility
     assert "self-concept alignment" in high.reasons
+
+
+def test_simulation_gives_event_knowledge_only_to_participants():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "contact", "lin", "contact_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert world.event_log[-1].id == event.id
+    assert event.facts[0] in world.characters["lin"].knowledge
+    assert event.facts[0] in world.characters["mei"].knowledge
+
+
+def test_world_event_history_is_not_enough_for_an_unaware_character_to_pay_repetition_cost():
+    from engine.core.models import ActionCandidate, ActionResult, Event
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    action = ActionCandidate(
+        "repeat", "lin", "travel", targets=["town"], confidence=0.8, difficulty=0.4
+    )
+    baseline = DecisionKernel(seed=1).evaluate(world, action)
+
+    hidden_event = Event(
+        "unseen-lin-travel",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin"],
+        ["unrelated-cause"],
+        ["Lin traveled long ago."],
+        action_result=ActionResult("success"),
+    )
+    world.event_log.append(hidden_event)
+    unaware = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert unaware.utility == baseline.utility
+    assert "recently repeated action" not in unaware.reasons
+
+
+def test_known_past_action_can_still_create_repetition_pressure():
+    from engine.core.models import ActionCandidate, ActionResult, Event
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    action = ActionCandidate(
+        "repeat", "lin", "travel", targets=["town"], confidence=0.8, difficulty=0.4
+    )
+    baseline = DecisionKernel(seed=1).evaluate(world, action)
+
+    event = Event(
+        "known-lin-travel",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin"],
+        ["tick-0-lin-travel"],
+        ["Lin traveled to town."],
+        action_result=ActionResult("success"),
+    )
+    world.event_log.append(event)
+    MemoryKernel().remember_event(world.memory_state, "lin", event, "Lin traveled to town.")
+
+    known = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert known.utility < baseline.utility
+    assert "recently repeated action" in known.reasons

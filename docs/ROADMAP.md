@@ -15,7 +15,7 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [ ] Success / failure / blocked action resolution
 - [ ] Deterministic seeded outcomes
 - [x] Time advancement
-- [ ] Local knowledge model
+- [x] Local knowledge model
 - [ ] Memory model
 - [ ] Rumor and information propagation
 - [ ] Authoritative relationship representation

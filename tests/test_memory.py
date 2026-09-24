@@ -136,3 +136,60 @@ def test_memory_revision_can_reference_later_evidence():
 
     assert revision.evidence_memory_ids == [m2.id]
     assert revision.id.startswith("revision-")
+
+
+def test_local_knowledge_is_owner_scoped_and_tracks_source():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    event = Event(
+        "e1",
+        3,
+        "0001-01-04T00:00:00",
+        "town",
+        ["lin", "mei"],
+        ["tick-3-lin-contact"],
+        ["Mei left town before dawn."],
+    )
+
+    lin_fact = kernel.record_event_knowledge(state, "lin", event)[0]
+
+    assert lin_fact.proposition == "Mei left town before dawn."
+    assert lin_fact.source == "direct_experience"
+    assert lin_fact.source_event_id == "e1"
+    assert state.get_knowledge("lin", lin_fact.proposition) == lin_fact
+    assert state.get_knowledge("rui", lin_fact.proposition) is None
+
+
+def test_non_participant_does_not_learn_an_event_automatically():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    event = Event(
+        "secret",
+        1,
+        "t",
+        "old_road",
+        ["lin"],
+        ["tick-1-lin-travel"],
+        ["Lin found the hidden cache."],
+    )
+
+    assert kernel.record_event_knowledge(state, "mei", event) == []
+    assert state.knowledge.get("mei", {}) == {}
+
+
+def test_knowledge_confidence_is_updated_without_creating_duplicate_facts():
+    state = MemoryState()
+    kernel = MemoryKernel()
+
+    first = kernel.learn_fact(
+        state, "lin", "Mei left town.", tick=2, source="heard", confidence=0.4
+    )
+    second = kernel.learn_fact(
+        state, "lin", "Mei left town.", tick=5, source="confirmed", confidence=0.9
+    )
+
+    assert first.id == second.id
+    assert second.confidence == 0.9
+    assert second.first_learned_tick == 2
+    assert second.last_confirmed_tick == 5
+    assert len(state.knowledge["lin"]) == 1

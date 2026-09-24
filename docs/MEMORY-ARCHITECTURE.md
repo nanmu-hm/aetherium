@@ -37,6 +37,10 @@ A concrete lived episode: an argument, promise, betrayal, journey, loss, discove
 
 Facts the character believes to be true. These can become stale or false.
 
+The MVP keeps local knowledge separate from world state. A `KnowledgeFact` belongs to one character and records the proposition, source, source event, confidence, and learning/confirmation ticks. Directly experienced event facts are granted only to participants. Information learned later can use a different source such as `heard` or `confirmed` without changing the underlying world fact.
+
+The existing `CharacterState.knowledge` set is a lightweight lookup mirror; `MemoryState.knowledge` is the authoritative local-knowledge record.
+
 ### Relational memory
 
 The accumulated history behind a relationship. A relationship score is only a derived summary; the causes remain inspectable.
@@ -82,6 +86,10 @@ Relationship scores are current summaries; relationship history preserves the co
 ### Memory revision / reinterpretation
 
 A memory keeps its original experience while allowing later interpretations to be appended as explicit revisions. A revision records the previous interpretation, the new interpretation, why it changed, the supporting later memories, and the revised confidence. The original event and prior interpretation are never erased.
+
+### Information asymmetry
+
+The simulation never treats the global event log as universal character knowledge. A character can know an event because they experienced it or later learned it; another character can remain unaware. Decision logic that depends on remembered history must use owner-scoped memory/knowledge rather than the omniscient world log. This preserves the causal basis for misunderstanding, discovery, secrecy, and later revelation.
 
 ### Belief / misbelief
 

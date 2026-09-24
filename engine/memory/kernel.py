@@ -4,7 +4,15 @@ from __future__ import annotations
 
 import math
 
-from .models import Belief, Desire, Memory, MemoryRevision, MemoryState, RelationshipHistoryEntry
+from .models import (
+    Belief,
+    Desire,
+    KnowledgeFact,
+    Memory,
+    MemoryRevision,
+    MemoryState,
+    RelationshipHistoryEntry,
+)
 from ..core.models import Event
 from ..core.action_types import canonical_action_type
 
@@ -57,6 +65,60 @@ class MemoryKernel:
 
     def add_belief(self, state: MemoryState, belief: Belief) -> None:
         state.add_belief(belief)
+
+    def learn_fact(
+        self,
+        state: MemoryState,
+        owner_id: str,
+        proposition: str,
+        tick: int,
+        source: str = "direct_experience",
+        source_event_id: str | None = None,
+        confidence: float = 1.0,
+    ) -> KnowledgeFact:
+        """Record what one character knows without changing world truth."""
+        existing = state.get_knowledge(owner_id, proposition)
+        bounded_confidence = max(0.0, min(1.0, confidence))
+        if existing is None:
+            owner_knowledge = state.knowledge.get(owner_id, {})
+            fact = KnowledgeFact(
+                id=f"knowledge-{owner_id}-{len(owner_knowledge) + 1}",
+                owner_id=owner_id,
+                proposition=proposition,
+                source=source,
+                source_event_id=source_event_id,
+                confidence=bounded_confidence,
+                first_learned_tick=tick,
+                last_confirmed_tick=tick,
+            )
+        else:
+            existing.confidence = max(existing.confidence, bounded_confidence)
+            existing.last_confirmed_tick = tick
+            fact = existing
+        state.add_knowledge(fact)
+        return fact
+
+    def record_event_knowledge(
+        self,
+        state: MemoryState,
+        owner_id: str,
+        event: Event,
+    ) -> list[KnowledgeFact]:
+        """Give direct participants only the facts contained in their experienced event."""
+        if owner_id not in event.participants:
+            return []
+        return [
+            self.learn_fact(
+                state,
+                owner_id,
+                fact,
+                tick=event.tick,
+                source="direct_experience",
+                source_event_id=event.id,
+                confidence=1.0,
+            )
+            for fact in event.facts
+        ]
 
     def record_event_belief(
         self,

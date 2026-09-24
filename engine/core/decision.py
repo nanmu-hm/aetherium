@@ -82,10 +82,17 @@ class DecisionKernel:
 
     @staticmethod
     def _repetition_penalty(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
+        known_event_ids = {
+            memory.event_id
+            for memory in state.memory_state.memories.values()
+            if memory.owner_id == character.id
+        }
         recent = [
             event
             for event in reversed(state.event_log)
-            if event.participants and event.participants[0] == character.id
+            if event.id in known_event_ids
+            and event.participants
+            and event.participants[0] == character.id
         ][:3]
         if not recent:
             return 0.0

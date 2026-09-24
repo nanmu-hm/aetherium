@@ -73,6 +73,12 @@ class SimulationEngine:
                 event,
                 memory.id,
             )
+            learned = self.memory_kernel.record_event_knowledge(
+                state.memory_state,
+                character_id,
+                event,
+            )
+            character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
     @staticmethod

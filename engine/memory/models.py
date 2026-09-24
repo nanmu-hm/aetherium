@@ -37,6 +37,18 @@ class Belief:
 
 
 @dataclass
+class KnowledgeFact:
+    id: str
+    owner_id: str
+    proposition: str
+    source: str = "direct_experience"
+    source_event_id: str | None = None
+    confidence: float = 1.0
+    first_learned_tick: int = 0
+    last_confirmed_tick: int = 0
+
+
+@dataclass
 class RelationshipHistoryEntry:
     id: str
     relationship_id: str
@@ -86,6 +98,7 @@ class MemoryState:
     desires: dict[str, Desire] = field(default_factory=dict)
     relationship_history: dict[str, list[RelationshipHistoryEntry]] = field(default_factory=dict)
     memory_revisions: dict[str, list[MemoryRevision]] = field(default_factory=dict)
+    knowledge: dict[str, dict[str, KnowledgeFact]] = field(default_factory=dict)
 
     def add_memory(self, memory: Memory) -> None:
         self.memories[memory.id] = memory
@@ -95,6 +108,12 @@ class MemoryState:
 
     def add_desire(self, desire: Desire) -> None:
         self.desires[desire.id] = desire
+
+    def add_knowledge(self, fact: KnowledgeFact) -> None:
+        self.knowledge.setdefault(fact.owner_id, {})[fact.proposition] = fact
+
+    def get_knowledge(self, owner_id: str, proposition: str) -> KnowledgeFact | None:
+        return self.knowledge.get(owner_id, {}).get(proposition)
 
     def add_relationship_history(self, entry: RelationshipHistoryEntry) -> None:
         self.relationship_history.setdefault(entry.relationship_id, []).append(entry)
