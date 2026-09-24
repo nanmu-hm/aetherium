@@ -57,6 +57,7 @@ A character is not merely a prompt. CharacterState represents the current condit
     ├── goals
     ├── needs
     ├── emotions
+    ├── habits
     ├── location
     ├── knowledge
     ├── memory
@@ -74,6 +75,9 @@ Core distinction:
 - Knowledge: what the character believes/knows.
 - Memory: what the character remembers from experience.
 - Constraints: what limits possible behavior.
+- Habits: learned procedural tendencies that can make an action feel more natural or aversive after repeated experience.
+
+Habits are mutable character state. They are not fixed values and they must be updated by lived outcomes rather than by narrative commands.
 
 The system must not collapse these into one generic personality paragraph.
 
