@@ -273,3 +273,28 @@ def test_remembered_contact_failure_reduces_contact_utility():
     remembered = DecisionKernel(seed=1).evaluate(world, action)
 
     assert remembered.utility < plain.utility
+
+
+def test_human_condition_desire_changes_action_utility():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    travel = ActionCandidate(
+        "travel", "lin", "travel", targets=["town"], confidence=0.8, difficulty=0.4
+    )
+    rest = ActionCandidate(
+        "rest", "lin", "rest", confidence=0.8, difficulty=0.2
+    )
+
+    world.characters["lin"].human_condition.desires["freedom"] = 0.0
+    low = DecisionKernel(seed=1).evaluate(world, travel)
+    rest_low = DecisionKernel(seed=1).evaluate(world, rest)
+
+    world.characters["lin"].human_condition.desires["freedom"] = 100.0
+    high = DecisionKernel(seed=1).evaluate(world, travel)
+
+    assert high.utility > low.utility
+    assert rest_low.utility < high.utility
+    assert "time pressure" in high.reasons
