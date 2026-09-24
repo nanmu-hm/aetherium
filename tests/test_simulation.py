@@ -97,3 +97,14 @@ def test_action_resolver_can_fail_and_is_seed_reproducible() -> None:
     assert first.status == second.status
     assert first.probability == second.probability
     assert first.status == "failure"
+
+
+
+def test_precondition_blocks_without_roll() -> None:
+    from engine.core.models import ActionCandidate
+    from engine.core.preconditions import PreconditionEngine
+    world = build_demo_world()
+    action = ActionCandidate("bad", "mei", "travel", targets=["missing-place"])
+    result = PreconditionEngine().check(world, action)
+    assert result.satisfied is False
+    assert "does not exist" in result.reasons[0]
