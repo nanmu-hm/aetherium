@@ -29,3 +29,14 @@ def test_genesis_can_produce_story_candidates():
     assert candidates
     assert candidates[0].event_ids
     assert candidates[0].participants
+
+
+def test_genesis_allows_goal_and_value_driven_action_change():
+    world = run_genesis(ticks=12, seed=7)
+    action_types = {
+        event.causes[0].rsplit("-", 1)[-1]
+        for event in world.event_log
+        if event.causes
+    }
+    assert "contact" in action_types
+    assert "travel" in action_types
