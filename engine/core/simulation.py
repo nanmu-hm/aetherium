@@ -7,7 +7,7 @@ import random
 
 from .actions import generate_action_pool
 from .decision import DecisionKernel
-from .models import ActionCandidate, Consequence, Event, WorldState
+from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from ..memory.kernel import MemoryKernel
 
 
@@ -95,7 +95,7 @@ class SimulationEngine:
                 timestamp=state.timestamp,
                 location=actor.location,
                 participants=[actor.id, *action.targets],
-                causes=[action.id], facts=facts, consequences=consequences,
+                causes=[action.id], action_result=outcome, facts=facts, consequences=consequences,
             ))
 
         for event in events:
