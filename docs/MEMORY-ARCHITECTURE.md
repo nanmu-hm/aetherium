@@ -63,6 +63,18 @@ Procedural learning must remain gradual. One event should not rewrite personalit
 
 Self-concept, values, commitments, shame, pride, feared identities, and promises to self.
 
+The MVP represents the descriptive part of self-concept as small, gradual identity beliefs on each character. A value says what a character thinks matters; an identity belief says what the character currently thinks they are.
+
+Identity evidence is experience-based and bounded:
+
+- successful travel can strengthen `independent` / `capable`;
+- successful contact can strengthen `loyal` / `reliable`;
+- successful help can strengthen `compassionate` / `reliable`;
+- failed attempts push the same dimensions gradually in the opposite direction;
+- blocked actions create no identity evidence because no lived outcome occurred.
+
+Identity changes are small and cumulative. A single event cannot rewrite the character, but repeated experience can make a self-concept durable. The decision kernel can use that self-concept as a modest compatibility signal, allowing character identity to become part of the causal loop without becoming destiny.
+
 ### Belief / misbelief
 
 Characters may hold incorrect interpretations. The simulation must preserve the distinction between an incorrect belief and an incorrect world fact.
