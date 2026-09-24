@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 from .models import ActionCandidate, CharacterState, WorldState
+from .action_types import canonical_action_type
 from ..memory.kernel import MemoryKernel
 
 
@@ -109,7 +110,7 @@ class DecisionKernel:
             if len(parts) != 4:
                 continue
             _, action_type, belief_targets, outcome = parts
-            if action_type != action.action_type:
+            if canonical_action_type(action_type) != canonical_action_type(action.action_type):
                 continue
             if belief_targets != target_text:
                 continue
