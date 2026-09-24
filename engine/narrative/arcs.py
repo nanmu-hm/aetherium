@@ -27,7 +27,13 @@ class CharacterArcDetector:
                 for consequence in event.consequences:
                     field = consequence.field
                     target = consequence.target_id
-                    owned = target == character.id or target.startswith(f"{character.id}:") or target.endswith(f":{character.id}")
+                    goal_ids = {goal.id for goal in character.goals}
+                    owned = (
+                        target == character.id
+                        or target.startswith(f"{character.id}:")
+                        or target.endswith(f":{character.id}")
+                        or (consequence.target_type == "goal" and target in goal_ids)
+                    )
                     if not owned:
                         continue
                     old, new = consequence.old_value, consequence.new_value

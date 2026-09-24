@@ -28,8 +28,8 @@ def test_causal_thread_engine_separates_distant_history():
     state.add_character(CharacterState(id="a", name="A"))
     state.add_character(CharacterState(id="b", name="B"))
     state.event_log.extend([
-        Event("e1", 1, "t", "town", ["a", "b"], ["c1"], ["first"], [Consequence("relationship", "a:b", "trust", 50, 60, "change")]),
-        Event("e9", 20, "t", "town", ["a", "b"], ["c9"], ["later"], [Consequence("relationship", "a:b", "trust", 60, 70, "change")]),
+        Event("e1", 1, "t", "town", ["a", "b"], ["c1"], ["first"], consequences=[Consequence("relationship", "a:b", "trust", 50, 60, "change")]),
+        Event("e9", 20, "t", "town", ["a", "b"], ["c9"], ["later"], consequences=[Consequence("relationship", "a:b", "trust", 60, 70, "change")]),
     ])
     threads = CausalThreadEngine().discover(state)
     assert len(threads) == 2
