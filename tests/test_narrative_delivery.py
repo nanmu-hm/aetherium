@@ -44,7 +44,7 @@ def test_callback_scheduler_keeps_payoff_timing_flexible():
 
 
 def test_story_completion_needs_grounded_resolution_and_payoff():
-    threads=[NarrativeThread("t1","goal","goal",["a"],["e1"],0.5,"resolved","")]
+    threads=[NarrativeThread("t1","goal","goal",["a"],["e1","e8"],0.5,"resolved","")]
     sequences=[NarrativeSequence("s1",["sc1"],["t1"],["a"],0.4,"developing",[])]
     arcs=[StoryArc("a","Arc",["s1"],["t1"],["a"],0.4,"development",0.8,[])]
     complete=StoryCompletionDetector().assess(arcs,sequences,threads,{"e8"})
