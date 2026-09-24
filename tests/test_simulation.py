@@ -62,3 +62,26 @@ def test_decision_kernel_uses_character_state_not_narrative_outcomes() -> None:
     chosen, evaluations = DecisionKernel(seed=42).choose(world, pool)
     assert chosen is not None
     assert {item.action_id for item in evaluations} == {"a", "b"}
+
+
+def test_blocked_travel_does_not_change_character_location() -> None:
+    from engine.core.models import ActionCandidate
+    world = build_demo_world()
+    actor = world.characters["mei"]
+    action = ActionCandidate("bad-travel", actor.id, "travel", targets=["unknown-place"], confidence=1.0)
+    events = SimulationEngine(seed=42).resolve(world, [action])
+    assert actor.location == "town"
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert events[0].consequences == []
+
+
+def test_blocked_contact_is_explicit() -> None:
+    from engine.core.models import ActionCandidate
+    world = build_demo_world()
+    world.characters["mei"].location = "elsewhere"
+    action = ActionCandidate("contact", "lin", "contact_person", targets=["mei"], confidence=1.0)
+    events = SimulationEngine(seed=42).resolve(world, [action])
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert events[0].consequences == []
