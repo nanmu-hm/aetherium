@@ -225,7 +225,7 @@ def test_knowledge_transmission_preserves_provenance_and_lowers_confidence():
     assert heard_by_rui.source_owner_id == "mei"
     assert heard_by_rui.parent_fact_id == heard_by_mei.id
     assert heard_by_rui.transmission_depth == 2
-    assert heard_by_rui.confidence == 0.64
+    assert heard_by_rui.confidence == pytest.approx(0.64)
 
 
 def test_knowledge_transmission_does_not_create_world_truth_or_source_knowledge():
