@@ -76,6 +76,8 @@ class ActionCandidate:
     expected_outcomes: list[str] = field(default_factory=list)
     risks: list[str] = field(default_factory=list)
     confidence: float = 0.5
+    difficulty: float = 0.5
+    required_ability: str = ""
     score: float = 0.0
 
 
