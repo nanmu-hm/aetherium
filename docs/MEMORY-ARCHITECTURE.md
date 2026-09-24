@@ -41,6 +41,8 @@ The MVP keeps local knowledge separate from world state. A `KnowledgeFact` belon
 
 The existing `CharacterState.knowledge` set is a lightweight lookup mirror; `MemoryState.knowledge` is the authoritative local-knowledge record.
 
+Knowledge may also travel between characters. A transmitted fact records the immediate source character, parent fact, transmission depth, and reduced confidence. The source character must actually know the proposition before it can be transmitted. Direct confirmation can later replace weaker hearsay provenance while preserving the same knowledge identity. Transmission changes what a character believes they know; it never creates or changes world truth.
+
 ### Relational memory
 
 The accumulated history behind a relationship. A relationship score is only a derived summary; the causes remain inspectable.

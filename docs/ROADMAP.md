@@ -17,7 +17,7 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [x] Time advancement
 - [x] Local knowledge model
 - [ ] Memory model
-- [ ] Rumor and information propagation
+- [x] Rumor and information propagation
 - [ ] Authoritative relationship representation
 - [ ] Character-state transitions caused by consequences
 - [ ] Decision errors, uncertainty, and bounded rationality

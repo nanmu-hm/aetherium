@@ -193,3 +193,83 @@ def test_knowledge_confidence_is_updated_without_creating_duplicate_facts():
     assert second.first_learned_tick == 2
     assert second.last_confirmed_tick == 5
     assert len(state.knowledge["lin"]) == 1
+
+
+def test_knowledge_transmission_preserves_provenance_and_lowers_confidence():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    kernel.learn_fact(
+        state,
+        "lin",
+        "Mei left town.",
+        tick=1,
+        source="direct_experience",
+        source_event_id="departure",
+        confidence=1.0,
+    )
+
+    heard_by_mei = kernel.transmit_knowledge(
+        state, "lin", "mei", "Mei left town.", tick=2
+    )
+    heard_by_rui = kernel.transmit_knowledge(
+        state, "mei", "rui", "Mei left town.", tick=3
+    )
+
+    assert heard_by_mei.source == "heard"
+    assert heard_by_mei.source_owner_id == "lin"
+    assert heard_by_mei.parent_fact_id == state.get_knowledge("lin", "Mei left town.").id
+    assert heard_by_mei.transmission_depth == 1
+    assert heard_by_mei.confidence == 0.8
+
+    assert heard_by_rui.source == "heard"
+    assert heard_by_rui.source_owner_id == "mei"
+    assert heard_by_rui.parent_fact_id == heard_by_mei.id
+    assert heard_by_rui.transmission_depth == 2
+    assert heard_by_rui.confidence == 0.64
+
+
+def test_knowledge_transmission_does_not_create_world_truth_or_source_knowledge():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    kernel.learn_fact(
+        state, "lin", "A secret door exists.", tick=1, source="direct_experience", confidence=1.0
+    )
+
+    kernel.transmit_knowledge(state, "lin", "mei", "A secret door exists.", tick=2)
+
+    assert state.get_knowledge("mei", "A secret door exists.") is not None
+    assert state.get_knowledge("rui", "A secret door exists.") is None
+    assert not hasattr(state, "world_facts")
+
+
+def test_transmission_requires_the_source_to_know_the_proposition():
+    state = MemoryState()
+    kernel = MemoryKernel()
+
+    import pytest
+
+    with pytest.raises(KeyError):
+        kernel.transmit_knowledge(
+            state, "lin", "mei", "A secret door exists.", tick=1
+        )
+
+
+def test_direct_confirmation_can_raise_confidence_and_refresh_provenance():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    heard = kernel.learn_fact(
+        state, "mei", "The bridge is broken.", tick=2, source="heard",
+        source_owner_id="lin", parent_fact_id="knowledge-lin-1",
+        transmission_depth=1, confidence=0.6,
+    )
+
+    confirmed = kernel.learn_fact(
+        state, "mei", "The bridge is broken.", tick=5,
+        source="confirmed", source_event_id="bridge-event", confidence=1.0,
+    )
+
+    assert confirmed.id == heard.id
+    assert confirmed.confidence == 1.0
+    assert confirmed.source == "confirmed"
+    assert confirmed.source_event_id == "bridge-event"
+    assert confirmed.transmission_depth == 0

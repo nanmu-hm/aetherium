@@ -43,6 +43,9 @@ class KnowledgeFact:
     proposition: str
     source: str = "direct_experience"
     source_event_id: str | None = None
+    source_owner_id: str | None = None
+    parent_fact_id: str | None = None
+    transmission_depth: int = 0
     confidence: float = 1.0
     first_learned_tick: int = 0
     last_confirmed_tick: int = 0

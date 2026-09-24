@@ -75,6 +75,9 @@ class MemoryKernel:
         source: str = "direct_experience",
         source_event_id: str | None = None,
         confidence: float = 1.0,
+        source_owner_id: str | None = None,
+        parent_fact_id: str | None = None,
+        transmission_depth: int = 0,
     ) -> KnowledgeFact:
         """Record what one character knows without changing world truth."""
         existing = state.get_knowledge(owner_id, proposition)
@@ -87,16 +90,60 @@ class MemoryKernel:
                 proposition=proposition,
                 source=source,
                 source_event_id=source_event_id,
+                source_owner_id=source_owner_id,
+                parent_fact_id=parent_fact_id,
+                transmission_depth=max(0, transmission_depth),
                 confidence=bounded_confidence,
                 first_learned_tick=tick,
                 last_confirmed_tick=tick,
             )
         else:
-            existing.confidence = max(existing.confidence, bounded_confidence)
+            if bounded_confidence > existing.confidence:
+                existing.confidence = bounded_confidence
+                existing.source = source
+                existing.source_event_id = source_event_id
+                existing.source_owner_id = source_owner_id
+                existing.parent_fact_id = parent_fact_id
+                existing.transmission_depth = max(0, transmission_depth)
             existing.last_confirmed_tick = tick
             fact = existing
         state.add_knowledge(fact)
         return fact
+
+    def transmit_knowledge(
+        self,
+        state: MemoryState,
+        source_owner_id: str,
+        recipient_id: str,
+        proposition: str,
+        tick: int,
+        confidence_decay: float = 0.80,
+    ) -> KnowledgeFact:
+        """Transmit a known fact between characters without making it world truth."""
+        if source_owner_id == recipient_id:
+            raise ValueError("source and recipient must be different characters")
+        if not 0.0 < confidence_decay <= 1.0:
+            raise ValueError("confidence_decay must be in (0, 1]")
+
+        source = state.get_knowledge(source_owner_id, proposition)
+        if source is None:
+            raise KeyError(
+                f"{source_owner_id!r} does not know the proposition: {proposition!r}"
+            )
+
+        confidence = source.confidence * confidence_decay
+        return self.learn_fact(
+            state,
+            recipient_id,
+            proposition,
+            tick=tick,
+            source="heard",
+            source_event_id=source.source_event_id,
+            source_owner_id=source_owner_id,
+            parent_fact_id=source.id,
+            transmission_depth=source.transmission_depth + 1,
+            confidence=confidence,
+        )
 
     def record_event_knowledge(
         self,
