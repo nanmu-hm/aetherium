@@ -57,6 +57,29 @@ class MemoryKernel:
     def add_belief(self, state: MemoryState, belief: Belief) -> None:
         state.add_belief(belief)
 
+    def record_event_belief(
+        self,
+        state: MemoryState,
+        owner_id: str,
+        event: Event,
+        memory_id: str,
+    ) -> Belief:
+        action_type = event.causes[0].rsplit("-", 1)[-1] if event.causes else "unknown"
+        target_ids = ",".join(event.participants[1:])
+        outcome = event.action_result.status if event.action_result else "unknown"
+        proposition = f"experience:{action_type}:{target_ids}:{outcome}"
+        belief = Belief(
+            id=f"belief-{owner_id}-{event.id}",
+            owner_id=owner_id,
+            proposition=proposition,
+            truth_status="true",
+            confidence=0.9 if outcome in {"success", "failure"} else 0.75,
+            source_memory_ids=[memory_id],
+            last_updated_tick=event.tick,
+        )
+        state.add_belief(belief)
+        return belief
+
     def advance_desires(self, state: MemoryState, current_tick: int) -> None:
         for desire in state.desires.values():
             if desire.status != "active":
