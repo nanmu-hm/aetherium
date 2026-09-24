@@ -33,21 +33,45 @@ class StoryArchaeologist:
             return []
 
         scores = self.pressure.score_events(state, state.event_log)
-        candidates: list[StoryCandidate] = []
-        for index, event in enumerate(state.event_log):
-            # A single event may have weak narrative pressure while a chain of
-            # related events becomes significant. Do not discard it before the
-            # provisional thread has been assembled.
-            chain = [event]
-            # Nearby events involving overlapping participants form a provisional
-            # historical thread. We never reorder or mutate the source history.
-            participant_set = set(event.participants)
-            for previous in reversed(state.event_log[max(0, index - 6):index]):
-                if participant_set.intersection(previous.participants):
-                    chain.insert(0, previous)
-                    participant_set.update(previous.participants)
+        threads: list[list[Event]] = []
 
+        # Build connected historical threads first. An event joins an existing
+        # thread when it shares participants with recent history in that thread.
+        # This produces one candidate for an underlying chain instead of one
+        # candidate for every event inside the same chain.
+        for event in state.event_log:
+            event_participants = set(event.participants)
+            selected_thread: list[Event] | None = None
+            selected_distance = 7
+            for thread in reversed(threads):
+                if not thread:
+                    continue
+                distance = event.tick - thread[-1].tick
+                if distance > 6:
+                    break
+                thread_participants = {
+                    participant
+                    for item in thread
+                    for participant in item.participants
+                }
+                if event_participants.intersection(thread_participants):
+                    if distance < selected_distance:
+                        selected_thread = thread
+                        selected_distance = distance
+            if selected_thread is None:
+                threads.append([event])
+            else:
+                selected_thread.append(event)
+
+        candidates: list[StoryCandidate] = []
+        for chain in threads:
             chain_scores = [scores[item.id] for item in chain]
+            participant_set = {
+                participant
+                for item in chain
+                for participant in item.participants
+            }
+            pressure = sum(chain_scores) / len(chain_scores)
             persistence = min(1.0, len(chain) / 5.0)
             consequence_density = min(
                 1.0,
@@ -58,7 +82,6 @@ class StoryArchaeologist:
                 and state.characters[character_id].status == "active"
                 for character_id in participant_set
             )
-            pressure = sum(chain_scores) / len(chain_scores)
             score = min(
                 1.0,
                 0.45 * pressure
@@ -78,7 +101,10 @@ class StoryArchaeologist:
                     consequence_density=consequence_density,
                     unresolved=unresolved,
                     score=score,
-                    reason="A persistent chain combines human pressure with consequential change.",
+                    reason=(
+                        "A connected historical thread combines human pressure "
+                        "with consequential change."
+                    ),
                 )
             )
 
