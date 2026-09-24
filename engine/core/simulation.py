@@ -213,11 +213,49 @@ class SimulationEngine:
                 )
         return errors
 
+    @staticmethod
+    def _advance_human_pressures(state: WorldState, events: list[Event]) -> None:
+        acted = {
+            event.participants[0]
+            for event in events
+            if event.participants
+        }
+
+        # Desires are pressures, not permanent flags. Successful satisfaction
+        # lowers a pressure; time without satisfaction lets it recover slowly.
+        for character in state.characters.values():
+            desires = character.human_condition.desires
+            if not desires:
+                continue
+
+            for desire_name, value in list(desires.items()):
+                desires[desire_name] = min(100.0, value + 3.0)
+
+            for event in events:
+                if not event.participants or event.participants[0] not in acted:
+                    continue
+                actor = event.participants[0]
+                if actor != character.id or event.action_result is None:
+                    continue
+                if event.action_result.status != "success":
+                    continue
+
+                action_type = event.causes[0].rsplit("-", 1)[-1] if event.causes else ""
+                satisfaction = {
+                    "travel": {"freedom": 35.0},
+                    "contact_person": {"reconciliation": 15.0, "belonging": 10.0},
+                    "help_person": {"responsibility": 20.0},
+                }
+                for desire_name, amount in satisfaction.get(action_type, {}).items():
+                    if desire_name in desires:
+                        desires[desire_name] = max(0.0, desires[desire_name] - amount)
+
     def step(self, state: WorldState) -> SimulationResult:
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
         self.memory_kernel.advance_desires(state.memory_state, state.tick)
+        self._advance_human_pressures(state, events)
         errors = self.validate(state)
         current_tick = state.tick
         state.tick += 1
