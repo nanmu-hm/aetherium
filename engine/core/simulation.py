@@ -58,6 +58,48 @@ class SimulationEngine:
             character.memory_ids.append(memory.id)
             character.memory.append(summary)
 
+    @staticmethod
+    def _goal_matches_action(goal_description: str, action_type: str) -> bool:
+        text = goal_description.lower()
+        keywords = {
+            "help_person": ("help", "protect", "support", "save"),
+            "contact_person": ("find", "reconcile", "talk", "meet", "contact", "friend"),
+            "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
+        }
+        return any(word in text for word in keywords.get(action_type, ()))
+
+    def _apply_goal_progress(
+        self,
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> str | None:
+        if outcome.status != "success":
+            return None
+
+        goal = max(
+            (item for item in actor.goals if item.status == "active"),
+            key=lambda item: item.priority,
+            default=None,
+        )
+        if goal is None or not self._goal_matches_action(goal.description, action.action_type):
+            return None
+
+        old_status = goal.status
+        goal.status = "achieved"
+        consequences.append(
+            Consequence(
+                "goal",
+                goal.id,
+                "status",
+                old_status,
+                goal.status,
+                f"goal fulfilled by {action.action_type}",
+            )
+        )
+        return f"{actor.name} achieves the goal: {goal.description}."
+
     def resolve(self, state: WorldState, actions: list[ActionCandidate]) -> list[Event]:
         events: list[Event] = []
         for action in actions:
@@ -138,6 +180,10 @@ class SimulationEngine:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
+
+            goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
+            if goal_fact:
+                facts.append(goal_fact)
 
             events.append(
                 Event(
