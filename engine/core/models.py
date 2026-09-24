@@ -31,6 +31,9 @@ class CharacterState:
     knowledge: set[str] = field(default_factory=set)
     memory: list[str] = field(default_factory=list)
     memory_ids: list[str] = field(default_factory=list)
+    # Procedural memory: learned behavioral tendencies by canonical action type.
+    # Values range from -1 (avoid) to +1 (prefer) and change through lived outcomes.
+    habits: dict[str, float] = field(default_factory=dict)
     # Deprecated mirror; authoritative relationship state is WorldState.relationships.
     relationships: dict[str, float] = field(default_factory=dict)
     possessions: dict[str, int] = field(default_factory=dict)
