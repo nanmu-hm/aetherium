@@ -60,11 +60,6 @@ class NarrativeObserver:
                         source_event_ids=[event.id],
                         description="The event changed persistent world or relationship state.",
                     )
-        scenes, sequences, story_arcs = self.structure_builder.build(narrative_state)
-        narrative_state.scenes = scenes
-        narrative_state.sequences = sequences
-        narrative_state.story_arcs = story_arcs
-        return narrative_state
                 )
 
             if participant_count >= 2:
@@ -106,8 +101,8 @@ class NarrativeObserver:
         information_gaps = self.knowledge_analyzer.analyze(state)
         revelations = self.revelation_detector.detect(state, information_gaps)
         importance = self.importance_analyzer.score(state, events)
-        event_ticks = {event.id:event.tick for event in state.event_log}
-        event_ticks.update({event.id:event.tick for event in events})
+        event_ticks = {event.id: event.tick for event in state.event_log}
+        event_ticks.update({event.id: event.tick for event in events})
         convergences = self.convergence_detector.detect(threads, event_ticks)
         foreshadowing = self.foreshadowing_tracker.detect(state)
 
@@ -127,3 +122,9 @@ class NarrativeObserver:
             convergences=convergences,
             foreshadowing=foreshadowing,
         )
+
+        scenes, sequences, story_arcs = self.structure_builder.build(narrative_state)
+        narrative_state.scenes = scenes
+        narrative_state.sequences = sequences
+        narrative_state.story_arcs = story_arcs
+        return narrative_state
