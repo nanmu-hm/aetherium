@@ -117,6 +117,77 @@ class SimulationEngine:
         return f"{actor.name} achieves the goal: {goal.description}."
 
     @staticmethod
+    @staticmethod
+    def _apply_emotional_consequences(
+        state: WorldState,
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Update experienced characters' current emotions from the outcome."""
+        if outcome.status not in {"success", "failure"}:
+            return
+
+        action_type = canonical_action_type(action.action_type)
+        effects = {
+            "travel": (
+                {"joy": 3.0, "hope": 3.0, "fear": -2.0} if outcome.status == "success"
+                else {"fear": 5.0, "regret": 2.0, "hope": -2.0}
+            ),
+            "contact_person": (
+                {"joy": 3.0, "love": 2.0, "longing": -3.0, "resentment": -2.0}
+                if outcome.status == "success"
+                else {"sorrow": 3.0, "anger": 2.0, "resentment": 3.0, "hope": -2.0}
+            ),
+            "help_person": (
+                {"joy": 3.0, "love": 1.0, "hope": 2.0}
+                if outcome.status == "success"
+                else {"sorrow": 3.0, "regret": 2.0, "hope": -1.0}
+            ),
+        }.get(action_type, {})
+
+        def apply(character, changes: dict[str, float], reason: str) -> None:
+            for emotion_name, delta in changes.items():
+                old_value = character.emotions.get(emotion_name, 0.0)
+                new_value = max(0.0, min(100.0, old_value + delta))
+                if new_value == old_value:
+                    continue
+                character.emotions[emotion_name] = new_value
+                consequences.append(
+                    Consequence(
+                        "character",
+                        character.id,
+                        f"emotions.{emotion_name}",
+                        old_value,
+                        new_value,
+                        reason,
+                    )
+                )
+
+        apply(actor, effects, f"emotional response to {outcome.status}")
+
+        if not action.targets:
+            return
+        target = state.characters.get(action.targets[0])
+        if target is None:
+            return
+
+        if action_type == "contact_person":
+            target_effects = (
+                {"joy": 2.0, "hope": 1.0}
+                if outcome.status == "success"
+                else {"sorrow": 2.0, "resentment": 2.0}
+            )
+            apply(target, target_effects, f"emotional response to contact {outcome.status}")
+        elif action_type == "help_person":
+            target_effects = (
+                {"joy": 4.0, "hope": 2.0}
+                if outcome.status == "success"
+                else {"sorrow": 4.0, "resentment": 2.0}
+            )
+            apply(target, target_effects, f"emotional response to help {outcome.status}")
+
     def _update_procedural_habit(
         actor,
         action: ActionCandidate,
@@ -358,6 +429,7 @@ class SimulationEngine:
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
 
+            self._apply_emotional_consequences(state, actor, action, outcome, consequences)
             self._update_procedural_habit(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
