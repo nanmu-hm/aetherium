@@ -24,6 +24,7 @@ class SimulationEngine:
         self.random = random.Random(seed)
         self.memory_kernel = memory_kernel or MemoryKernel()
         self.decision_kernel = DecisionKernel(seed=seed)
+        self.action_resolver = ActionResolver(self.random)
 
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
         """Generate and select one plausible action per active character."""
