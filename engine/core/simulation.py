@@ -116,6 +116,37 @@ class SimulationEngine:
         )
         return f"{actor.name} achieves the goal: {goal.description}."
 
+    @staticmethod
+    def _update_procedural_habit(
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Learn a small action preference from an experienced outcome."""
+        if outcome.status not in {"success", "failure"}:
+            return
+
+        action_type = canonical_action_type(action.action_type)
+        old_value = actor.habits.get(action_type, 0.0)
+        if outcome.status == "success":
+            new_value = old_value + 0.10 * (1.0 - old_value)
+        else:
+            new_value = old_value - 0.10 * (old_value + 1.0)
+
+        new_value = max(-1.0, min(1.0, new_value))
+        actor.habits[action_type] = new_value
+        consequences.append(
+            Consequence(
+                "character",
+                actor.id,
+                f"habits.{action_type}",
+                old_value,
+                new_value,
+                f"procedural learning from {outcome.status}",
+            )
+        )
+
     def _apply_failure_consequences(
         self,
         state: WorldState,
@@ -327,6 +358,7 @@ class SimulationEngine:
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
 
+            self._update_procedural_habit(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
             goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
