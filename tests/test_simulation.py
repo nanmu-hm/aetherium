@@ -411,3 +411,28 @@ def test_failed_contact_creates_persistent_relational_friction():
         and consequence.target_id == "lin:mei"
         for consequence in events[0].consequences
     )
+
+
+def test_failed_help_disappoints_the_recipient():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=50.0, loyalty=40.0))
+    world.add_relationship(RelationshipState("mei", "lin", trust=35.0, loyalty=25.0))
+    action = ActionCandidate(
+        "failed-help",
+        "lin",
+        "help_person",
+        targets=["mei"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    relationship = world.relationships["mei:lin"]
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert relationship.trust == 33.0
+    assert relationship.loyalty == 24.0
