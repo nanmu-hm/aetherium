@@ -148,7 +148,7 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
                 timestamp="0001-01-02T00:00:00",
                 location="town",
                 participants=["lin", "mei"],
-                causes=["tick-1-lin-contact_person"],
+                causes=["tick-1-lin-contact"],
                 facts=["contact"],
             ),
             __import__("engine.core.models", fromlist=["Event"]).Event(
@@ -157,7 +157,7 @@ def test_repeated_contact_gets_a_temporary_social_cooldown():
                 timestamp="0001-01-03T00:00:00",
                 location="town",
                 participants=["lin", "mei"],
-                causes=["tick-2-lin-contact_person"],
+                causes=["tick-2-lin-contact"],
                 facts=["contact"],
             ),
         ]
