@@ -5,7 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 import random
 
-from .actions import choose_action, generate_action_pool
+from .actions import generate_action_pool
+from .decision import DecisionKernel
 from .models import ActionCandidate, Consequence, Event, WorldState
 from ..memory.kernel import MemoryKernel
 
@@ -22,12 +23,14 @@ class SimulationEngine:
     def __init__(self, seed: int = 0, memory_kernel: MemoryKernel | None = None) -> None:
         self.random = random.Random(seed)
         self.memory_kernel = memory_kernel or MemoryKernel()
+        self.decision_kernel = DecisionKernel(seed=seed)
 
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
         """Generate and select one plausible action per active character."""
         selected: list[ActionCandidate] = []
         for character in state.characters.values():
-            action = choose_action(generate_action_pool(state, character.id))
+            pool = generate_action_pool(state, character.id)
+            action, _ = self.decision_kernel.choose(state, pool)
             if action is not None:
                 selected.append(action)
         return selected
