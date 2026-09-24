@@ -56,7 +56,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             action_type="contact_person", targets=[target_id],
             motivation="address an important relationship",
             preconditions=["target is at the same location"],
-            expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35, score=
+            expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35,
             score=(100.0 - trust) / 100.0,
         ))
 
