@@ -15,7 +15,8 @@ class StoryCompletionDetector:
             arc_threads=[thread_by_id[item] for item in arc.thread_ids if item in thread_by_id]
             unresolved=sum(bool(thread.unresolved_question) and thread.status=="open" for thread in arc_threads)
             resolved=sum(thread.status!="open" for thread in arc_threads)
-            payoffs=sum(1 for sequence_id in arc.sequence_ids if sequence_id in callback_payoffs)
+            payoff_events = {event_id for sequence in sequences if sequence.id in arc.sequence_ids for event_id in sequence.scene_ids}
+            payoffs = len(payoff_events.intersection(callback_payoffs))
             if unresolved==0 and resolved>0 and payoffs>0:
                 status="complete"; confidence=0.90; reason="The arc has resolved threads and an observed payoff."
             elif unresolved==0 and arc.completion_signal>=0.75:
