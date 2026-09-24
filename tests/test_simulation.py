@@ -201,3 +201,36 @@ def test_simulation_supports_custom_tick_duration():
     world.timestamp = "0001-01-01T00:00:00"
     SimulationEngine(seed=42, tick_duration_hours=6).step(world)
     assert world.timestamp == "0001-01-01T06:00:00"
+
+
+def test_remembered_failure_reduces_repeat_action_utility():
+    from engine.core.actions import ActionCandidate
+    from engine.core.models import ActionResult, Event
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "retry", "lin", "travel", targets=["town"], confidence=0.8, difficulty=0.4, score=0.5
+    )
+    plain = DecisionKernel(seed=1).evaluate(world, action)
+
+    event = Event(
+        "past-failure",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin", "mei"],
+        ["tick-0-lin-travel"],
+        ["Lin failed to travel."],
+        action_result=ActionResult("failure"),
+    )
+    memory = SimulationEngine(seed=1).memory_kernel.remember_event(
+        world.memory_state, "lin", event, "failed travel"
+    )
+    SimulationEngine(seed=1).memory_kernel.record_event_belief(
+        world.memory_state, "lin", event, memory.id
+    )
+    remembered = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert remembered.utility < plain.utility
