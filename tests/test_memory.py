@@ -54,3 +54,21 @@ def test_lived_event_creates_owner_scoped_belief():
     assert belief.owner_id == "lin"
     assert belief.source_memory_ids == [memory.id]
     assert "failure" in belief.proposition
+
+
+def test_event_belief_uses_canonical_action_type():
+    state = MemoryState()
+    event = Event(
+        "e-contact",
+        0,
+        "0001-01-01T00:00:00",
+        "town",
+        ["lin", "mei"],
+        ["tick-0-lin-contact"],
+        ["Lin speaks with Mei."],
+        action_result=__import__("engine.core.models", fromlist=["ActionResult"]).ActionResult("failure"),
+    )
+    kernel = MemoryKernel()
+    memory = kernel.remember_event(state, "lin", event, "failed conversation")
+    belief = kernel.record_event_belief(state, "lin", event, memory.id)
+    assert belief.proposition.startswith("experience:contact_person:mei:failure")
