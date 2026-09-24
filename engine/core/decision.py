@@ -20,6 +20,7 @@ class DecisionWeights:
     cost: float = 0.35
     uncertainty: float = 0.20
     habit: float = 0.35
+    identity: float = 0.15
 
 
 @dataclass(frozen=True)
@@ -127,6 +128,24 @@ class DecisionKernel:
     def _habit_alignment(character: CharacterState, action: ActionCandidate) -> float:
         action_type = canonical_action_type(action.action_type)
         return max(-1.0, min(1.0, character.habits.get(action_type, 0.0)))
+
+    @staticmethod
+    def _identity_alignment(character: CharacterState, action: ActionCandidate) -> float:
+        """Measure compatibility with the character's current self-concept."""
+        action_type = canonical_action_type(action.action_type)
+        affordances = {
+            "travel": ("independent", "capable"),
+            "contact_person": ("loyal", "reliable"),
+            "help_person": ("compassionate", "reliable"),
+        }
+        dimensions = affordances.get(action_type, ())
+        if not dimensions:
+            return 0.0
+        values = [
+            max(-1.0, min(1.0, character.identity_beliefs.get(name, 0.0)))
+            for name in dimensions
+        ]
+        return sum(values) / len(values)
 
     @staticmethod
     def _emotion_alignment(character: CharacterState, action: ActionCandidate) -> float:
@@ -240,6 +259,7 @@ class DecisionKernel:
         repetition = self._repetition_penalty(state, character, action)
         belief_friction = self._belief_friction(state, character, action)
         habit = self._habit_alignment(character, action)
+        identity = self._identity_alignment(character, action)
         score = (
             self.weights.goal * goal
             + self.weights.values * values
@@ -251,6 +271,7 @@ class DecisionKernel:
             - self.weights.uncertainty * uncertainty
             + self.weights.habit * habit
             - self.weights.habit * repetition
+            + self.weights.identity * identity
             - self.weights.uncertainty * max(0.0, belief_friction)
             + self.weights.uncertainty * min(0.0, belief_friction)
         )
@@ -264,6 +285,8 @@ class DecisionKernel:
         if risk > 0: reasons.append("perceived risk")
         if habit > 0: reasons.append("learned preference")
         if habit < 0: reasons.append("learned avoidance")
+        if identity > 0: reasons.append("self-concept alignment")
+        if identity < 0: reasons.append("self-concept resistance")
         if repetition > 0: reasons.append("recently repeated action")
         if belief_friction > 0: reasons.append("past failure remembered")
         if belief_friction < 0: reasons.append("past success remembered")
