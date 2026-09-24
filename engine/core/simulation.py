@@ -192,7 +192,10 @@ class ActionResolver:
             else 0.5
         )
         base = 0.5 + 0.35 * (ability - action.difficulty)
-        confidence_factor = 0.5 + 0.5 * action.confidence
+        # Confidence should materially affect willingness to take an uncertain
+        # action: low confidence must not turn a very difficult action into a
+        # near-even roll.
+        confidence_factor = 0.25 + 0.75 * action.confidence
         return max(0.05, min(0.95, base * confidence_factor))
 
     def resolve_outcome(
