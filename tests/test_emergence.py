@@ -88,3 +88,34 @@ def test_story_archaeologist_discovers_persistent_thread():
     assert candidates
     assert candidates[0].event_ids
     assert candidates[0].participants == ["a", "b"]
+
+def test_story_archaeologist_deduplicates_one_connected_history_chain():
+    state = WorldState(world_id="test")
+    state.add_character(CharacterState(id="a", name="A"))
+    state.add_character(CharacterState(id="b", name="B"))
+    for i in range(1, 6):
+        state.event_log.append(
+            Event(
+                id=f"chain-{i}",
+                tick=i,
+                timestamp=f"0001-01-{i + 1:02d}T00:00:00",
+                location="town",
+                participants=["a", "b"],
+                causes=[f"choice:a:{i}"],
+                facts=[f"Chain event {i}"],
+                consequences=[
+                    Consequence(
+                        target_type="character",
+                        target_id="a",
+                        field="reputation",
+                        old_value=i,
+                        new_value=i + 1,
+                        reason="Persistent change",
+                    )
+                ],
+            )
+        )
+
+    candidates = StoryArchaeologist().discover(state, min_score=0.1)
+    assert len(candidates) == 1
+    assert candidates[0].event_ids == [f"chain-{i}" for i in range(1, 6)]
