@@ -119,6 +119,9 @@ class WorldState:
         key = f"{relationship.source_id}:{relationship.target_id}"
         self.relationships[key] = relationship
 
+    def get_relationship(self, source_id: str, target_id: str) -> RelationshipState | None:
+        return self.relationships.get(f"{source_id}:{target_id}")
+
     def add_faction(self, faction: FactionState) -> None:
         if faction.id in self.factions:
             raise ValueError(f"Faction already exists: {faction.id}")
