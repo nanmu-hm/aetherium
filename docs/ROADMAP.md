@@ -22,6 +22,21 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [ ] Character-state transitions caused by consequences
 - [ ] Decision errors, uncertainty, and bounded rationality
 
+
+### Phase 2 character-life kernel detail
+
+- [x] Structured episodic memory model
+- [x] Character belief/misbelief model
+- [x] Memory salience and recall decay
+- [x] Cue-driven memory recall
+- [x] Desire opportunity windows and missed chances
+- [x] Vendor-neutral memory store interface
+- [ ] Integrate structured memory into authoritative simulation events
+- [ ] Relationship-history event model
+- [ ] Memory revision/reinterpretation events
+- [ ] Persistent SQLite memory adapter
+- [ ] Optional Graphiti/Mem0 adapter after the Aetherium memory contract stabilizes
+
 ## Phase 3 — Narrative intelligence
 The narrative layer observes the autonomous world; it does not secretly write outcomes into the simulation.
 
