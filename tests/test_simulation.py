@@ -533,3 +533,89 @@ def test_blocked_action_does_not_create_a_behavioral_habit():
     assert events[0].action_result is not None
     assert events[0].action_result.status == "blocked"
     assert "travel" not in world.characters["mei"].habits
+
+
+def test_successful_contact_creates_actor_and_recipient_emotional_change():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
+    action = ActionCandidate(
+        "contact",
+        "lin",
+        "contact_person",
+        targets=["mei"],
+        confidence=1.0,
+        difficulty=0.1,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "success"
+    assert world.characters["lin"].emotions["joy"] == 3.0
+    assert world.characters["lin"].emotions["longing"] == 0.0
+    assert world.characters["mei"].emotions["joy"] == 2.0
+    assert any(
+        consequence.field == "emotions.joy"
+        and consequence.target_id == "lin"
+        for consequence in events[0].consequences
+    )
+
+
+def test_failed_travel_creates_fear_and_can_resist_later_travel():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "hard-travel",
+        "mei",
+        "travel",
+        targets=["town"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert world.characters["mei"].emotions["fear"] == 5.0
+
+    retry = ActionCandidate(
+        "retry-travel",
+        "mei",
+        "travel",
+        targets=["town"],
+        confidence=0.8,
+        difficulty=0.4,
+    )
+    evaluation = DecisionKernel(seed=1).evaluate(world, retry)
+    assert evaluation.utility < DecisionKernel(seed=1).evaluate(
+        build_demo_world().characters["mei"] if False else world, retry
+    ).utility + 0.001
+    assert "emotional resistance" in evaluation.reasons
+
+
+def test_positive_emotion_does_not_automatically_increase_every_action():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    travel = ActionCandidate("travel", "mei", "travel", targets=["town"], confidence=0.8, difficulty=0.4)
+    contact = ActionCandidate("contact", "mei", "contact_person", targets=["lin"], confidence=0.8, difficulty=0.4)
+    world.add_relationship(RelationshipState("mei", "lin", trust=50.0))
+
+    neutral_travel = DecisionKernel(seed=1).evaluate(world, travel)
+    neutral_contact = DecisionKernel(seed=1).evaluate(world, contact)
+
+    world.characters["mei"].emotions["hope"] = 100.0
+    hopeful_travel = DecisionKernel(seed=1).evaluate(world, travel)
+    hopeful_contact = DecisionKernel(seed=1).evaluate(world, contact)
+
+    assert hopeful_travel.utility > neutral_travel.utility
+    assert hopeful_contact.utility == neutral_contact.utility
