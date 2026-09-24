@@ -55,10 +55,10 @@ The narrative layer observes the autonomous world; it does not secretly write ou
 - [ ] Story completion criteria
 
 ## Phase 4 — Story structure and discovery
-- [ ] Beat model
-- [ ] Scene formation
-- [ ] Sequence formation
-- [ ] Story-arc formation
+- [x] Beat model
+- [x] Scene formation
+- [x] Sequence formation
+- [x] Story-arc formation
 - [ ] Multi-arc interleaving
 - [ ] Delayed callbacks and payoff scheduling
 - [ ] Story boundary detection

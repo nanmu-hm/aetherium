@@ -10,6 +10,7 @@ from .foreshadowing import ForeshadowingTracker
 from .importance import NarrativeImportanceAnalyzer
 from .threads import CausalThreadEngine
 from .models import NarrativeBeat, NarrativeSignal, NarrativeState
+from .structure import NarrativeStructureBuilder
 from .rhythm import NarrativeRhythmAnalyzer
 from ..core.models import Event, WorldState
 
@@ -28,6 +29,7 @@ class NarrativeObserver:
         importance_analyzer: NarrativeImportanceAnalyzer | None = None,
         convergence_detector: ThreadConvergenceDetector | None = None,
         foreshadowing_tracker: ForeshadowingTracker | None = None,
+        structure_builder: NarrativeStructureBuilder | None = None,
     ) -> None:
         self.dilemma_detector = dilemma_detector or DilemmaDetector()
         self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
@@ -38,6 +40,7 @@ class NarrativeObserver:
         self.importance_analyzer = importance_analyzer or NarrativeImportanceAnalyzer()
         self.convergence_detector = convergence_detector or ThreadConvergenceDetector()
         self.foreshadowing_tracker = foreshadowing_tracker or ForeshadowingTracker()
+        self.structure_builder = structure_builder or NarrativeStructureBuilder()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -57,6 +60,11 @@ class NarrativeObserver:
                         source_event_ids=[event.id],
                         description="The event changed persistent world or relationship state.",
                     )
+        scenes, sequences, story_arcs = self.structure_builder.build(narrative_state)
+        narrative_state.scenes = scenes
+        narrative_state.sequences = sequences
+        narrative_state.story_arcs = story_arcs
+        return narrative_state
                 )
 
             if participant_count >= 2:
@@ -103,7 +111,7 @@ class NarrativeObserver:
         convergences = self.convergence_detector.detect(threads, event_ticks)
         foreshadowing = self.foreshadowing_tracker.detect(state)
 
-        return NarrativeState(
+        narrative_state = NarrativeState(
             pressure=pressure,
             recent_climax_tick=climax_tick,
             signals=signals,

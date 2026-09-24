@@ -10,6 +10,7 @@ from .information import KnowledgeAsymmetryAnalyzer, RevelationDetector
 from .pressure import NarrativePressureAnalyzer
 from .rhythm import NarrativeRhythmAnalyzer
 from .threads import CausalThreadEngine
+from .structure import NarrativeStructureBuilder
 
 __all__ = [
     "CausalThreadEngine",
@@ -23,5 +24,6 @@ __all__ = [
     "RevelationDetector",
     "StoryArchaeologist",
     "StoryCandidate",
+    "NarrativeStructureBuilder",
     "ThreadConvergenceDetector",
 ]

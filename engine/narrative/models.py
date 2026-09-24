@@ -155,6 +155,48 @@ class NarrativeBeat:
 
 
 @dataclass
+class NarrativeScene:
+    """A contiguous group of beats that can be staged as one scene."""
+
+    id: str
+    beat_ids: list[str] = field(default_factory=list)
+    event_ids: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    start_tick: int = 0
+    end_tick: int = 0
+    pressure: float = 0.0
+    dominant_beat_type: str = "event"
+
+
+@dataclass
+class NarrativeSequence:
+    """A connected run of scenes sharing a causal or relational concern."""
+
+    id: str
+    scene_ids: list[str] = field(default_factory=list)
+    thread_ids: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    tension: float = 0.0
+    status: str = "open"
+    unresolved_questions: list[str] = field(default_factory=list)
+
+
+@dataclass
+class StoryArc:
+    """A discovered story-scale arc derived from sequences and threads."""
+
+    id: str
+    title: str
+    sequence_ids: list[str] = field(default_factory=list)
+    thread_ids: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    tension: float = 0.0
+    phase: str = "emerging"
+    completion_signal: float = 0.0
+    unresolved_questions: list[str] = field(default_factory=list)
+
+
+@dataclass
 class NarrativeState:
     """Derived narrative observations; safe to recompute from the event log."""
 
@@ -172,3 +214,6 @@ class NarrativeState:
     importance: list[NarrativeImportance] = field(default_factory=list)
     convergences: list[ThreadConvergence] = field(default_factory=list)
     foreshadowing: list[ForeshadowingLink] = field(default_factory=list)
+    scenes: list[NarrativeScene] = field(default_factory=list)
+    sequences: list[NarrativeSequence] = field(default_factory=list)
+    story_arcs: list[StoryArc] = field(default_factory=list)
