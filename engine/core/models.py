@@ -25,7 +25,9 @@ class CharacterState:
     emotions: dict[str, float] = field(default_factory=dict)
     location: str = ""
     knowledge: set[str] = field(default_factory=set)
+    # Legacy summaries remain for compatibility; structured memories live in MemoryState.
     memory: list[str] = field(default_factory=list)
+    memory_ids: list[str] = field(default_factory=list)
     relationships: dict[str, float] = field(default_factory=dict)
     possessions: dict[str, int] = field(default_factory=dict)
     abilities: dict[str, float] = field(default_factory=dict)
