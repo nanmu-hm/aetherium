@@ -298,3 +298,60 @@ def test_human_condition_desire_changes_action_utility():
     assert high.utility > low.utility
     assert rest_low.utility < high.utility
     assert "time pressure" in high.reasons
+
+
+def test_successful_help_changes_reciprocal_relationship_state():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.characters["lin"].values = ["loyalty"]
+    world.add_relationship(RelationshipState("lin", "mei", trust=60.0, affection=50.0, loyalty=50.0))
+    world.add_relationship(RelationshipState("mei", "lin", trust=20.0, affection=40.0, loyalty=30.0))
+
+    action = ActionCandidate(
+        "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "success"
+    reciprocal = world.relationships["mei:lin"]
+    assert reciprocal.trust == 25.0
+    assert reciprocal.affection == 42.0
+    assert reciprocal.loyalty == 33.0
+    assert any(
+        item.target_type == "relationship"
+        and item.target_id == "mei:lin"
+        and item.field == "trust"
+        for item in events[0].consequences
+    )
+
+
+def test_relationship_consequence_is_visible_to_later_action_generation():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.characters["mei"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=60.0, affection=50.0, loyalty=50.0))
+    world.add_relationship(RelationshipState("mei", "lin", trust=20.0, affection=40.0, loyalty=30.0))
+    world.characters["mei"].human_condition.desires["belonging"] = 40.0
+
+    before = next(
+        action for action in generate_action_pool(world, "mei")
+        if action.action_type == "contact_person"
+    )
+
+    help_action = ActionCandidate(
+        "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+    SimulationEngine(seed=1).resolve(world, [help_action])
+
+    after = next(
+        action for action in generate_action_pool(world, "mei")
+        if action.action_type == "contact_person"
+    )
+
+    assert after.score < before.score
