@@ -1,0 +1,125 @@
+"""Core state models for the first Aetherium MVP."""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from typing import Any
+
+
+@dataclass
+class Goal:
+    id: str
+    description: str
+    priority: float = 1.0
+    status: str = "active"
+
+
+@dataclass
+class CharacterState:
+    id: str
+    name: str
+    traits: list[str] = field(default_factory=list)
+    values: list[str] = field(default_factory=list)
+    goals: list[Goal] = field(default_factory=list)
+    needs: list[str] = field(default_factory=list)
+    emotions: dict[str, float] = field(default_factory=dict)
+    location: str = ""
+    knowledge: set[str] = field(default_factory=set)
+    memory: list[str] = field(default_factory=list)
+    relationships: dict[str, float] = field(default_factory=dict)
+    possessions: dict[str, int] = field(default_factory=dict)
+    abilities: dict[str, float] = field(default_factory=dict)
+    constraints: list[str] = field(default_factory=list)
+    status: str = "active"
+
+
+@dataclass
+class RelationshipState:
+    source_id: str
+    target_id: str
+    trust: float = 50.0
+    affection: float = 50.0
+    loyalty: float = 50.0
+    fear: float = 0.0
+    respect: float = 50.0
+    resentment: float = 0.0
+    rivalry: float = 0.0
+
+
+@dataclass
+class FactionState:
+    id: str
+    name: str
+    goals: list[str] = field(default_factory=list)
+    values: list[str] = field(default_factory=list)
+    members: set[str] = field(default_factory=set)
+    resources: dict[str, float] = field(default_factory=dict)
+    territory: set[str] = field(default_factory=set)
+    allies: set[str] = field(default_factory=set)
+    enemies: set[str] = field(default_factory=set)
+    stability: float = 50.0
+    reputation: float = 50.0
+
+
+@dataclass
+class ActionCandidate:
+    id: str
+    actor_id: str
+    action_type: str
+    targets: list[str] = field(default_factory=list)
+    motivation: str = ""
+    preconditions: list[str] = field(default_factory=list)
+    expected_outcomes: list[str] = field(default_factory=list)
+    risks: list[str] = field(default_factory=list)
+    confidence: float = 0.5
+    score: float = 0.0
+
+
+@dataclass
+class Consequence:
+    target_type: str
+    target_id: str
+    field: str
+    old_value: Any
+    new_value: Any
+    reason: str = ""
+
+
+@dataclass
+class Event:
+    id: str
+    tick: int
+    timestamp: str
+    location: str
+    participants: list[str]
+    causes: list[str]
+    facts: list[str]
+    consequences: list[Consequence] = field(default_factory=list)
+
+
+@dataclass
+class WorldState:
+    world_id: str
+    tick: int = 0
+    timestamp: str = "0001-01-01T00:00:00"
+    locations: set[str] = field(default_factory=set)
+    characters: dict[str, CharacterState] = field(default_factory=dict)
+    relationships: dict[str, RelationshipState] = field(default_factory=dict)
+    factions: dict[str, FactionState] = field(default_factory=dict)
+    resources: dict[str, float] = field(default_factory=dict)
+    event_log: list[Event] = field(default_factory=list)
+    active_branch: str = "main"
+
+    def add_character(self, character: CharacterState) -> None:
+        if character.id in self.characters:
+            raise ValueError(f"Character already exists: {character.id}")
+        self.characters[character.id] = character
+
+    def add_relationship(self, relationship: RelationshipState) -> None:
+        key = f"{relationship.source_id}:{relationship.target_id}"
+        self.relationships[key] = relationship
+
+    def add_faction(self, faction: FactionState) -> None:
+        if faction.id in self.factions:
+            raise ValueError(f"Faction already exists: {faction.id}")
+        self.factions[faction.id] = faction
