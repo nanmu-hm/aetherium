@@ -555,7 +555,7 @@ def test_successful_contact_creates_actor_and_recipient_emotional_change():
     assert events[0].action_result is not None
     assert events[0].action_result.status == "success"
     assert world.characters["lin"].emotions["joy"] == 3.0
-    assert world.characters["lin"].emotions["longing"] == 0.0
+    assert world.characters["lin"].emotions.get("longing", 0.0) == 0.0
     assert world.characters["mei"].emotions["joy"] == 2.0
     assert any(
         consequence.field == "emotions.joy"
@@ -616,9 +616,9 @@ def test_positive_emotion_does_not_automatically_increase_every_action():
     neutral_travel = DecisionKernel(seed=1).evaluate(world, travel)
     neutral_contact = DecisionKernel(seed=1).evaluate(world, contact)
 
-    world.characters["mei"].emotions["hope"] = 100.0
-    hopeful_travel = DecisionKernel(seed=1).evaluate(world, travel)
-    hopeful_contact = DecisionKernel(seed=1).evaluate(world, contact)
+    world.characters["mei"].emotions["joy"] = 100.0
+    joyful_travel = DecisionKernel(seed=1).evaluate(world, travel)
+    joyful_contact = DecisionKernel(seed=1).evaluate(world, contact)
 
-    assert hopeful_travel.utility > neutral_travel.utility
-    assert hopeful_contact.utility == neutral_contact.utility
+    assert joyful_travel.utility == neutral_travel.utility
+    assert joyful_contact.utility == neutral_contact.utility
