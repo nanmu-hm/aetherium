@@ -60,15 +60,34 @@ class DecisionKernel:
         return sum(scores) / len(scores) if scores else 0.0
 
     @staticmethod
-    def _goal_alignment(character: CharacterState, action: ActionCandidate) -> float:
+    def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
         goal = max((g for g in character.goals if g.status == "active"), key=lambda g: g.priority, default=None)
         if goal is None:
             return 0.0
-        return goal.priority if action.action_type == "pursue_goal" else min(1.0, goal.priority * action.confidence)
+        if action.action_type == "pursue_goal":
+            return goal.priority
+
+        alignment = min(1.0, goal.priority * action.confidence)
+
+        # Relationship-seeking actions become more compelling when the
+        # relationship itself carries unresolved tension. This keeps the
+        # decision grounded in the character's present situation rather than
+        # letting a generic "help" action dominate every tick.
+        if action.action_type == "contact_person" and action.targets:
+            relationship = state.get_relationship(character.id, action.targets[0])
+            if relationship is not None:
+                tension = max(
+                    relationship.resentment,
+                    relationship.fear,
+                    100.0 - relationship.trust,
+                ) / 100.0
+                alignment = min(1.0, alignment + 0.5 * tension)
+
+        return alignment
 
     def evaluate(self, state: WorldState, action: ActionCandidate) -> DecisionEvaluation:
         character = state.characters[action.actor_id]
-        goal = self._goal_alignment(character, action)
+        goal = self._goal_alignment(state, character, action)
         values = self._value_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
         urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
