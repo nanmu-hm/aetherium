@@ -69,14 +69,36 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     if nearby:
         target_id = min(nearby, key=lambda item: _trust(state, character, item))
         trust = _trust(state, character, target_id)
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
-            action_type="contact_person", targets=[target_id],
-            motivation="address an important relationship",
-            preconditions=["target is at the same location"],
-            expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35,
-            score=(100.0 - trust) / 100.0,
-        ))
+
+        recent_contact = 0
+        for event in reversed(state.event_log):
+            if event.participants and event.participants[0] == character.id:
+                if event.causes and event.causes[0].endswith("contact_person"):
+                    recent_contact += 1
+                    if recent_contact >= 2:
+                        break
+                elif recent_contact:
+                    break
+
+        relationship_desire = max(
+            character.human_condition.desires.get("reconciliation", 0.0),
+            character.human_condition.desires.get("belonging", 0.0),
+        )
+        tension = 100.0 - trust
+        contact_pressure = max(0.0, min(100.0, tension + 0.5 * relationship_desire))
+
+        # Contact is an available life option, not a mandatory tick action.
+        # Recent contact creates a temporary social cooldown unless the
+        # relationship is under meaningful pressure.
+        if contact_pressure >= 35.0 and (recent_contact == 0 or contact_pressure >= 65.0):
+            pool.append(ActionCandidate(
+                id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
+                action_type="contact_person", targets=[target_id],
+                motivation="address an important relationship",
+                preconditions=["target is at the same location"],
+                expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35,
+                score=(contact_pressure / 100.0),
+            ))
 
     if _has_value(character, "loyalty") and _goal_supports_action(character, "help_person") and _relationship_targets(state, character):
         targets = _relationship_targets(state, character)
