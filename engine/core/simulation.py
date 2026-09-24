@@ -61,34 +61,46 @@ class SimulationEngine:
             consequences: list[Consequence] = []
             facts: list[str] = []
 
-            if action.action_type == "travel":
-                destination = action.targets[0]
-                old = actor.location
-                actor.location = destination
-                consequences.append(Consequence("character", actor.id, "location", old, destination, "travel"))
-                facts.append(f"{actor.name} travels from {old} to {destination}.")
-
-            elif action.action_type == "contact_person":
-                target = state.characters.get(action.targets[0])
-                relationship = state.get_relationship(actor.id, target.id) if target else None
-                if target is not None and relationship is not None and target.location == actor.location:
-                    old_trust = relationship.trust
-                    old_affection = relationship.affection
-                    relationship.trust = min(100.0, relationship.trust + 2.0)
-                    relationship.affection = min(100.0, relationship.affection + 1.0)
-                    facts.append(f"{actor.name} speaks with {target.name} at {actor.location}.")
-                    consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "trust", old_trust, relationship.trust, "successful contact"))
-                    consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "affection", old_affection, relationship.affection, "successful contact"))
-                elif target is not None:
-                    facts.append(f"{actor.name} cannot meet {target.name}; they are in different locations.")
-
-            elif action.action_type == "help_person":
-                target = state.characters.get(action.targets[0])
-                if target is not None:
-                    facts.append(f"{actor.name} decides to help {target.name}.")
-
+            precondition = self.precondition_engine.check(state, action)
+            if not precondition.satisfied:
+                outcome = ActionResult("blocked", "; ".join(precondition.reasons))
+                facts.append(f"{actor.name} cannot attempt {action.action_type}: {outcome.reason}.")
             else:
-                facts.append(f"{actor.name} attempts to {action.motivation}.")
+                outcome = self.action_resolver.resolve_outcome(state, action)
+
+                if action.action_type == "travel":
+                    destination = action.targets[0]
+                    if outcome.status == "success":
+                        old = actor.location
+                        actor.location = destination
+                        consequences.append(Consequence("character", actor.id, "location", old, destination, "travel"))
+                        facts.append(f"{actor.name} travels from {old} to {destination}.")
+                    else:
+                        facts.append(f"{actor.name} attempts to travel to {destination}, but fails.")
+
+                elif action.action_type == "contact_person":
+                    target = state.characters[action.targets[0]]
+                    relationship = state.get_relationship(actor.id, target.id)
+                    if outcome.status == "success" and relationship is not None:
+                        old_trust = relationship.trust
+                        old_affection = relationship.affection
+                        relationship.trust = min(100.0, relationship.trust + 2.0)
+                        relationship.affection = min(100.0, relationship.affection + 1.0)
+                        facts.append(f"{actor.name} speaks with {target.name} at {actor.location}.")
+                        consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "trust", old_trust, relationship.trust, "successful contact"))
+                        consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "affection", old_affection, relationship.affection, "successful contact"))
+                    else:
+                        facts.append(f"{actor.name} speaks with {target.name}, but the interaction does not go as intended.")
+
+                elif action.action_type == "help_person":
+                    target = state.characters[action.targets[0]]
+                    if outcome.status == "success":
+                        facts.append(f"{actor.name} successfully helps {target.name}.")
+                    else:
+                        facts.append(f"{actor.name} tries to help {target.name}, but fails.")
+
+                else:
+                    facts.append(f"{actor.name} attempts to {action.motivation} and {outcome.status}.")
 
             events.append(Event(
                 id=f"event-{state.tick}-{actor.id}-{action.action_type}",
@@ -96,7 +108,10 @@ class SimulationEngine:
                 timestamp=state.timestamp,
                 location=actor.location,
                 participants=[actor.id, *action.targets],
-                causes=[action.id], action_result=outcome, facts=facts, consequences=consequences,
+                causes=[action.id],
+                facts=facts,
+                action_result=outcome,
+                consequences=consequences,
             ))
 
         for event in events:
