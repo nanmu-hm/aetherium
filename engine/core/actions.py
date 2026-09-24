@@ -28,6 +28,24 @@ def _trust(state: WorldState, character: CharacterState, target_id: str) -> floa
     return character.relationships.get(target_id, 50.0)
 
 
+def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
+    goal = max(
+        (g for g in character.goals if g.status == "active"),
+        key=lambda item: item.priority,
+        default=None,
+    )
+    if goal is None:
+        return False
+
+    text = goal.description.lower()
+    keywords = {
+        "help_person": ("help", "protect", "support", "save"),
+        "contact_person": ("find", "reconcile", "talk", "meet", "contact", "friend"),
+        "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
+    }
+    return any(word in text for word in keywords.get(action_type, ()))
+
+
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
     """Generate plausible actions without deciding which one must happen."""
     character = state.characters[character_id]
@@ -60,7 +78,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             score=(100.0 - trust) / 100.0,
         ))
 
-    if _has_value(character, "loyalty") and _relationship_targets(state, character):
+    if _has_value(character, "loyalty") and _goal_supports_action(character, "help_person") and _relationship_targets(state, character):
         targets = _relationship_targets(state, character)
         target_id = max(targets, key=lambda item: _trust(state, character, item))
         pool.append(ActionCandidate(
