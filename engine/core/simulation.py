@@ -119,3 +119,23 @@ class SimulationEngine:
         current_tick = state.tick
         state.tick += 1
         return SimulationResult(current_tick, actions, events, errors)
+
+
+class ActionResolver:
+    """Resolve probabilistic outcomes from current state with a seeded RNG."""
+
+    def __init__(self, rng: random.Random) -> None:
+        self.rng = rng
+
+    def probability(self, state: WorldState, action: ActionCandidate) -> float:
+        actor = state.characters[action.actor_id]
+        ability = actor.abilities.get(action.required_ability, 0.5) if action.required_ability else 0.5
+        base = 0.5 + 0.35 * (ability - action.difficulty)
+        confidence_factor = 0.5 + 0.5 * action.confidence
+        return max(0.05, min(0.95, base * confidence_factor))
+
+    def resolve_outcome(self, state: WorldState, action: ActionCandidate) -> ActionResult:
+        probability = self.probability(state, action)
+        if self.rng.random() <= probability:
+            return ActionResult("success", "action succeeded", probability)
+        return ActionResult("failure", "action failed despite being attempted", probability)
