@@ -67,3 +67,9 @@ def test_genesis_has_recovery_between_repeated_travel_actions():
         second > first + 1
         for first, second in zip(travel_ticks, travel_ticks[1:])
     )
+
+
+def test_genesis_clock_advances_with_simulation_ticks():
+    world = run_genesis(ticks=12, seed=7)
+    assert world.timestamp == "0001-01-13T00:00:00"
+    assert len({event.timestamp for event in world.event_log}) > 1
