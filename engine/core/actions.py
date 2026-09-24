@@ -43,11 +43,13 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                     actor_id=character.id,
                     action_type="contact_person",
                     targets=[target_id],
-                motivation="address an important relationship",
-                confidence=0.65,
-                score=(100.0 - trust) / 100.0,
+                    motivation="address an important relationship",
+                    preconditions=["target is at the same location"],
+                    expected_outcomes=["relationship may change"],
+                    confidence=0.65,
+                    score=(100.0 - trust) / 100.0,
+                )
             )
-        )
 
     if "loyalty" in {value.lower() for value in character.values} and character.relationships:
         target_id = max(character.relationships, key=character.relationships.get)
