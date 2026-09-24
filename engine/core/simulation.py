@@ -66,6 +66,12 @@ class SimulationEngine:
             )
             character.memory_ids.append(memory.id)
             character.memory.append(summary)
+            self.memory_kernel.record_event_belief(
+                state.memory_state,
+                character_id,
+                event,
+                memory.id,
+            )
 
     @staticmethod
     def _goal_matches_action(goal_description: str, action_type: str) -> bool:
