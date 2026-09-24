@@ -108,3 +108,25 @@ def test_precondition_blocks_without_roll() -> None:
     result = PreconditionEngine().check(world, action)
     assert result.satisfied is False
     assert "does not exist" in result.reasons[0]
+
+
+def test_successful_goal_action_marks_goal_achieved():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].description = "help a friend"
+    action = ActionCandidate(
+        "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+    events = SimulationEngine(seed=1).resolve(world, [action])
+    assert world.characters["lin"].goals[0].status == "achieved"
+    assert any(item.target_type == "goal" for item in events[0].consequences)
+
+
+def test_achieved_goal_no_longer_generates_matching_help_action():
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(
+        world, "lin"
+    )
+    assert not any(action.action_type == "help_person" for action in pool)
