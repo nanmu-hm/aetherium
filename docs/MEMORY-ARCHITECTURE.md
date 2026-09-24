@@ -75,6 +75,14 @@ Identity evidence is experience-based and bounded:
 
 Identity changes are small and cumulative. A single event cannot rewrite the character, but repeated experience can make a self-concept durable. The decision kernel can use that self-concept as a modest compatibility signal, allowing character identity to become part of the causal loop without becoming destiny.
 
+### Relationship history
+
+Relationship scores are current summaries; relationship history preserves the concrete events and score changes that produced them. Each entry keeps the affected relationship, action, outcome, event, and field-level changes. This history is append-only in the MVP, so later analysis can explain why a relationship changed instead of inferring causes from the latest numbers alone.
+
+### Memory revision / reinterpretation
+
+A memory keeps its original experience while allowing later interpretations to be appended as explicit revisions. A revision records the previous interpretation, the new interpretation, why it changed, the supporting later memories, and the revised confidence. The original event and prior interpretation are never erased.
+
 ### Belief / misbelief
 
 Characters may hold incorrect interpretations. The simulation must preserve the distinction between an incorrect belief and an incorrect world fact.

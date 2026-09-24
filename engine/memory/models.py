@@ -37,6 +37,33 @@ class Belief:
 
 
 @dataclass
+class RelationshipHistoryEntry:
+    id: str
+    relationship_id: str
+    event_id: str
+    tick: int
+    actor_id: str
+    target_id: str
+    action_type: str
+    outcome: str
+    changes: dict[str, tuple[float, float]] = field(default_factory=dict)
+    summary: str = ""
+
+
+@dataclass
+class MemoryRevision:
+    id: str
+    memory_id: str
+    owner_id: str
+    tick: int
+    previous_interpretation: str
+    new_interpretation: str
+    reason: str = ""
+    evidence_memory_ids: list[str] = field(default_factory=list)
+    confidence: float = 1.0
+
+
+@dataclass
 class Desire:
     id: str
     owner_id: str
@@ -57,6 +84,8 @@ class MemoryState:
     memories: dict[str, Memory] = field(default_factory=dict)
     beliefs: dict[str, Belief] = field(default_factory=dict)
     desires: dict[str, Desire] = field(default_factory=dict)
+    relationship_history: dict[str, list[RelationshipHistoryEntry]] = field(default_factory=dict)
+    memory_revisions: dict[str, list[MemoryRevision]] = field(default_factory=dict)
 
     def add_memory(self, memory: Memory) -> None:
         self.memories[memory.id] = memory
@@ -66,3 +95,9 @@ class MemoryState:
 
     def add_desire(self, desire: Desire) -> None:
         self.desires[desire.id] = desire
+
+    def add_relationship_history(self, entry: RelationshipHistoryEntry) -> None:
+        self.relationship_history.setdefault(entry.relationship_id, []).append(entry)
+
+    def add_memory_revision(self, revision: MemoryRevision) -> None:
+        self.memory_revisions.setdefault(revision.memory_id, []).append(revision)

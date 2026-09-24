@@ -72,3 +72,67 @@ def test_event_belief_uses_canonical_action_type():
     memory = kernel.remember_event(state, "lin", event, "failed conversation")
     belief = kernel.record_event_belief(state, "lin", event, memory.id)
     assert belief.proposition.startswith("experience:contact_person:mei:failure")
+
+
+def test_relationship_history_preserves_causal_changes():
+    from engine.core.models import ActionCandidate, RelationshipState
+    from engine.core.simulation import SimulationEngine
+
+    from tests.test_simulation import build_demo_world
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
+    action = ActionCandidate(
+        "contact", "lin", "contact_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    history = world.memory_state.relationship_history["lin:mei"]
+    assert history
+    assert history[0].event_id == event.id
+    assert history[0].changes["trust"] == (40.0, 42.0)
+    assert history[0].outcome == "success"
+
+
+def test_memory_revision_preserves_old_interpretation():
+    state = MemoryState()
+    event = Event("e1", 0, "0001-01-01T00:00:00", "town", ["lin"], ["tick-0-lin-travel"], ["Lin failed to travel."])
+    kernel = MemoryKernel()
+    memory = kernel.remember_event(state, "lin", event, "I could not leave.", confidence=0.8)
+    memory.interpretation = "I was blocked by circumstances."
+
+    revision = kernel.revise_memory(
+        state,
+        memory.id,
+        "I hesitated and chose not to leave.",
+        tick=4,
+        reason="Later evidence changed how Lin understood the event.",
+        confidence=0.6,
+    )
+
+    assert revision.previous_interpretation == "I was blocked by circumstances."
+    assert revision.new_interpretation == "I hesitated and chose not to leave."
+    assert state.memories[memory.id].interpretation == revision.new_interpretation
+    assert state.memories[memory.id].confidence == 0.6
+    assert state.memory_revisions[memory.id] == [revision]
+
+
+def test_memory_revision_can_reference_later_evidence():
+    state = MemoryState()
+    kernel = MemoryKernel()
+    e1 = Event("e1", 0, "t", "town", ["lin"], ["tick-0-lin-contact"], ["Lin speaks with Mei."])
+    e2 = Event("e2", 2, "t", "town", ["lin"], ["tick-2-lin-contact"], ["Lin learns why Mei left."])
+    m1 = kernel.remember_event(state, "lin", e1, "Mei refused to meet me.")
+    m2 = kernel.remember_event(state, "lin", e2, "I learn the reason.")
+    revision = kernel.revise_memory(
+        state,
+        m1.id,
+        "Mei was protecting me rather than rejecting me.",
+        tick=2,
+        reason="Later explanation from Mei.",
+        evidence_memory_ids=[m2.id],
+    )
+
+    assert revision.evidence_memory_ids == [m2.id]
+    assert revision.id.startswith("revision-")

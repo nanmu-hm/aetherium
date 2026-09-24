@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 
-from .models import Belief, Desire, Memory, MemoryState
+from .models import Belief, Desire, Memory, MemoryRevision, MemoryState, RelationshipHistoryEntry
 from ..core.models import Event
 from ..core.action_types import canonical_action_type
 
@@ -80,6 +80,73 @@ class MemoryKernel:
         )
         state.add_belief(belief)
         return belief
+
+    def record_relationship_history(self, state: MemoryState, event: Event) -> list[RelationshipHistoryEntry]:
+        """Preserve relationship-changing event history separately from current scores."""
+        if event.action_result is None or event.action_result.status not in {"success", "failure"}:
+            return []
+
+        action_type = canonical_action_type(event.causes[0].rsplit("-", 1)[-1]) if event.causes else "unknown"
+        grouped: dict[str, dict[str, tuple[float, float]]] = {}
+        for consequence in event.consequences:
+            if consequence.target_type != "relationship":
+                continue
+            if consequence.field in {"trust", "affection", "loyalty", "fear", "respect", "resentment", "rivalry"}:
+                old = float(consequence.old_value)
+                new = float(consequence.new_value)
+                grouped.setdefault(consequence.target_id, {})[consequence.field] = (old, new)
+
+        entries: list[RelationshipHistoryEntry] = []
+        for relationship_id, changes in grouped.items():
+            parts = relationship_id.split(":", 1)
+            if len(parts) != 2:
+                continue
+            actor_id, target_id = parts
+            entry = RelationshipHistoryEntry(
+                id=f"relationship-history-{event.id}-{relationship_id}",
+                relationship_id=relationship_id,
+                event_id=event.id,
+                tick=event.tick,
+                actor_id=actor_id,
+                target_id=target_id,
+                action_type=action_type,
+                outcome=event.action_result.status,
+                changes=changes,
+                summary=event.facts[0] if event.facts else "",
+            )
+            state.add_relationship_history(entry)
+            entries.append(entry)
+        return entries
+
+    def revise_memory(
+        self,
+        state: MemoryState,
+        memory_id: str,
+        new_interpretation: str,
+        tick: int,
+        reason: str = "",
+        evidence_memory_ids: list[str] | None = None,
+        confidence: float | None = None,
+    ) -> MemoryRevision:
+        """Record a new interpretation without destroying the prior one."""
+        memory = state.memories[memory_id]
+        previous = memory.interpretation
+        revision = MemoryRevision(
+            id=f"revision-{memory_id}-{tick}-{len(state.memory_revisions.get(memory_id, [])) + 1}",
+            memory_id=memory_id,
+            owner_id=memory.owner_id,
+            tick=tick,
+            previous_interpretation=previous,
+            new_interpretation=new_interpretation,
+            reason=reason,
+            evidence_memory_ids=list(evidence_memory_ids or ()),
+            confidence=memory.confidence if confidence is None else max(0.0, min(1.0, confidence)),
+        )
+        memory.interpretation = new_interpretation
+        if confidence is not None:
+            memory.confidence = revision.confidence
+        state.add_memory_revision(revision)
+        return revision
 
     def advance_desires(self, state: MemoryState, current_tick: int) -> None:
         for desire in state.desires.values():

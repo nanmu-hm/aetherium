@@ -73,6 +73,7 @@ class SimulationEngine:
                 event,
                 memory.id,
             )
+        self.memory_kernel.record_relationship_history(state.memory_state, event)
 
     @staticmethod
     def _goal_matches_action(goal_description: str, action_type: str) -> bool:

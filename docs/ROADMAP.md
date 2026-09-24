@@ -33,8 +33,8 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [x] Desire opportunity windows and missed chances
 - [x] Vendor-neutral memory store interface
 - [x] Integrate structured memory into authoritative simulation events
-- [ ] Relationship-history event model
-- [ ] Memory revision/reinterpretation events
+- [x] Relationship-history event model
+- [x] Memory revision/reinterpretation events
 - [ ] Persistent SQLite memory adapter
 - [ ] Optional Graphiti/Mem0 adapter after the Aetherium memory contract stabilizes
 
