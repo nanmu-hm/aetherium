@@ -8,6 +8,7 @@ import random
 from .actions import generate_action_pool
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
+from .preconditions import PreconditionEngine
 from ..memory.kernel import MemoryKernel
 
 
@@ -25,6 +26,7 @@ class SimulationEngine:
         self.memory_kernel = memory_kernel or MemoryKernel()
         self.decision_kernel = DecisionKernel(seed=seed)
         self.action_resolver = ActionResolver(self.random)
+        self.precondition_engine = PreconditionEngine()
 
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
         """Generate and select one plausible action per active character."""
@@ -44,14 +46,16 @@ class SimulationEngine:
                 continue
             summary = event.facts[0] if event.facts else "An event occurred."
             memory = self.memory_kernel.remember_event(
-                state.memory_state, character_id, event, summary,
+                state.memory_state,
+                character_id,
+                event,
+                summary,
                 emotional_salience=0.55 if len(event.participants) > 1 else 0.35,
                 personal_importance=0.5,
                 relationship_importance=0.5 if len(event.participants) > 1 else 0.0,
                 unresolved=bool(event.causes),
             )
             character.memory_ids.append(memory.id)
-            # Legacy human-readable memory remains available during migration.
             character.memory.append(summary)
 
     def resolve(self, state: WorldState, actions: list[ActionCandidate]) -> list[Event]:
@@ -64,7 +68,9 @@ class SimulationEngine:
             precondition = self.precondition_engine.check(state, action)
             if not precondition.satisfied:
                 outcome = ActionResult("blocked", "; ".join(precondition.reasons))
-                facts.append(f"{actor.name} cannot attempt {action.action_type}: {outcome.reason}.")
+                facts.append(
+                    f"{actor.name} cannot attempt {action.action_type}: {outcome.reason}."
+                )
             else:
                 outcome = self.action_resolver.resolve_outcome(state, action)
 
@@ -73,10 +79,16 @@ class SimulationEngine:
                     if outcome.status == "success":
                         old = actor.location
                         actor.location = destination
-                        consequences.append(Consequence("character", actor.id, "location", old, destination, "travel"))
+                        consequences.append(
+                            Consequence(
+                                "character", actor.id, "location", old, destination, "travel"
+                            )
+                        )
                         facts.append(f"{actor.name} travels from {old} to {destination}.")
                     else:
-                        facts.append(f"{actor.name} attempts to travel to {destination}, but fails.")
+                        facts.append(
+                            f"{actor.name} attempts to travel to {destination}, but fails."
+                        )
 
                 elif action.action_type == "contact_person":
                     target = state.characters[action.targets[0]]
@@ -86,11 +98,34 @@ class SimulationEngine:
                         old_affection = relationship.affection
                         relationship.trust = min(100.0, relationship.trust + 2.0)
                         relationship.affection = min(100.0, relationship.affection + 1.0)
-                        facts.append(f"{actor.name} speaks with {target.name} at {actor.location}.")
-                        consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "trust", old_trust, relationship.trust, "successful contact"))
-                        consequences.append(Consequence("relationship", f"{actor.id}:{target.id}", "affection", old_affection, relationship.affection, "successful contact"))
+                        facts.append(
+                            f"{actor.name} speaks with {target.name} at {actor.location}."
+                        )
+                        consequences.append(
+                            Consequence(
+                                "relationship",
+                                f"{actor.id}:{target.id}",
+                                "trust",
+                                old_trust,
+                                relationship.trust,
+                                "successful contact",
+                            )
+                        )
+                        consequences.append(
+                            Consequence(
+                                "relationship",
+                                f"{actor.id}:{target.id}",
+                                "affection",
+                                old_affection,
+                                relationship.affection,
+                                "successful contact",
+                            )
+                        )
                     else:
-                        facts.append(f"{actor.name} speaks with {target.name}, but the interaction does not go as intended.")
+                        facts.append(
+                            f"{actor.name} speaks with {target.name}, "
+                            "but the interaction does not go as intended."
+                        )
 
                 elif action.action_type == "help_person":
                     target = state.characters[action.targets[0]]
@@ -100,19 +135,23 @@ class SimulationEngine:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
                 else:
-                    facts.append(f"{actor.name} attempts to {action.motivation} and {outcome.status}.")
+                    facts.append(
+                        f"{actor.name} attempts to {action.motivation} and {outcome.status}."
+                    )
 
-            events.append(Event(
-                id=f"event-{state.tick}-{actor.id}-{action.action_type}",
-                tick=state.tick,
-                timestamp=state.timestamp,
-                location=actor.location,
-                participants=[actor.id, *action.targets],
-                causes=[action.id],
-                facts=facts,
-                action_result=outcome,
-                consequences=consequences,
-            ))
+            events.append(
+                Event(
+                    id=f"event-{state.tick}-{actor.id}-{action.action_type}",
+                    tick=state.tick,
+                    timestamp=state.timestamp,
+                    location=actor.location,
+                    participants=[actor.id, *action.targets],
+                    causes=[action.id],
+                    facts=facts,
+                    action_result=outcome,
+                    consequences=consequences,
+                )
+            )
 
         for event in events:
             state.event_log.append(event)
@@ -123,7 +162,9 @@ class SimulationEngine:
         errors: list[str] = []
         for character in state.characters.values():
             if character.location and character.location not in state.locations:
-                errors.append(f"{character.id} is at unknown location {character.location!r}")
+                errors.append(
+                    f"{character.id} is at unknown location {character.location!r}"
+                )
         return errors
 
     def step(self, state: WorldState) -> SimulationResult:
@@ -145,13 +186,21 @@ class ActionResolver:
 
     def probability(self, state: WorldState, action: ActionCandidate) -> float:
         actor = state.characters[action.actor_id]
-        ability = actor.abilities.get(action.required_ability, 0.5) if action.required_ability else 0.5
+        ability = (
+            actor.abilities.get(action.required_ability, 0.5)
+            if action.required_ability
+            else 0.5
+        )
         base = 0.5 + 0.35 * (ability - action.difficulty)
         confidence_factor = 0.5 + 0.5 * action.confidence
         return max(0.05, min(0.95, base * confidence_factor))
 
-    def resolve_outcome(self, state: WorldState, action: ActionCandidate) -> ActionResult:
+    def resolve_outcome(
+        self, state: WorldState, action: ActionCandidate
+    ) -> ActionResult:
         probability = self.probability(state, action)
         if self.rng.random() <= probability:
             return ActionResult("success", "action succeeded", probability)
-        return ActionResult("failure", "action failed despite being attempted", probability)
+        return ActionResult(
+            "failure", "action failed despite being attempted", probability
+        )
