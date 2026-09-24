@@ -23,3 +23,28 @@ def test_same_location_contact_changes_relationship() -> None:
     assert world.relationships["lin:mei"].trust == 42.0
     assert world.relationships["lin:mei"].affection == 51.0
     assert any(item.field == "trust" for item in contact.consequences)
+
+
+def test_simulation_records_structured_memories_for_participants() -> None:
+    world = build_demo_world()
+    world.characters["lin"].relationships["mei"] = 40.0
+    world.characters["mei"].relationships["lin"] = 50.0
+    world.characters["lin"].goals[0].priority = 0.2
+    world.characters["mei"].goals[0].priority = 0.2
+    world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
+    result = SimulationEngine(seed=42).step(world)
+    assert result.events
+    assert world.memory_state.memories
+    assert world.characters["lin"].memory_ids
+    memory = world.memory_state.memories[world.characters["lin"].memory_ids[0]]
+    assert memory.owner_id == "lin"
+    assert memory.event_id == result.events[0].id
+
+
+def test_authoritative_relationship_is_used_for_action_scoring() -> None:
+    world = build_demo_world()
+    world.characters["lin"].relationships["mei"] = 99.0
+    world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(world, "lin")
+    contact = next(action for action in pool if action.action_type == "contact_person")
+    assert contact.score == 0.9
