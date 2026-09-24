@@ -28,6 +28,7 @@ class CharacterState:
     # Legacy summaries remain for compatibility; structured memories live in MemoryState.
     memory: list[str] = field(default_factory=list)
     memory_ids: list[str] = field(default_factory=list)
+    # Deprecated mirror; authoritative relationship state is WorldState.relationships.
     relationships: dict[str, float] = field(default_factory=dict)
     possessions: dict[str, int] = field(default_factory=dict)
     abilities: dict[str, float] = field(default_factory=dict)
