@@ -80,6 +80,14 @@ class ActionCandidate:
 
 
 @dataclass
+@dataclass
+class ActionResult:
+    status: str  # success / failure / blocked
+    reason: str = ""
+    probability: float = 1.0
+
+
+@dataclass
 class Consequence:
     target_type: str
     target_id: str
