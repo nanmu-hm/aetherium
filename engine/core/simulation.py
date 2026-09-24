@@ -243,7 +243,7 @@ class SimulationEngine:
                 action_type = event.causes[0].rsplit("-", 1)[-1] if event.causes else ""
                 satisfaction = {
                     "travel": {"freedom": 35.0},
-                    "contact_person": {"reconciliation": 15.0, "belonging": 10.0},
+                    "contact": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
