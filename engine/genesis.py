@@ -89,6 +89,8 @@ if __name__ == "__main__":
     print(f"events={len(world.event_log)}")
     print(f"memories={len(world.memory_state.memories)}")
     print(f"story_candidates={len(candidates)}")
+    print(f"final_timestamp={world.timestamp}")
+    print(f"beliefs={len(world.memory_state.beliefs)}")
     print("history:")
     for event in world.event_log:
         status = event.action_result.status if event.action_result else "unknown"
@@ -107,4 +109,22 @@ if __name__ == "__main__":
             f"events={len(candidate.event_ids)} "
             f"participants={','.join(candidate.participants)} "
             f"event_ids={','.join(candidate.event_ids)}"
+        )
+
+
+    print("final_state:")
+    for character_id in sorted(world.characters):
+        character = world.characters[character_id]
+        desires = ", ".join(
+            f"{name}={value:.1f}"
+            for name, value in sorted(character.human_condition.desires.items())
+        )
+        beliefs = [
+            belief.proposition
+            for belief in world.memory_state.beliefs.values()
+            if belief.owner_id == character_id
+        ]
+        print(
+            f"  {character.name}: location={character.location} "
+            f"desires={desires or '(none)'} beliefs={len(beliefs)}"
         )
