@@ -622,3 +622,85 @@ def test_positive_emotion_does_not_automatically_increase_every_action():
 
     assert joyful_travel.utility == neutral_travel.utility
     assert joyful_contact.utility == neutral_contact.utility
+
+
+def test_successful_help_builds_positive_self_concept_evidence():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "success"
+    assert world.characters["lin"].identity_beliefs["compassionate"] == 0.08
+    assert world.characters["lin"].identity_beliefs["reliable"] == 0.08
+    assert any(
+        item.field == "identity_beliefs.reliable"
+        for item in events[0].consequences
+    )
+
+
+def test_failed_travel_builds_negative_self_concept_evidence():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "hard-travel",
+        "mei",
+        "travel",
+        targets=["town"],
+        confidence=0.1,
+        difficulty=0.99,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "failure"
+    assert world.characters["mei"].identity_beliefs["independent"] == -0.08
+    assert world.characters["mei"].identity_beliefs["capable"] == -0.08
+
+
+def test_blocked_action_does_not_create_self_concept_evidence():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    action = ActionCandidate(
+        "blocked-travel",
+        "mei",
+        "travel",
+        targets=["missing-place"],
+        confidence=1.0,
+        difficulty=0.1,
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert world.characters["mei"].identity_beliefs == {}
+
+
+def test_self_concept_influences_matching_action_utility():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    action = ActionCandidate(
+        "help", "lin", "help_person", targets=["mei"], confidence=0.8, difficulty=0.4
+    )
+
+    low = DecisionKernel(seed=1).evaluate(world, action)
+    world.characters["lin"].identity_beliefs["reliable"] = 1.0
+    world.characters["lin"].identity_beliefs["compassionate"] = 1.0
+    high = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert high.utility > low.utility
+    assert "self-concept alignment" in high.reasons
