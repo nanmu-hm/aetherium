@@ -70,14 +70,14 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         target_id = min(nearby, key=lambda item: _trust(state, character, item))
         trust = _trust(state, character, target_id)
 
-        recent_contact = 0
+        recent_contacts: list = []
         for event in reversed(state.event_log):
             if event.participants and event.participants[0] == character.id:
                 if event.causes and event.causes[0].endswith("-contact"):
-                    recent_contact += 1
-                    if recent_contact >= 2:
+                    recent_contacts.append(event)
+                    if len(recent_contacts) >= 2:
                         break
-                elif recent_contact:
+                elif recent_contacts:
                     break
 
         relationship_desire = max(
@@ -87,10 +87,18 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         tension = 100.0 - trust
         contact_pressure = max(0.0, min(100.0, tension + 0.5 * relationship_desire))
 
+        last_contact_succeeded = bool(
+            recent_contacts
+            and recent_contacts[0].action_result is not None
+            and recent_contacts[0].action_result.status == "success"
+        )
+        severe_pressure = contact_pressure >= 85.0
+        recent_success_cooldown = len(recent_contacts) >= 2 and last_contact_succeeded and not severe_pressure
+
         # Contact is an available life option, not a mandatory tick action.
-        # Recent contact creates a temporary social cooldown unless the
-        # relationship is under meaningful pressure.
-        if contact_pressure >= 35.0 and (recent_contact == 0 or contact_pressure >= 65.0):
+        # A successful recent conversation creates a stronger cooldown; repeated
+        # attempts are still possible when unresolved pressure is genuinely high.
+        if contact_pressure >= 35.0 and not recent_success_cooldown:
             pool.append(ActionCandidate(
                 id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
                 action_type="contact_person", targets=[target_id],
