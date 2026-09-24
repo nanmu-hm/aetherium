@@ -188,6 +188,46 @@ class SimulationEngine:
             apply(target, target_effects, f"emotional response to help {outcome.status}")
 
     @staticmethod
+    def _update_identity_beliefs(
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Update self-concept gradually from lived success or failure."""
+        if outcome.status not in {"success", "failure"}:
+            return
+
+        affordances = {
+            "travel": ("independent", "capable"),
+            "contact_person": ("loyal", "reliable"),
+            "help_person": ("compassionate", "reliable"),
+        }
+        action_type = canonical_action_type(action.action_type)
+        dimensions = affordances.get(action_type, ())
+        if not dimensions:
+            return
+
+        direction = 1.0 if outcome.status == "success" else -1.0
+        learning_rate = 0.08
+        for dimension in dimensions:
+            old_value = actor.identity_beliefs.get(dimension, 0.0)
+            target = 1.0 if direction > 0 else -1.0
+            new_value = old_value + learning_rate * (target - old_value)
+            new_value = max(-1.0, min(1.0, new_value))
+            actor.identity_beliefs[dimension] = new_value
+            consequences.append(
+                Consequence(
+                    "character",
+                    actor.id,
+                    f"identity_beliefs.{dimension}",
+                    old_value,
+                    new_value,
+                    f"self-concept updated by {outcome.status} {action_type}",
+                )
+            )
+
+    @staticmethod
     def _update_procedural_habit(
         actor,
         action: ActionCandidate,
@@ -431,6 +471,7 @@ class SimulationEngine:
 
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
             self._update_procedural_habit(actor, action, outcome, consequences)
+            self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
             goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
