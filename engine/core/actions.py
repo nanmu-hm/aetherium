@@ -87,7 +87,8 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             motivation="help someone they feel loyal to", confidence=0.7, score=0.6,
         ))
 
-    if _has_value(character, "freedom") and len(state.locations) > 1:
+    freedom_pressure = character.human_condition.desires.get("freedom", 0.0)
+    if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1:
         destination = sorted(location for location in state.locations if location != character.location)[0]
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
