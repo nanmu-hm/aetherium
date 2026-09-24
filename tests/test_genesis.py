@@ -51,3 +51,19 @@ def test_genesis_records_completed_goal_consequences():
         for event in world.event_log
         for consequence in event.consequences
     )
+
+
+def test_genesis_has_recovery_between_repeated_travel_actions():
+    world = run_genesis(ticks=12, seed=7)
+    travel_ticks = [
+        event.tick
+        for event in world.event_log
+        if event.causes and event.causes[0].endswith("travel")
+        and event.action_result is not None
+        and event.action_result.status == "success"
+    ]
+    assert travel_ticks
+    assert all(
+        second > first + 1
+        for first, second in zip(travel_ticks, travel_ticks[1:])
+    )
