@@ -103,7 +103,17 @@ class DecisionKernel:
         if action.action_type == "pursue_goal":
             return goal.priority
 
-        alignment = min(1.0, goal.priority * action.confidence)
+        goal_text = goal.description.lower()
+        goal_affordances = {
+            "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
+            "contact_person": ("find", "reconcile", "talk", "meet", "contact"),
+            "help_person": ("help", "protect", "support", "save"),
+        }
+        keywords = goal_affordances.get(action.action_type, ())
+        if any(keyword in goal_text for keyword in keywords):
+            alignment = goal.priority
+        else:
+            alignment = min(1.0, goal.priority * action.confidence)
 
         # Relationship-seeking actions become more compelling when the
         # relationship itself carries unresolved tension. This keeps the
