@@ -48,3 +48,17 @@ def test_authoritative_relationship_is_used_for_action_scoring() -> None:
     pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(world, "lin")
     contact = next(action for action in pool if action.action_type == "contact_person")
     assert contact.score == 0.9
+
+
+def test_decision_kernel_uses_character_state_not_narrative_outcomes() -> None:
+    from engine.core.actions import ActionCandidate
+    from engine.core.decision import DecisionKernel
+    world = build_demo_world()
+    world.characters["lin"].goals[0].priority = 0.1
+    pool = [
+        ActionCandidate("a", "lin", "pursue_goal", motivation="find a missing friend", confidence=0.8),
+        ActionCandidate("b", "lin", "rest", motivation="rest", confidence=0.8),
+    ]
+    chosen, evaluations = DecisionKernel(seed=42).choose(world, pool)
+    assert chosen is not None
+    assert {item.action_id for item in evaluations} == {"a", "b"}
