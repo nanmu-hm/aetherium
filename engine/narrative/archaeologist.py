@@ -35,10 +35,9 @@ class StoryArchaeologist:
         scores = self.pressure.score_events(state, state.event_log)
         candidates: list[StoryCandidate] = []
         for index, event in enumerate(state.event_log):
-            event_score = scores[event.id]
-            if event_score < min_score:
-                continue
-
+            # A single event may have weak narrative pressure while a chain of
+            # related events becomes significant. Do not discard it before the
+            # provisional thread has been assembled.
             chain = [event]
             # Nearby events involving overlapping participants form a provisional
             # historical thread. We never reorder or mutate the source history.
