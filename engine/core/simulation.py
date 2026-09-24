@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime, timedelta
 import random
 
 from .actions import generate_action_pool
@@ -21,8 +22,16 @@ class SimulationResult:
 
 
 class SimulationEngine:
-    def __init__(self, seed: int = 0, memory_kernel: MemoryKernel | None = None) -> None:
+    def __init__(
+        self,
+        seed: int = 0,
+        memory_kernel: MemoryKernel | None = None,
+        tick_duration_hours: int = 24,
+    ) -> None:
+        if tick_duration_hours <= 0:
+            raise ValueError("tick_duration_hours must be positive")
         self.random = random.Random(seed)
+        self.tick_duration = timedelta(hours=tick_duration_hours)
         self.memory_kernel = memory_kernel or MemoryKernel()
         self.decision_kernel = DecisionKernel(seed=seed)
         self.action_resolver = ActionResolver(self.random)
@@ -250,6 +259,10 @@ class SimulationEngine:
                     if desire_name in desires:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
+    def _advance_clock(self, state: WorldState) -> None:
+        current = datetime.fromisoformat(state.timestamp)
+        state.timestamp = (current + self.tick_duration).isoformat()
+
     def step(self, state: WorldState) -> SimulationResult:
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
@@ -258,6 +271,7 @@ class SimulationEngine:
         self._advance_human_pressures(state, events)
         errors = self.validate(state)
         current_tick = state.tick
+        self._advance_clock(state)
         state.tick += 1
         return SimulationResult(current_tick, actions, events, errors)
 
