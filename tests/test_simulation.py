@@ -220,9 +220,9 @@ def test_remembered_failure_reduces_repeat_action_utility():
         0,
         "0001-01-01T00:00:00",
         "town",
-        ["lin", "mei"],
+        ["lin", "town"],
         ["tick-0-lin-travel"],
-        ["Lin failed to travel."],
+        ["Lin failed to travel to town."],
         action_result=ActionResult("failure"),
     )
     memory = SimulationEngine(seed=1).memory_kernel.remember_event(
