@@ -594,9 +594,12 @@ def test_failed_travel_creates_fear_and_can_resist_later_travel():
         difficulty=0.4,
     )
     evaluation = DecisionKernel(seed=1).evaluate(world, retry)
-    assert evaluation.utility < DecisionKernel(seed=1).evaluate(
-        build_demo_world().characters["mei"] if False else world, retry
-    ).utility + 0.001
+
+    baseline = build_demo_world()
+    baseline.characters["mei"].goals[0].status = "achieved"
+    baseline_evaluation = DecisionKernel(seed=1).evaluate(baseline, retry)
+
+    assert evaluation.utility < baseline_evaluation.utility
     assert "emotional resistance" in evaluation.reasons
 
 
