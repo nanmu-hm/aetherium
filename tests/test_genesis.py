@@ -40,3 +40,14 @@ def test_genesis_allows_goal_and_value_driven_action_change():
     }
     assert "contact" in action_types
     assert "travel" in action_types
+
+
+def test_genesis_records_completed_goal_consequences():
+    world = run_genesis(ticks=12, seed=7)
+    assert any(
+        consequence.target_type == "goal"
+        and consequence.field == "status"
+        and consequence.new_value == "achieved"
+        for event in world.event_log
+        for consequence in event.consequences
+    )
