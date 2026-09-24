@@ -184,3 +184,20 @@ def test_successful_contact_reduces_reconciliation_pressure():
     events = engine.resolve(world, [action])
     engine._advance_human_pressures(world, events)
     assert world.characters["lin"].human_condition.desires["reconciliation"] < 70.0
+
+
+def test_simulation_advances_world_clock_and_preserves_event_timestamp():
+    world = build_demo_world()
+    world.timestamp = "0001-01-01T00:00:00"
+    result = SimulationEngine(seed=42).step(world)
+
+    assert result.events
+    assert all(event.timestamp == "0001-01-01T00:00:00" for event in result.events)
+    assert world.timestamp == "0001-01-02T00:00:00"
+
+
+def test_simulation_supports_custom_tick_duration():
+    world = build_demo_world()
+    world.timestamp = "0001-01-01T00:00:00"
+    SimulationEngine(seed=42, tick_duration_hours=6).step(world)
+    assert world.timestamp == "0001-01-01T06:00:00"
