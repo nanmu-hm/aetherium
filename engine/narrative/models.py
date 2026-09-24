@@ -197,6 +197,52 @@ class StoryArc:
 
 
 @dataclass
+class NarrativeTreatment:
+    """How much narrative attention a scene should receive."""
+
+    scene_id: str
+    mode: str = "summarize"
+    attention: float = 0.0
+    reason: str = ""
+
+
+@dataclass
+class CallbackSchedule:
+    """A delayed callback candidate grounded in an existing setup/payoff link."""
+
+    setup_event_id: str
+    payoff_event_id: str
+    priority: float = 0.0
+    minimum_gap: int = 0
+    maximum_gap: int = 0
+    status: str = "eligible"
+    reason: str = ""
+
+
+@dataclass
+class ArcInterleaveSlot:
+    """One planned narrative slot in a multi-arc reading order."""
+
+    arc_id: str
+    sequence_id: str
+    rank: int = 0
+    reason: str = ""
+
+
+@dataclass
+class StoryCompletionAssessment:
+    """Evidence-based assessment of whether an observed arc has ended."""
+
+    arc_id: str
+    status: str = "open"
+    confidence: float = 0.0
+    resolved_thread_count: int = 0
+    unresolved_question_count: int = 0
+    payoff_count: int = 0
+    reason: str = ""
+
+
+@dataclass
 class NarrativeState:
     """Derived narrative observations; safe to recompute from the event log."""
 
@@ -217,3 +263,7 @@ class NarrativeState:
     scenes: list[NarrativeScene] = field(default_factory=list)
     sequences: list[NarrativeSequence] = field(default_factory=list)
     story_arcs: list[StoryArc] = field(default_factory=list)
+    treatments: list[NarrativeTreatment] = field(default_factory=list)
+    callback_schedules: list[CallbackSchedule] = field(default_factory=list)
+    interleave_slots: list[ArcInterleaveSlot] = field(default_factory=list)
+    completion: list[StoryCompletionAssessment] = field(default_factory=list)

@@ -11,6 +11,10 @@ from .pressure import NarrativePressureAnalyzer
 from .rhythm import NarrativeRhythmAnalyzer
 from .threads import CausalThreadEngine
 from .structure import NarrativeStructureBuilder
+from .allocation import NarrativeResourceAllocator
+from .callbacks import CallbackScheduler
+from .completion import StoryCompletionDetector
+from .interleave import MultiArcInterleaver
 
 __all__ = [
     "CausalThreadEngine",
@@ -25,5 +29,9 @@ __all__ = [
     "StoryArchaeologist",
     "StoryCandidate",
     "NarrativeStructureBuilder",
+    "NarrativeResourceAllocator",
+    "CallbackScheduler",
+    "StoryCompletionDetector",
+    "MultiArcInterleaver",
     "ThreadConvergenceDetector",
 ]

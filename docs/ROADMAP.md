@@ -50,17 +50,17 @@ The narrative layer observes the autonomous world; it does not secretly write ou
 - [x] Character arc detection
 - [x] Foreshadowing and payoff tracking
 - [x] Narrative importance vs historical importance
-- [ ] Narrative resource allocation
+- [x] Narrative resource allocation
 - [x] Multi-thread convergence
-- [ ] Story completion criteria
+- [x] Story completion criteria
 
 ## Phase 4 — Story structure and discovery
 - [x] Beat model
 - [x] Scene formation
 - [x] Sequence formation
 - [x] Story-arc formation
-- [ ] Multi-arc interleaving
-- [ ] Delayed callbacks and payoff scheduling
+- [x] Multi-arc interleaving
+- [x] Delayed callbacks and payoff scheduling
 - [ ] Story boundary detection
 - [ ] Story discovery from long simulation histories
 - [ ] Reader-knowledge planning
