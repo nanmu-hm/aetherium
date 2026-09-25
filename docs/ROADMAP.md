@@ -61,9 +61,9 @@ The narrative layer observes the autonomous world; it does not secretly write ou
 - [x] Story-arc formation
 - [x] Multi-arc interleaving
 - [x] Delayed callbacks and payoff scheduling
-- [ ] Story boundary detection
-- [ ] Story discovery from long simulation histories
-- [ ] Reader-knowledge planning
+- [x] Story boundary detection
+- [x] Story discovery from long simulation histories
+- [x] Reader-knowledge planning
 
 ## Phase 5 — Literary expression
 Literary quality is a composable expression system, not a single author-style switch. See docs/LITERARY-MECHANICS.md.

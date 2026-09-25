@@ -16,6 +16,9 @@ from .completion import StoryCompletionDetector
 from .interleave import MultiArcInterleaver
 from .structure import NarrativeStructureBuilder
 from .rhythm import NarrativeRhythmAnalyzer
+from .boundary import StoryBoundaryDetector
+from .discovery import LongHistoryStoryDiscovery
+from .reader import ReaderKnowledgePlanner
 from ..core.models import Event, WorldState
 
 
@@ -38,6 +41,9 @@ class NarrativeObserver:
         callback_scheduler: CallbackScheduler | None = None,
         arc_interleaver: MultiArcInterleaver | None = None,
         completion_detector: StoryCompletionDetector | None = None,
+        boundary_detector: StoryBoundaryDetector | None = None,
+        story_discovery: LongHistoryStoryDiscovery | None = None,
+        reader_knowledge_planner: ReaderKnowledgePlanner | None = None,
     ) -> None:
         self.dilemma_detector = dilemma_detector or DilemmaDetector()
         self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
@@ -53,6 +59,9 @@ class NarrativeObserver:
         self.callback_scheduler = callback_scheduler or CallbackScheduler()
         self.arc_interleaver = arc_interleaver or MultiArcInterleaver()
         self.completion_detector = completion_detector or StoryCompletionDetector()
+        self.boundary_detector = boundary_detector or StoryBoundaryDetector()
+        self.story_discovery = story_discovery or LongHistoryStoryDiscovery()
+        self.reader_knowledge_planner = reader_knowledge_planner or ReaderKnowledgePlanner()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -144,4 +153,7 @@ class NarrativeObserver:
         narrative_state.interleave_slots = self.arc_interleaver.plan(story_arcs, sequences)
         callback_payoffs={item.payoff_event_id for item in narrative_state.callback_schedules}
         narrative_state.completion = self.completion_detector.assess(story_arcs, sequences, threads, callback_payoffs)
+        narrative_state.story_boundaries = self.boundary_detector.detect(state, narrative_state)
+        narrative_state.story_discoveries = self.story_discovery.discover(state)
+        narrative_state.reader_knowledge = self.reader_knowledge_planner.plan(narrative_state)
         return narrative_state

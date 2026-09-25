@@ -335,3 +335,33 @@ class NarrativeState:
     character_voices: list[CharacterVoiceProfile] = field(default_factory=list)
     motifs: list[MotifObservation] = field(default_factory=list)
     scene_expression: list[SceneExpressionPlan] = field(default_factory=list)
+    story_boundaries: list[StoryBoundaryCandidate] = field(default_factory=list)
+    story_discoveries: list[StoryDiscoveryCandidate] = field(default_factory=list)
+    reader_knowledge: list[ReaderKnowledgePlan] = field(default_factory=list)
+
+
+@dataclass
+class StoryBoundaryCandidate:
+    start_event_id: str
+    end_event_id: str
+    confidence: float = 0.0
+    reason: str = ""
+
+
+@dataclass
+class StoryDiscoveryCandidate:
+    event_ids: list[str] = field(default_factory=list)
+    participants: list[str] = field(default_factory=list)
+    score: float = 0.0
+    title: str = ""
+    reason: str = ""
+
+
+@dataclass
+class ReaderKnowledgePlan:
+    scene_id: str
+    reveal_event_ids: list[str] = field(default_factory=list)
+    withheld_propositions: list[str] = field(default_factory=list)
+    dramatic_irony: list[str] = field(default_factory=list)
+    mode: str = "discover"
+    reason: str = ""
