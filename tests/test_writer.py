@@ -8,7 +8,6 @@ from engine.agents import (
     WriterAgent,
 )
 from engine.core.models import CharacterState, Consequence, Event, Goal, RelationshipState, WorldState
-from engine.narrative.models import NarrativeScene, SceneExpressionPlan
 
 
 def make_state():
@@ -151,7 +150,7 @@ def test_writer_blocks_unknown_viewpoint():
     context.narrative_snapshot["scene_expression"][0]["viewpoint_character_id"] = "ghost"
     result = WriterAgent("scene-1").inspect(context)
     assert result.status == AgentStatus.BLOCKED
-    assert "Viewpoint character does not exist" in result.diagnostics
+    assert any("Viewpoint character does not exist" in item for item in result.diagnostics)
 
 
 def test_writer_result_passes_director_authority():
