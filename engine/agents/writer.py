@@ -114,9 +114,8 @@ class WriterAgent:
             prefix = f"At {event.timestamp}, {who} were at {location}."
             prose_parts.append(f"{prefix} {facts}".strip())
 
-        prose = "
-
-".join(prose_parts)
+        paragraph_break = chr(10) + chr(10)
+        prose = paragraph_break.join(prose_parts)
         title = (event_list[0].facts[0] if event_list[0].facts else scene.get("id", "Scene")).strip()
         if len(title) > 80:
             title = title[:77].rstrip() + "..."
