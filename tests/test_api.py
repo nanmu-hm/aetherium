@@ -24,6 +24,23 @@ def test_root_and_health(tmp_path):
     assert response.json()["status"] == "ok"
 
 
+def test_dashboard_page_and_view_model(tmp_path):
+    client = build_client(tmp_path)
+
+    page = client.get("/dashboard/")
+    assert page.status_code == 200
+    assert "Aetherium World Dashboard" in page.text
+    assert "/dashboard/app.js" in page.text
+
+    model = client.get("/api/dashboard")
+    assert model.status_code == 200
+    payload = model.json()
+    assert payload["summary"]["world_id"] == "demo"
+    assert len(payload["characters"]) == 2
+    assert "threads" in payload["narrative"]
+    assert "discoveries" in payload["narrative"]
+
+
 def test_world_summary_and_characters_are_read_only(tmp_path):
     client = build_client(tmp_path)
 
@@ -173,10 +190,7 @@ def test_invalid_agent_and_invalid_run_are_rejected(tmp_path):
     response = client.post("/api/agents/unknown/inspect", json={})
     assert response.status_code == 404
 
-    response = client.post(
-        "/api/simulation/run",
-        json={"max_ticks": 0},
-    )
+    response = client.post("/api/simulation/run", json={"max_ticks": 0})
     assert response.status_code == 422
 
 

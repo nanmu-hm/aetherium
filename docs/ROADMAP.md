@@ -84,10 +84,10 @@
 ## Phase 8 — Product layer
 
 - [x] FastAPI
-- [ ] World dashboard
-- [ ] Timeline
-- [ ] Character graph
-- [ ] Narrative threads
+- [x] World dashboard
+- [x] Timeline
+- [x] Character graph
+- [x] Narrative threads
 - [ ] Branch browser
 - [ ] Agent rooms
 - [ ] Novel editor

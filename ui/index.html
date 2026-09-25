@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aetherium World Dashboard</title>
+  <link rel="stylesheet" href="/dashboard/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <div class="eyebrow">AETHERIUM</div>
+      <h1>World Dashboard</h1>
+      <p id="subtitle">Loading world state…</p>
+    </div>
+    <div class="controls">
+      <button id="step-one">Advance 1 tick</button>
+      <button id="run-ten">Autonomous ×10</button>
+      <button id="refresh" class="secondary">Refresh</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="metrics panel" id="metrics"></section>
+
+    <section class="panel wide">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">HISTORY</div>
+          <h2>Timeline</h2>
+        </div>
+        <span id="timeline-count" class="badge">0 events</span>
+      </div>
+      <div id="timeline" class="timeline"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">PEOPLE</div>
+          <h2>Characters</h2>
+        </div>
+      </div>
+      <div id="characters" class="character-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">RELATIONS</div>
+          <h2>Character Graph</h2>
+        </div>
+      </div>
+      <svg id="graph" class="graph" viewBox="0 0 640 360" aria-label="Character relationship graph"></svg>
+    </section>
+
+    <section class="panel wide">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">NARRATIVE</div>
+          <h2>Emergent Threads</h2>
+        </div>
+        <span id="pressure" class="badge">pressure 0.00</span>
+      </div>
+      <div id="threads" class="thread-list"></div>
+    </section>
+
+    <section class="panel wide">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">DISCOVERY</div>
+          <h2>Story Discoveries</h2>
+        </div>
+      </div>
+      <div id="discoveries" class="discovery-list"></div>
+    </section>
+  </main>
+
+  <footer>
+    <span>Aetherium · simulation remains authoritative</span>
+    <a href="/docs" target="_blank" rel="noreferrer">Open API docs</a>
+  </footer>
+
+  <script src="/dashboard/app.js"></script>
+</body>
+</html>

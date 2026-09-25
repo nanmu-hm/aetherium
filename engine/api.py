@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from .agents import (
@@ -199,11 +200,16 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
     )
     api.state.aetherium = application
 
+    ui_dir = Path(__file__).resolve().parent.parent / "ui"
+    if ui_dir.exists():
+        api.mount("/dashboard", StaticFiles(directory=ui_dir, html=True), name="dashboard")
+
     @api.get("/")
     def root() -> dict[str, Any]:
         return {
             "name": "aetherium",
             "api": "/api",
+            "dashboard": "/dashboard/",
             "world_id": application.state.world_id,
             "tick": application.state.tick,
             "branch": application.state.active_branch,
@@ -233,26 +239,46 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
 
     @api.get("/api/world/characters")
     def get_characters() -> list[dict[str, Any]]:
-        return [
-            _jsonable(character)
-            for character in application.state.characters.values()
-        ]
+        return [_jsonable(character) for character in application.state.characters.values()]
 
     @api.get("/api/world/relationships")
     def get_relationships() -> list[dict[str, Any]]:
-        return [
-            _jsonable(relationship)
-            for relationship in application.state.relationships.values()
-        ]
+        return [_jsonable(relationship) for relationship in application.state.relationships.values()]
 
     @api.get("/api/world/events")
     def get_events(limit: int = 50) -> list[dict[str, Any]]:
         if limit < 1 or limit > 500:
             raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
-        return [
-            _jsonable(event)
-            for event in application.state.event_log[-limit:]
-        ]
+        return [_jsonable(event) for event in application.state.event_log[-limit:]]
+
+    @api.get("/api/dashboard")
+    def get_dashboard(limit: int = 80) -> dict[str, Any]:
+        if limit < 1 or limit > 500:
+            raise HTTPException(status_code=400, detail="limit must be between 1 and 500")
+        narrative = application.narrative_state
+        return {
+            "summary": {
+                "world_id": application.state.world_id,
+                "tick": application.state.tick,
+                "timestamp": application.state.timestamp,
+                "active_branch": application.state.active_branch,
+                "locations": sorted(application.state.locations),
+                "character_count": len(application.state.characters),
+                "relationship_count": len(application.state.relationships),
+                "faction_count": len(application.state.factions),
+                "event_count": len(application.state.event_log),
+            },
+            "characters": _jsonable(list(application.state.characters.values())),
+            "relationships": _jsonable(list(application.state.relationships.values())),
+            "events": _jsonable(list(application.state.event_log[-limit:])),
+            "narrative": {
+                "pressure": getattr(narrative, "pressure", 0.0),
+                "threads": _jsonable(getattr(narrative, "threads", [])),
+                "story_arcs": _jsonable(getattr(narrative, "story_arcs", [])),
+                "discoveries": _jsonable(getattr(narrative, "story_discoveries", [])),
+                "scenes": _jsonable(getattr(narrative, "scenes", [])),
+            },
+        }
 
     @api.post("/api/simulation/step")
     def simulation_step(request: TickRequest) -> dict[str, Any]:
@@ -277,10 +303,7 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
 
     @api.get("/api/agents")
     def list_agents() -> list[dict[str, Any]]:
-        return [
-            _jsonable(agent.contract)
-            for agent in application.director.registry.agents.values()
-        ]
+        return [_jsonable(agent.contract) for agent in application.director.registry.agents.values()]
 
     @api.post("/api/agents/{agent_id}/inspect")
     def inspect_agent(agent_id: str, request: AgentContextRequest) -> dict[str, Any]:
@@ -370,10 +393,7 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
 
     @api.get("/api/narrative/drafts/{draft_id}/versions")
     def get_narrative_draft_versions(draft_id: str) -> list[dict[str, Any]]:
-        try:
-            versions = application.approval.store.versions(draft_id)
-        except KeyError as exc:
-            raise HTTPException(status_code=404, detail="Narrative draft not found.") from exc
+        versions = application.approval.store.versions(draft_id)
         if not versions:
             raise HTTPException(status_code=404, detail="Narrative draft not found.")
         return _jsonable(versions)
@@ -415,10 +435,7 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
         request: DraftDecisionRequest,
     ) -> dict[str, Any]:
         try:
-            decision = application.approval.reject(
-                draft_id,
-                version=request.version,
-            )
+            decision = application.approval.reject(draft_id, version=request.version)
         except (KeyError, ValueError) as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return _jsonable(decision)

@@ -11,6 +11,8 @@ After installing the project:
 
 The interactive OpenAPI page is available at /docs.
 
+The visual world dashboard is available at /dashboard/.
+
 ## Authority boundary
 
 The API follows this direction:
@@ -24,8 +26,25 @@ The API follows this direction:
       +-- Agent API ------> DirectorOrchestrator -> detached AgentContext
       |
       +-- Narrative API --> NarrativeObserver / Writer / Approval
+      |
+      +-- Dashboard ------> read-only view model
 
 Agents do not receive direct access to the authoritative WorldState. They receive detached snapshots. Narrative observation and writing do not mutate the simulation state.
+
+## Dashboard
+
+The first product UI is intentionally dependency-light:
+
+- World metrics
+- Event timeline
+- Character cards
+- SVG relationship graph
+- Emergent narrative threads
+- Story discoveries
+- One-tick simulation control
+- Safe autonomous 10-tick control
+
+The browser does not contain a second simulation engine. It calls the same API that other clients use.
 
 ## Endpoint groups
 
@@ -36,6 +55,7 @@ Agents do not receive direct access to the authoritative WorldState. They receiv
 - GET /api/world/characters
 - GET /api/world/relationships
 - GET /api/world/events?limit=50
+- GET /api/dashboard
 
 ### Simulation
 
@@ -63,4 +83,4 @@ Agents do not receive direct access to the authoritative WorldState. They receiv
 
 ## Intentional limitation
 
-This first API block is an orchestration layer, not a web editor. It does not expose arbitrary world editing or model-provider secrets. Branch mutation remains behind the existing intervention rules.
+This first product UI is observational and operational. It does not expose arbitrary world editing or model-provider secrets. Branch mutation remains behind the existing intervention rules.
