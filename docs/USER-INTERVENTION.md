@@ -163,3 +163,9 @@ The same world can move between these modes.
 Aetherium should never force the user to choose between creative freedom and continuity.
 
 Intervention changes the world through explicit, traceable operations rather than hidden prompt edits.
+
+## 11. Structured Intervention Planning
+
+Before execution, the system can convert a user request into an InterventionRequest and produce an ImpactReport, ConflictFindings, and InterventionPlan.
+
+This planning step is read-only. Execution remains downstream of validation and persistence controls.

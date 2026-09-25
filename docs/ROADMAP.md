@@ -94,8 +94,8 @@ Literary quality is a composable expression system, not a single author-style sw
 - [x] Canon ledger / provenance
 - [x] Checkpoints
 - [x] Branch / fork / rollback
-- [ ] Impact analysis for user edits
-- [ ] Conflict resolution
+- [x] Impact analysis for user edits
+- [x] Conflict resolution
 - [x] Simulation replay
 - [x] Deterministic reproducibility
 
