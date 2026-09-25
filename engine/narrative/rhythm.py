@@ -68,8 +68,6 @@ class NarrativeRhythmAnalyzer:
         )
 
 
-from __future__ import annotations
-
 from .models import SceneExpressionPlan, SentenceRhythmPlan
 
 
