@@ -267,3 +267,72 @@ class NarrativeState:
     callback_schedules: list[CallbackSchedule] = field(default_factory=list)
     interleave_slots: list[ArcInterleaveSlot] = field(default_factory=list)
     completion: list[StoryCompletionAssessment] = field(default_factory=list)
+    literary: LiteraryExpressionState = field(default_factory=LiteraryExpressionState)
+    character_voices: list[CharacterVoiceProfile] = field(default_factory=list)
+    motifs: list[MotifObservation] = field(default_factory=list)
+    scene_expression: list[SceneExpressionPlan] = field(default_factory=list)
+
+
+@dataclass
+class LiteraryExpressionState:
+    register: str = "natural"
+    cultural_texture: str = "grounded"
+    narrative_distance: str = "close"
+    default_viewpoint: str = "limited"
+    sentence_cadence: str = "varied"
+    dialogue_density: float = 0.45
+    emotional_explicitness: float = 0.45
+    sensory_detail: float = 0.50
+    exposition_density: float = 0.40
+    omission_strength: float = 0.45
+    humor_level: float = 0.10
+
+
+@dataclass
+class CharacterVoiceProfile:
+    character_id: str
+    register: str = "natural"
+    sentence_length: str = "medium"
+    directness: float = 0.50
+    emotional_restraint: float = 0.50
+    vocabulary_keys: list[str] = field(default_factory=list)
+    habitual_phrases: list[str] = field(default_factory=list)
+    dialogue_density: float = 0.50
+
+
+@dataclass
+class MotifObservation:
+    motif: str
+    event_ids: list[str] = field(default_factory=list)
+    occurrence_count: int = 0
+    contexts: list[str] = field(default_factory=list)
+    resonance: float = 0.0
+
+
+@dataclass
+class SceneExpressionPlan:
+    scene_id: str
+    viewpoint_character_id: str | None = None
+    narrative_distance: str = "close"
+    dialogue_density: float = 0.45
+    emotional_explicitness: float = 0.45
+    sensory_detail: float = 0.50
+    exposition_density: float = 0.40
+    subtext_strength: float = 0.45
+    omission_strength: float = 0.45
+    cadence: str = "varied"
+    motif_ids: list[str] = field(default_factory=list)
+    emphasis_mode: str = "summarize"
+    reason: str = ""
+
+
+@dataclass
+class ProseQualityReport:
+    factual_fidelity: bool = True
+    viewpoint_consistency: bool = True
+    temporal_consistency: bool = True
+    spatial_consistency: bool = True
+    participant_consistency: bool = True
+    knowledge_consistency: bool = True
+    score: float = 1.0
+    failures: list[str] = field(default_factory=list)

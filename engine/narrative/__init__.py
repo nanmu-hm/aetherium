@@ -15,6 +15,8 @@ from .allocation import NarrativeResourceAllocator
 from .callbacks import CallbackScheduler
 from .completion import StoryCompletionDetector
 from .interleave import MultiArcInterleaver
+from .literary import LiteraryExpressionPlanner, LiteraryExpressionPipeline
+from .quality import ProseQualityGate
 
 __all__ = [
     "CausalThreadEngine",
@@ -34,4 +36,7 @@ __all__ = [
     "StoryCompletionDetector",
     "MultiArcInterleaver",
     "ThreadConvergenceDetector",
+    "LiteraryExpressionPlanner",
+    "LiteraryExpressionPipeline",
+    "ProseQualityGate",
 ]
