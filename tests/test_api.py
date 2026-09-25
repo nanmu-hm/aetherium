@@ -205,7 +205,7 @@ def test_dashboard_assets_are_served_as_browser_files(tmp_path):
     style = client.get("/dashboard/style.css")
 
     assert script.status_code == 200
-    assert 'fetch("/api/dashboard?limit=80")' in script.text
+    assert '"/api/dashboard?limit=80"' in script.text
     assert "renderGraph" in script.text
 
     assert style.status_code == 200

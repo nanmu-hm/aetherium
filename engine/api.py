@@ -354,16 +354,27 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
     @api.post("/api/narrative/drafts")
     def create_narrative_draft(request: DraftRequest) -> dict[str, Any]:
         scene_id = request.scene_id
+        selected_event_ids = list(request.selected_event_ids)
+        if scene_id:
+            if application.narrative_state is None:
+                application.refresh_narrative([])
+            scene = next(
+                (
+                    item
+                    for item in application.narrative_state.scenes
+                    if item.id == scene_id
+                ),
+                None,
+            )
+            if scene is None:
+                raise HTTPException(status_code=404, detail=f"Unknown narrative scene: {scene_id}")
+            selected_event_ids.extend(scene.event_ids)
+
         context = application.context(
-            selected_event_ids=request.selected_event_ids,
+            selected_event_ids=selected_event_ids,
             mode="draft",
         )
         writer_id = "writer"
-        if scene_id:
-            writer = WriterAgent(scene_id=scene_id)
-            writer_id = writer.contract.agent_id
-            if writer_id not in application.director.registry.agents:
-                application.director.register(writer)
         run = application.director.inspect_one(writer_id, context)
         if run.status.value != "ok" or not run.result.proposals:
             raise HTTPException(
