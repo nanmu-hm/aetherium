@@ -1,4 +1,4 @@
-from engine.core.models import CharacterState, Event, WorldState
+from engine.core.models import CharacterState, Event, Goal, WorldState
 from engine.core.simulation import SimulationEngine
 from engine.persistence.codec import load_world_json, save_world_json, world_from_dict, world_to_dict
 from engine.persistence.events import JsonEventStore
@@ -11,7 +11,7 @@ from engine.persistence.repository import WorldRepository
 def make_state():
     state = WorldState(world_id="persist", tick=2, timestamp="0001-01-03T00:00:00")
     state.locations.add("town")
-    state.add_character(CharacterState(id="a", name="A", location="town", knowledge={"A knows"}))
+    state.add_character(CharacterState(id="a", name="A", location="town", knowledge={"A knows"}, goals=[Goal("g1", "leave town", priority=1.0)]))
     return state
 
 
@@ -87,10 +87,11 @@ def test_deterministic_replay_matches_recorded_events():
     assert verifier.verify(initial, expected, seed=7, steps=2)
 
 
-def test_replay_detects_different_seed():
+def test_replay_detects_tampered_history():
     initial = make_state()
     state = world_from_dict(world_to_dict(initial))
     engine = SimulationEngine(seed=7)
     expected = engine.step(state).events
+    expected[0].facts.append("tampered history")
     verifier = ReplayVerifier()
-    assert verifier.verify(initial, expected, seed=8, steps=1) is False
+    assert verifier.verify(initial, expected, seed=7, steps=1) is False
