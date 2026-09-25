@@ -1,4 +1,5 @@
 from .adapters import ModelAdapter, ModelRequest, ModelResponse, NullModelAdapter
+from .approval import ApprovalDecision, DraftStatus, HumanApprovalService, NarrativeDraft, NarrativeDraftStore
 from .authority import AgentAuthority, AuthorityDecision
 from .character import CharacterAgent
 from .contracts import Agent, standard_contracts
@@ -29,14 +30,19 @@ __all__ = [
     "AgentRole",
     "AgentRun",
     "AgentStatus",
+    "ApprovalDecision",
     "AuthorityDecision",
     "CharacterAgent",
     "ContinuityAgent",
     "CriticAgent",
     "DirectorOrchestrator",
+    "DraftStatus",
+    "HumanApprovalService",
     "ModelAdapter",
     "ModelRequest",
     "ModelResponse",
+    "NarrativeDraft",
+    "NarrativeDraftStore",
     "NullModelAdapter",
     "ProposalKind",
     "SceneDraft",
