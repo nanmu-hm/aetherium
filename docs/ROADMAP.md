@@ -22,7 +22,6 @@ Aetherium is built around a **self-simulating fictional world**. The roadmap the
 - [ ] Character-state transitions caused by consequences
 - [x] Decision errors, uncertainty, and bounded rationality
 
-
 ### Phase 2 character-life kernel detail
 
 - [x] Structured episodic memory model
@@ -100,8 +99,8 @@ Literary quality is a composable expression system, not a single author-style sw
 - [x] Deterministic reproducibility
 
 ## Phase 8 — Agents and novelization
-- [ ] Agent contracts
-- [ ] Model adapters
+- [x] Agent contracts
+- [x] Model adapters
 - [ ] Director / orchestrator
 - [ ] Character agents
 - [ ] Continuity agent
