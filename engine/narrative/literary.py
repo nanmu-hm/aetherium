@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from collections import Counter
 
+from .rhythm import SentenceRhythmPlanner
+from .research import LiteraryResearchRegistry
 from .models import (
     CharacterVoiceProfile,
     LiteraryExpressionState,
@@ -128,8 +130,15 @@ class LiteraryExpressionPlanner:
 
 
 class LiteraryExpressionPipeline:
-    def __init__(self, planner: LiteraryExpressionPlanner | None = None) -> None:
+    def __init__(
+        self,
+        planner: LiteraryExpressionPlanner | None = None,
+        rhythm_planner: SentenceRhythmPlanner | None = None,
+        research_registry: LiteraryResearchRegistry | None = None,
+    ) -> None:
         self.planner = planner or LiteraryExpressionPlanner()
+        self.rhythm_planner = rhythm_planner or SentenceRhythmPlanner()
+        self.research_registry = research_registry or LiteraryResearchRegistry()
 
     def build(self, state: WorldState, narrative: NarrativeState) -> NarrativeState:
         voices = self.planner.build_voice_profiles(state)
@@ -138,4 +147,6 @@ class LiteraryExpressionPipeline:
         narrative.character_voices = voices
         narrative.motifs = motifs
         narrative.scene_expression = scene_expression
+        narrative.rhythm_plans = self.rhythm_planner.plan(scene_expression)
+        narrative.literary_profiles = self.research_registry.list()
         return narrative

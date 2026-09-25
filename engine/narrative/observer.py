@@ -19,6 +19,7 @@ from .rhythm import NarrativeRhythmAnalyzer
 from .boundary import StoryBoundaryDetector
 from .discovery import LongHistoryStoryDiscovery
 from .reader import ReaderKnowledgePlanner
+from .literary import LiteraryExpressionPipeline
 from ..core.models import Event, WorldState
 
 
@@ -44,6 +45,7 @@ class NarrativeObserver:
         boundary_detector: StoryBoundaryDetector | None = None,
         story_discovery: LongHistoryStoryDiscovery | None = None,
         reader_knowledge_planner: ReaderKnowledgePlanner | None = None,
+        literary_pipeline: LiteraryExpressionPipeline | None = None,
     ) -> None:
         self.dilemma_detector = dilemma_detector or DilemmaDetector()
         self.rhythm_analyzer = rhythm_analyzer or NarrativeRhythmAnalyzer()
@@ -62,6 +64,7 @@ class NarrativeObserver:
         self.boundary_detector = boundary_detector or StoryBoundaryDetector()
         self.story_discovery = story_discovery or LongHistoryStoryDiscovery()
         self.reader_knowledge_planner = reader_knowledge_planner or ReaderKnowledgePlanner()
+        self.literary_pipeline = literary_pipeline or LiteraryExpressionPipeline()
 
     def observe(self, state: WorldState, events: list[Event]) -> NarrativeState:
         signals: list[NarrativeSignal] = []
@@ -156,4 +159,5 @@ class NarrativeObserver:
         narrative_state.story_boundaries = self.boundary_detector.detect(state, narrative_state)
         narrative_state.story_discoveries = self.story_discovery.discover(state)
         narrative_state.reader_knowledge = self.reader_knowledge_planner.plan(narrative_state)
+        narrative_state = self.literary_pipeline.build(state, narrative_state)
         return narrative_state

@@ -70,14 +70,14 @@ Literary quality is a composable expression system, not a single author-style sw
 
 - [x] Literary expression state
 - [x] Character voice model
-- [ ] Sentence / paragraph rhythm controls
+- [x] Sentence / paragraph rhythm controls
 - [x] Viewpoint and narrative-distance controls
 - [x] Subtext and omission model
 - [x] Imagery / motif model
 - [x] Dynamic scene-level expression
 - [x] Narrative emphasis: summarize vs dramatize vs slow down
 - [x] Prose quality gates
-- [ ] Literary research profiles expressed as abstract mechanisms
+- [x] Literary research profiles expressed as abstract mechanisms
 
 ## Phase 6 — World evolution
 - [ ] Faction evolution

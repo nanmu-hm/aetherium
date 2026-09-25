@@ -17,6 +17,8 @@ from .completion import StoryCompletionDetector
 from .interleave import MultiArcInterleaver
 from .literary import LiteraryExpressionPlanner, LiteraryExpressionPipeline
 from .quality import ProseQualityGate
+from .rhythm import SentenceRhythmPlanner
+from .research import LiteraryResearchRegistry
 from .boundary import StoryBoundaryDetector
 from .discovery import LongHistoryStoryDiscovery
 from .reader import ReaderKnowledgePlanner
@@ -42,6 +44,8 @@ __all__ = [
     "LiteraryExpressionPlanner",
     "LiteraryExpressionPipeline",
     "ProseQualityGate",
+    "SentenceRhythmPlanner",
+    "LiteraryResearchRegistry",
     "StoryBoundaryDetector",
     "LongHistoryStoryDiscovery",
     "ReaderKnowledgePlanner",

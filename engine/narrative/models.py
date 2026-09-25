@@ -338,6 +338,8 @@ class NarrativeState:
     story_boundaries: list[StoryBoundaryCandidate] = field(default_factory=list)
     story_discoveries: list[StoryDiscoveryCandidate] = field(default_factory=list)
     reader_knowledge: list[ReaderKnowledgePlan] = field(default_factory=list)
+    rhythm_plans: list[SentenceRhythmPlan] = field(default_factory=list)
+    literary_profiles: list[LiteraryMechanismProfile] = field(default_factory=list)
 
 
 @dataclass
@@ -365,3 +367,25 @@ class ReaderKnowledgePlan:
     dramatic_irony: list[str] = field(default_factory=list)
     mode: str = "discover"
     reason: str = ""
+
+
+@dataclass
+class SentenceRhythmPlan:
+    scene_id: str
+    pace: str = "medium"
+    sentence_length_mix: str = "medium"
+    variation: float = 0.50
+    punctuation_density: float = 0.45
+    pause_strength: float = 0.45
+    paragraph_breathing: float = 0.50
+    reason: str = ""
+
+
+@dataclass
+class LiteraryMechanismProfile:
+    id: str
+    title: str
+    mechanisms: list[str] = field(default_factory=list)
+    constraints: list[str] = field(default_factory=list)
+    intended_effects: list[str] = field(default_factory=list)
+    compatible_dimensions: list[str] = field(default_factory=list)
