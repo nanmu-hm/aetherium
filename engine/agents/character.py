@@ -2,7 +2,15 @@ from __future__ import annotations
 
 from ..persistence.codec import world_from_dict
 from .contracts import standard_contracts
-from .models import AgentContext, AgentContract, AgentProposal, AgentResult, AgentRole, AgentStatus, ProposalKind
+from .models import (
+    AgentContext,
+    AgentContract,
+    AgentProposal,
+    AgentResult,
+    AgentRole,
+    AgentStatus,
+    ProposalKind,
+)
 
 
 class CharacterAgent:
@@ -52,6 +60,11 @@ class CharacterAgent:
             f"{len(character.memory_ids)} recorded memory reference(s).",
             f"{relationship_count} relationship edge(s) involve this character.",
         ]
+        if top_goal is not None:
+            facts.append(
+                f"Highest-priority active goal: {top_goal.description} "
+                f"(priority {top_goal.priority:.1f})."
+            )
         if dominant_emotion:
             facts.append(f"Strongest current emotion: {dominant_emotion[0]} ({dominant_emotion[1]:.1f}).")
         if strongest_desire:

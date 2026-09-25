@@ -51,6 +51,12 @@ def test_character_agent_does_not_mutate_world_snapshot():
     assert state.characters["a"].location == "town"
 
 
+def test_character_agent_reports_highest_priority_goal_in_both_channels():
+    result = CharacterAgent("a").inspect(AgentContext.from_world(make_state()))
+    assert "Highest-priority active goal: leave town" in result.response
+    assert result.proposals[0].summary.endswith("leave town.")
+
+
 def test_unknown_character_agent_blocks():
     result = CharacterAgent("ghost").inspect(AgentContext.from_world(make_state()))
     assert result.status == AgentStatus.BLOCKED
