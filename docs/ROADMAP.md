@@ -102,9 +102,9 @@ Literary quality is a composable expression system, not a single author-style sw
 - [x] Agent contracts
 - [x] Model adapters
 - [x] Director / orchestrator
-- [ ] Character agents
-- [ ] Continuity agent
-- [ ] Independent critic agents
+- [x] Character agents
+- [x] Continuity agent
+- [x] Independent critic agents
 - [ ] Writer / scene generation
 - [ ] Human-in-the-loop approval
 - [ ] Autonomous long-run mode

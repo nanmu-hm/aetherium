@@ -1,6 +1,9 @@
 from .adapters import ModelAdapter, ModelRequest, ModelResponse, NullModelAdapter
 from .authority import AgentAuthority, AuthorityDecision
+from .character import CharacterAgent
 from .contracts import Agent, standard_contracts
+from .continuity import ContinuityAgent
+from .critic import CriticAgent
 from .director import AgentRegistry, AgentRun, DirectorOrchestrator
 from .models import (
     AgentContext,
@@ -26,6 +29,9 @@ __all__ = [
     "AgentRun",
     "AgentStatus",
     "AuthorityDecision",
+    "CharacterAgent",
+    "ContinuityAgent",
+    "CriticAgent",
     "DirectorOrchestrator",
     "ModelAdapter",
     "ModelRequest",
