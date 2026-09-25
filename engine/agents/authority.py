@@ -56,7 +56,7 @@ class AgentAuthority:
                 blocked.append(decision.reason)
 
         status = result.status
-        if result.proposals and not accepted and blocked:
+        if len(accepted) != len(result.proposals):
             status = AgentStatus.BLOCKED
 
         return AgentResult(
