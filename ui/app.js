@@ -18,7 +18,7 @@ async function api(url, options = {}) {
   const response = await fetch(url, options);
   if (!response.ok) {
     const body = await response.json().catch(() => ({}));
-    throw new Error(body.detail || \`HTTP \${response.status}\`);
+    throw new Error((body && body.detail) || ("HTTP " + response.status));
   }
   return response.json();
 }
@@ -32,35 +32,43 @@ function renderMetrics(summary, narrative) {
     ["Pressure", Number(narrative.pressure || 0).toFixed(2)],
     ["Branch", summary.active_branch],
   ];
-  $("metrics").innerHTML = values.map(([label, value]) => \`
-    <div class="metric">
-      <div class="label">\${esc(label)}</div>
-      <div class="value">\${esc(value)}</div>
-    </div>
-  \`).join("");
+
+  $("metrics").innerHTML = values.map(([label, value]) =>
+    '<div class="metric">' +
+      '<div class="label">' + esc(label) + '</div>' +
+      '<div class="value">' + esc(value) + '</div>' +
+    '</div>'
+  ).join("");
+
   $("subtitle").textContent =
-    \`\${summary.world_id} · \${summary.timestamp} · branch \${summary.active_branch}\`;
-  $("pressure").textContent = \`pressure \${Number(narrative.pressure || 0).toFixed(2)}\`;
+    summary.world_id + " · " + summary.timestamp + " · branch " + summary.active_branch;
+  $("pressure").textContent =
+    "pressure " + Number(narrative.pressure || 0).toFixed(2);
 }
 
 function renderTimeline(events) {
-  $("timeline-count").textContent = \`\${events.length} events\`;
+  $("timeline-count").textContent = events.length + " events";
+
   if (!events.length) {
-    $("timeline").innerHTML = '<div class="empty">No history yet. Advance the simulation to create history.</div>';
+    $("timeline").innerHTML =
+      '<div class="empty">No history yet. Advance the simulation to create history.</div>';
     return;
   }
+
   $("timeline").innerHTML = [...events].reverse().map(event => {
-    const status = event.action_result?.status || "event";
-    const fact = event.facts?.[0] || "(no fact)";
+    const status = (event.action_result && event.action_result.status) || "event";
+    const fact = (event.facts && event.facts[0]) || "(no fact)";
     const participants = (event.participants || []).join(" · ");
-    return \`
-      <article class="event">
-        <div class="meta">tick \${esc(event.tick)}<br>\${esc(status)}</div>
-        <div>
-          <div class="fact">\${esc(fact)}</div>
-          <div class="participants">\${esc(participants)} · \${esc(event.location)}</div>
-        </div>
-      </article>\`;
+
+    return (
+      '<article class="event">' +
+        '<div class="meta">tick ' + esc(event.tick) + '<br>' + esc(status) + '</div>' +
+        '<div>' +
+          '<div class="fact">' + esc(fact) + '</div>' +
+          '<div class="participants">' + esc(participants) + ' · ' + esc(event.location) + '</div>' +
+        '</div>' +
+      '</article>'
+    );
   }).join("");
 }
 
@@ -69,20 +77,31 @@ function renderCharacters(characters) {
     $("characters").innerHTML = '<div class="empty">No characters.</div>';
     return;
   }
+
   $("characters").innerHTML = characters.map(character => {
     const goals = (character.goals || []).filter(g => g.status === "active");
     const emotions = Object.entries(character.emotions || {})
       .sort((a, b) => b[1] - a[1])
       .slice(0, 2)
-      .map(([name, value]) => \`\${name} \${Number(value).toFixed(0)}\`)
+      .map(([name, value]) => name + " " + Number(value).toFixed(0))
       .join(" · ");
-    return \`
-      <article class="character">
-        <div class="character-name">\${esc(character.name)}</div>
-        <div class="character-meta">\${esc(character.id)} · \${esc(character.location || "unknown")} · \${esc(character.status)}</div>
-        <div class="character-detail">Goals: \${esc(goals.map(g => g.description).join("; ") || "none")}</div>
-        <div class="character-detail">Emotion: \${esc(emotions || "none")}</div>
-      </article>\`;
+
+    return (
+      '<article class="character">' +
+        '<div class="character-name">' + esc(character.name) + '</div>' +
+        '<div class="character-meta">' +
+          esc(character.id) + ' · ' +
+          esc(character.location || "unknown") + ' · ' +
+          esc(character.status) +
+        '</div>' +
+        '<div class="character-detail">Goals: ' +
+          esc(goals.map(g => g.description).join("; ") || "none") +
+        '</div>' +
+        '<div class="character-detail">Emotion: ' +
+          esc(emotions || "none") +
+        '</div>' +
+      '</article>'
+    );
   }).join("");
 }
 
@@ -90,27 +109,39 @@ function graphLayout(characters) {
   const centerX = 320;
   const centerY = 180;
   const radius = Math.min(125, 45 + characters.length * 18);
+
   return characters.map((character, index) => {
-    const angle = (-Math.PI / 2) + index * (2 * Math.PI / Math.max(characters.length, 1));
-    return { character, x: centerX + radius * Math.cos(angle), y: centerY + radius * Math.sin(angle) };
+    const angle =
+      (-Math.PI / 2) +
+      index * (2 * Math.PI / Math.max(characters.length, 1));
+
+    return {
+      character,
+      x: centerX + radius * Math.cos(angle),
+      y: centerY + radius * Math.sin(angle),
+    };
   });
 }
 
 function renderGraph(characters, relationships) {
   const svg = $("graph");
   svg.innerHTML = "";
+
   if (!characters.length) {
     svg.innerHTML = '<text x="320" y="185">No characters</text>';
     return;
   }
 
   const nodes = graphLayout(characters);
-  const lookup = Object.fromEntries(nodes.map(item => [item.character.id, item]));
+  const lookup = Object.fromEntries(
+    nodes.map(item => [item.character.id, item])
+  );
 
   relationships.forEach(rel => {
     const a = lookup[rel.source_id];
     const b = lookup[rel.target_id];
     if (!a || !b) return;
+
     const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
     line.setAttribute("x1", a.x);
     line.setAttribute("y1", a.y);
@@ -136,31 +167,50 @@ function renderGraph(characters, relationships) {
 
 function renderThreads(narrative) {
   const threads = narrative.threads || [];
+
   if (!threads.length) {
-    $("threads").innerHTML = '<div class="empty">No persistent narrative threads have emerged yet.</div>';
+    $("threads").innerHTML =
+      '<div class="empty">No persistent narrative threads have emerged yet.</div>';
     return;
   }
-  $("threads").innerHTML = threads.map(thread => \`
-    <article class="thread">
-      <div class="thread-title">\${esc(thread.title)}</div>
-      <div class="thread-meta">\${esc(thread.status)} · tension \${Number(thread.tension || 0).toFixed(2)} · events \${thread.event_ids?.length || 0}</div>
-      <div class="thread-question">\${esc(thread.unresolved_question || "No unresolved question recorded.")}</div>
-    </article>\`
+
+  $("threads").innerHTML = threads.map(thread =>
+    '<article class="thread">' +
+      '<div class="thread-title">' + esc(thread.title) + '</div>' +
+      '<div class="thread-meta">' +
+        esc(thread.status) +
+        ' · tension ' + Number(thread.tension || 0).toFixed(2) +
+        ' · events ' + ((thread.event_ids && thread.event_ids.length) || 0) +
+      '</div>' +
+      '<div class="thread-question">' +
+        esc(thread.unresolved_question || "No unresolved question recorded.") +
+      '</div>' +
+    '</article>'
   ).join("");
 }
 
 function renderDiscoveries(narrative) {
   const discoveries = narrative.discoveries || [];
+
   if (!discoveries.length) {
-    $("discoveries").innerHTML = '<div class="empty">No story-bearing discovery above the observer threshold.</div>';
+    $("discoveries").innerHTML =
+      '<div class="empty">No story-bearing discovery above the observer threshold.</div>';
     return;
   }
-  $("discoveries").innerHTML = discoveries.map(item => \`
-    <article class="discovery">
-      <div class="discovery-title">\${esc(item.title || "Untitled discovery")}</div>
-      <div class="discovery-meta">score \${Number(item.score || 0).toFixed(2)} · events \${item.event_ids?.length || 0}</div>
-      <div class="thread-question">\${esc(item.reason || "No reason recorded.")}</div>
-    </article>\`
+
+  $("discoveries").innerHTML = discoveries.map(item =>
+    '<article class="discovery">' +
+      '<div class="discovery-title">' +
+        esc(item.title || "Untitled discovery") +
+      '</div>' +
+      '<div class="discovery-meta">' +
+        'score ' + Number(item.score || 0).toFixed(2) +
+        ' · events ' + ((item.event_ids && item.event_ids.length) || 0) +
+      '</div>' +
+      '<div class="thread-question">' +
+        esc(item.reason || "No reason recorded.") +
+      '</div>' +
+    '</article>'
   ).join("");
 }
 
@@ -181,8 +231,10 @@ async function refresh() {
 
 async function perform(button, fn) {
   if (state.busy) return;
+
   state.busy = true;
   button.disabled = true;
+
   try {
     await fn();
     await refresh();
