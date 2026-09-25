@@ -1,6 +1,6 @@
 # Aetherium Roadmap
 
-Aetherium is built around a **self-simulating fictional world**. The roadmap therefore prioritizes trustworthy world causality before autonomous storytelling, while bringing narrative intelligence and literary expression early enough that the simulator does not become a history generator with no compelling stories.
+Aetherium is built around a self-simulating fictional world. The roadmap therefore prioritizes trustworthy world causality before autonomous storytelling, while bringing narrative intelligence and literary expression early enough that the simulator does not become a history generator with no compelling stories.
 
 ## Phase 1 — Living-world kernel
 - [x] Core world and character state
@@ -101,14 +101,14 @@ Literary quality is a composable expression system, not a single author-style sw
 ## Phase 8 — Agents and novelization
 - [x] Agent contracts
 - [x] Model adapters
-- [ ] Director / orchestrator
+- [x] Director / orchestrator
 - [ ] Character agents
 - [ ] Continuity agent
 - [ ] Independent critic agents
 - [ ] Writer / scene generation
 - [ ] Human-in-the-loop approval
 - [ ] Autonomous long-run mode
-- [ ] User can converse with any agent without replacing authoritative world state
+- [x] User can converse with any agent without replacing authoritative world state
 
 ## Phase 9 — Product layer
 - [ ] FastAPI
@@ -123,20 +123,20 @@ Literary quality is a composable expression system, not a single author-style sw
 
 ## Cross-cutting invariants
 
-1. **The world can run without a novel.**
-2. **Characters can make choices that do not serve a predefined plot.**
-3. **Narrative systems observe and propose; they do not silently rewrite authoritative history.**
-4. **Literary expression cannot contradict authoritative facts.**
-5. **World truth, character belief, and reader knowledge remain separate.**
-6. **Pressure is not spectacle; quiet scenes may matter.**
-7. **Setups must be causally legitimate; twists cannot manufacture their own past.**
-8. **Not every seed requires a payoff.**
-9. **User interventions create explicit, recoverable history rather than erasing the old world.**
-10. **The system must support autonomous evolution as a first-class operating mode.**
+1. The world can run without a novel.
+2. Characters can make choices that do not serve a predefined plot.
+3. Narrative systems observe and propose; they do not silently rewrite authoritative history.
+4. Literary expression cannot contradict authoritative facts.
+5. World truth, character belief, and reader knowledge remain separate.
+6. Pressure is not spectacle; quiet scenes may matter.
+7. Setups must be causally legitimate; twists cannot manufacture their own past.
+8. Not every seed requires a payoff.
+9. User interventions create explicit, recoverable history rather than erasing the old world.
+10. The system must support autonomous evolution as a first-class operating mode.
 
 ## Guiding milestone
 
-The first real milestone is not "AI wrote a chapter".
+The first real milestone is not AI wrote a chapter.
 
 It is:
 
