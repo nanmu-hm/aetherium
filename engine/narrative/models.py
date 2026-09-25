@@ -241,38 +241,6 @@ class StoryCompletionAssessment:
     payoff_count: int = 0
     reason: str = ""
 
-
-@dataclass
-class NarrativeState:
-    """Derived narrative observations; safe to recompute from the event log."""
-
-    pressure: float = 0.0
-    recent_climax_tick: int | None = None
-    unresolved_threads: list[NarrativeThread] = field(default_factory=list)
-    signals: list[NarrativeSignal] = field(default_factory=list)
-    beats: list[NarrativeBeat] = field(default_factory=list)
-    dilemmas: list[NarrativeDilemma] = field(default_factory=list)
-    rhythm: RhythmState = field(default_factory=RhythmState)
-    threads: list[NarrativeThread] = field(default_factory=list)
-    arcs: list[CharacterArc] = field(default_factory=list)
-    information_gaps: list[InformationGap] = field(default_factory=list)
-    revelations: list[RevelationCandidate] = field(default_factory=list)
-    importance: list[NarrativeImportance] = field(default_factory=list)
-    convergences: list[ThreadConvergence] = field(default_factory=list)
-    foreshadowing: list[ForeshadowingLink] = field(default_factory=list)
-    scenes: list[NarrativeScene] = field(default_factory=list)
-    sequences: list[NarrativeSequence] = field(default_factory=list)
-    story_arcs: list[StoryArc] = field(default_factory=list)
-    treatments: list[NarrativeTreatment] = field(default_factory=list)
-    callback_schedules: list[CallbackSchedule] = field(default_factory=list)
-    interleave_slots: list[ArcInterleaveSlot] = field(default_factory=list)
-    completion: list[StoryCompletionAssessment] = field(default_factory=list)
-    literary: LiteraryExpressionState = field(default_factory=LiteraryExpressionState)
-    character_voices: list[CharacterVoiceProfile] = field(default_factory=list)
-    motifs: list[MotifObservation] = field(default_factory=list)
-    scene_expression: list[SceneExpressionPlan] = field(default_factory=list)
-
-
 @dataclass
 class LiteraryExpressionState:
     register: str = "natural"
@@ -336,3 +304,34 @@ class ProseQualityReport:
     knowledge_consistency: bool = True
     score: float = 1.0
     failures: list[str] = field(default_factory=list)
+
+
+@dataclass
+class NarrativeState:
+    """Derived narrative observations; safe to recompute from the event log."""
+
+    pressure: float = 0.0
+    recent_climax_tick: int | None = None
+    unresolved_threads: list[NarrativeThread] = field(default_factory=list)
+    signals: list[NarrativeSignal] = field(default_factory=list)
+    beats: list[NarrativeBeat] = field(default_factory=list)
+    dilemmas: list[NarrativeDilemma] = field(default_factory=list)
+    rhythm: RhythmState = field(default_factory=RhythmState)
+    threads: list[NarrativeThread] = field(default_factory=list)
+    arcs: list[CharacterArc] = field(default_factory=list)
+    information_gaps: list[InformationGap] = field(default_factory=list)
+    revelations: list[RevelationCandidate] = field(default_factory=list)
+    importance: list[NarrativeImportance] = field(default_factory=list)
+    convergences: list[ThreadConvergence] = field(default_factory=list)
+    foreshadowing: list[ForeshadowingLink] = field(default_factory=list)
+    scenes: list[NarrativeScene] = field(default_factory=list)
+    sequences: list[NarrativeSequence] = field(default_factory=list)
+    story_arcs: list[StoryArc] = field(default_factory=list)
+    treatments: list[NarrativeTreatment] = field(default_factory=list)
+    callback_schedules: list[CallbackSchedule] = field(default_factory=list)
+    interleave_slots: list[ArcInterleaveSlot] = field(default_factory=list)
+    completion: list[StoryCompletionAssessment] = field(default_factory=list)
+    literary: LiteraryExpressionState = field(default_factory=LiteraryExpressionState)
+    character_voices: list[CharacterVoiceProfile] = field(default_factory=list)
+    motifs: list[MotifObservation] = field(default_factory=list)
+    scene_expression: list[SceneExpressionPlan] = field(default_factory=list)
