@@ -105,7 +105,7 @@ Literary quality is a composable expression system, not a single author-style sw
 - [x] Character agents
 - [x] Continuity agent
 - [x] Independent critic agents
-- [ ] Writer / scene generation
+- [x] Writer / scene generation
 - [ ] Human-in-the-loop approval
 - [ ] Autonomous long-run mode
 - [x] User can converse with any agent without replacing authoritative world state
@@ -133,15 +133,3 @@ Literary quality is a composable expression system, not a single author-style sw
 8. Not every seed requires a payoff.
 9. User interventions create explicit, recoverable history rather than erasing the old world.
 10. The system must support autonomous evolution as a first-class operating mode.
-
-## Guiding milestone
-
-The first real milestone is not AI wrote a chapter.
-
-It is:
-
-> A deterministic world can evolve for a long time; characters make causally consistent but imperfect choices; consequences persist; information differs by actor; relationships change; narrative intelligence discovers dilemmas, threads, and emerging arcs; and the literary layer can turn an observed arc into readable prose without falsifying the world.
-
-## Guiding rule
-
-Do not add UI complexity faster than the underlying world, narrative, and literary models become trustworthy.

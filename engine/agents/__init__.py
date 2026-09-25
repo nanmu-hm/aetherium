@@ -15,6 +15,7 @@ from .models import (
     AgentStatus,
     ProposalKind,
 )
+from .writer import SceneDraft, WriterAgent
 
 __all__ = [
     "Agent",
@@ -38,5 +39,7 @@ __all__ = [
     "ModelResponse",
     "NullModelAdapter",
     "ProposalKind",
+    "SceneDraft",
+    "WriterAgent",
     "standard_contracts",
 ]
