@@ -198,4 +198,15 @@ def test_api_run_request_matches_controller_limits(tmp_path):
     request = RunRequest(max_ticks=2, checkpoint_every=0)
     assert request.max_ticks == 2
     assert request.checkpoint_every == 0
-\ndef test_dashboard_assets_are_served_as_browser_files(tmp_path):\n    client = build_client(tmp_path)\n\n    script = client.get("/dashboard/app.js")\n    style = client.get("/dashboard/style.css")\n\n    assert script.status_code == 200\n    assert 'fetch("/api/dashboard?limit=80")' in script.text\n    assert "renderGraph" in script.text\n\n    assert style.status_code == 200\n    assert ".character-list" in style.text\n
+def test_dashboard_assets_are_served_as_browser_files(tmp_path):
+    client = build_client(tmp_path)
+
+    script = client.get("/dashboard/app.js")
+    style = client.get("/dashboard/style.css")
+
+    assert script.status_code == 200
+    assert 'fetch("/api/dashboard?limit=80")' in script.text
+    assert "renderGraph" in script.text
+
+    assert style.status_code == 200
+    assert ".character-list" in style.text
