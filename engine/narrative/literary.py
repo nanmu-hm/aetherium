@@ -57,7 +57,7 @@ class LiteraryExpressionPlanner:
             for fact in event.facts:
                 words = {word.strip(".,!?;:()[]{}").lower() for word in fact.split()}
                 for word in words:
-                    if len(word) >= 5:
+                    if len(word) >= 4:
                         counts[word] += 1
                         event_ids.setdefault(word, []).append(event.id)
         result = []
