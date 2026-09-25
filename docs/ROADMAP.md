@@ -90,14 +90,14 @@ Literary quality is a composable expression system, not a single author-style sw
 - [ ] Long-horizon stability / anti-collapse controls
 
 ## Phase 7 — Persistence and agency
-- [ ] Event-sourced persistence
-- [ ] Canon ledger / provenance
-- [ ] Checkpoints
-- [ ] Branch / fork / rollback
+- [x] Event-sourced persistence
+- [x] Canon ledger / provenance
+- [x] Checkpoints
+- [x] Branch / fork / rollback
 - [ ] Impact analysis for user edits
 - [ ] Conflict resolution
-- [ ] Simulation replay
-- [ ] Deterministic reproducibility
+- [x] Simulation replay
+- [x] Deterministic reproducibility
 
 ## Phase 8 — Agents and novelization
 - [ ] Agent contracts
