@@ -107,7 +107,7 @@ Literary quality is a composable expression system, not a single author-style sw
 - [x] Independent critic agents
 - [x] Writer / scene generation
 - [x] Human-in-the-loop approval
-- [ ] Autonomous long-run mode
+- [x] Autonomous long-run mode
 - [x] User can converse with any agent without replacing authoritative world state
 - [x] Draft / Narrative Canon separation with immutable event provenance
 

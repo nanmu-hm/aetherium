@@ -1,6 +1,7 @@
 from .adapters import ModelAdapter, ModelRequest, ModelResponse, NullModelAdapter
 from .approval import ApprovalDecision, DraftStatus, HumanApprovalService, NarrativeDraft, NarrativeDraftStore
 from .authority import AgentAuthority, AuthorityDecision
+from .autonomous import AutonomousRunConfig, AutonomousRunController, AutonomousRunReport, AutonomousRunStatus
 from .character import CharacterAgent
 from .contracts import Agent, standard_contracts
 from .continuity import ContinuityAgent
@@ -32,6 +33,10 @@ __all__ = [
     "AgentStatus",
     "ApprovalDecision",
     "AuthorityDecision",
+    "AutonomousRunConfig",
+    "AutonomousRunController",
+    "AutonomousRunReport",
+    "AutonomousRunStatus",
     "CharacterAgent",
     "ContinuityAgent",
     "CriticAgent",
