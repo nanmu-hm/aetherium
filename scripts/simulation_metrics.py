@@ -70,6 +70,33 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
     }
 
 
+def search_reroute_probe() -> list[str]:
+    """Three-location probe showing actor-local failed search changing later destinations."""
+    world = build_genesis_world()
+    world.locations.add("temple")
+    world.characters["yan"].location = "river_town"
+    world.characters["rui"].location = "old_road"
+    SimulationEngine(seed=31).memory_kernel.learn_fact(
+        world.memory_state,
+        "yan",
+        "location_seen:rui:temple",
+        tick=0,
+        source="prior_observation",
+        confidence=0.8,
+    )
+    events: list[str] = []
+    engine = SimulationEngine(seed=31)
+    for _ in range(3):
+        result = engine.step(world)
+        events.extend(
+            fact
+            for event in result.events
+            for fact in event.facts
+            if "search for" in fact.lower()
+        )
+    return events
+
+
 def checkpoint_replay_check() -> bool:
     initial = build_genesis_world()
     continuous = world_from_dict(world_to_dict(initial))
@@ -109,6 +136,9 @@ def main() -> None:
             f"final_locations={result['final_locations']}"
         )
     print(f"checkpoint_replay={checkpoint_replay_check()}")
+    print("search_reroute_probe:")
+    for fact in search_reroute_probe():
+        print(f"  {fact}")
 
 
 if __name__ == "__main__":
