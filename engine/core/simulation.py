@@ -701,6 +701,32 @@ class SimulationEngine:
                     )
 
             self._apply_fatigue(actor, action, outcome, consequences)
+
+            # Helping is meaningful only if it changes the condition that caused
+            # the help affordance. In the Genesis world, fatigue is one such
+            # modeled condition, so successful help provides direct recovery.
+            if (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "help_person"
+                and action.targets
+            ):
+                target = state.characters.get(action.targets[0])
+                if target is not None:
+                    old_fatigue = target.human_condition.fatigue
+                    recovery = min(15.0, old_fatigue)
+                    target.human_condition.fatigue = old_fatigue - recovery
+                    if recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "human_condition.fatigue",
+                                old_fatigue,
+                                target.human_condition.fatigue,
+                                "successful help addresses the target's fatigue",
+                            )
+                        )
+
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
@@ -807,7 +833,24 @@ class SimulationEngine:
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
                     if desire_name not in desires:
                         continue
-                    if action_type == "travel" and desire_name == "freedom":
+                    if action_type == "contact_person" and desire_name == "reconciliation":
+                    relationship = state.get_relationship(character.id, event.participants[1]) if len(event.participants) > 1 else None
+                    if relationship is not None:
+                        tension = max(
+                            0.0,
+                            min(
+                                100.0,
+                                max(
+                                    100.0 - relationship.trust,
+                                    relationship.resentment,
+                                    relationship.fear,
+                                ),
+                            ),
+                        )
+                        satisfaction = min(100.0, 20.0 + 0.50 * tension)
+                        desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
+                    continue
+                if action_type == "travel" and desire_name == "freedom":
                         # Freedom is satisfied according to the actor's
                         # experienced confinement at the place they left.
                         old_value = desires[desire_name]
@@ -845,6 +888,18 @@ class SimulationEngine:
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
         self.memory_kernel.advance_desires(state.memory_state, state.tick)
+        # Quiet time is part of the world, not a missing event. A character
+        # who takes no action can still recover from ordinary fatigue.
+        acted = {action.actor_id for action in actions}
+        for character in state.characters.values():
+            if character.id in acted or character.status != "active":
+                continue
+            old_fatigue = character.human_condition.fatigue
+            if old_fatigue <= 0.0:
+                continue
+            recovery = min(2.0, old_fatigue)
+            character.human_condition.fatigue = old_fatigue - recovery
+
         self._advance_human_pressures(state, events)
         errors = self.validate(state)
         current_tick = state.tick
