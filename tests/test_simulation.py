@@ -956,18 +956,17 @@ def test_freedom_pressure_does_not_recover_away_from_confining_context():
     assert world.characters["r"].human_condition.desires["freedom"] == 20.0
 
 
-def test_rest_is_always_available_but_deterministically_succeeds():
+def test_rest_requires_a_real_recovery_need():
     from engine.core.actions import generate_action_pool
 
     world = build_demo_world()
-    world.characters["lin"].human_condition.desires["stress"] = 0.0
+    world.characters["lin"].human_condition.fatigue = 0.0
+    pool = generate_action_pool(world, "lin")
+    assert not any(action.action_type == "rest" for action in pool)
+
+    world.characters["lin"].human_condition.fatigue = 40.0
     pool = generate_action_pool(world, "lin")
     assert any(action.action_type == "rest" for action in pool)
-
-    action = next(item for item in pool if item.action_type == "rest")
-    event = SimulationEngine(seed=1).resolve(world, [action])[0]
-    assert event.action_result is not None
-    assert event.action_result.status == "success"
 
 
 def test_location_seen_evidence_retracts_stale_absence_fact():
@@ -980,6 +979,46 @@ def test_location_seen_evidence_retracts_stale_absence_fact():
 
     kernel.learn_fact(world.memory_state, "lin", "location_seen:mei:road", tick=2)
     assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is None
+
+
+def test_same_event_can_produce_different_personality_reactions():
+    from engine.core.models import ActionCandidate, CharacterState
+    from engine.core.human_condition import HumanCondition
+    from engine.core.models import RelationshipState, WorldState
+
+    world = WorldState(world_id="personality-reaction", locations={"town"})
+    world.add_character(CharacterState(
+        id="actor", name="Actor", location="town", values=["loyalty"],
+        human_condition=HumanCondition(),
+    ))
+    world.add_character(CharacterState(
+        id="proud", name="Proud", location="town", traits=["proud", "independent"],
+        human_condition=HumanCondition(),
+    ))
+    world.add_character(CharacterState(
+        id="warm", name="Warm", location="town", traits=["warm", "forgiving"],
+        human_condition=HumanCondition(),
+    ))
+    world.add_relationship(RelationshipState("actor", "proud", trust=50))
+    world.add_relationship(RelationshipState("actor", "warm", trust=50))
+
+    # One contact event is observed by both characters, but their own traits
+    # produce different interpretations and therefore different emotional state.
+    action = ActionCandidate(
+        "contact", "actor", "contact_person", targets=["proud"], confidence=1.0, difficulty=0.0,
+    )
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert world.characters["proud"].emotions["resentment"] > 0.0
+    assert world.characters["warm"].emotions["joy"] > 0.0
+    assert any(
+        item.target_id == "proud" and item.field == "emotions.resentment"
+        for item in event.consequences
+    )
+    assert any(
+        item.target_id == "warm" and item.field == "emotions.joy"
+        for item in event.consequences
+    )
 
 
 def test_rest_does_not_reinforce_when_actor_is_already_rested():
