@@ -769,7 +769,18 @@ class SimulationEngine:
                         growth *= 1.35
                     if has_trait(character, "cautious"):
                         growth *= 0.80
-                desires[desire_name] = min(100.0, value + growth)
+                    explored = {
+                        state.memory_state.memories[memory_id].location
+                        for memory_id in character.memory_ids
+                        if memory_id in state.memory_state.memories
+                        and state.memory_state.memories[memory_id].location in state.locations
+                    }
+                    if len(explored) >= len(state.locations):
+                        # Curiosity habituates when every available place has
+                        # already been experienced. Do not manufacture an
+                        # endless need to travel without a new frontier.
+                        growth = -min(2.0, max(0.5, growth * 0.5))
+                desires[desire_name] = max(0.0, min(100.0, value + growth))
 
             for event in events:
                 if not event.participants or event.participants[0] not in acted:
@@ -850,10 +861,14 @@ class ActionResolver:
             if action.required_ability
             else 0.5
         )
+        if canonical_action_type(action.action_type) == "travel":
+            # The current world models valid travel between known locations but
+            # models no terrain, weather, gate, transport, or other obstacle.
+            # A valid travel attempt therefore succeeds; physical impossibility
+            # is represented explicitly by the precondition layer as blocked.
+            return 1.0
+
         base = 0.5 + 0.35 * (ability - action.difficulty)
-        # Confidence should materially affect willingness to take an uncertain
-        # action: low confidence must not turn a very difficult action into a
-        # near-even roll.
         confidence_factor = 0.25 + 0.75 * action.confidence
         return max(0.05, min(0.95, base * confidence_factor))
 
