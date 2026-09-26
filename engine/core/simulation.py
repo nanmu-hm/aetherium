@@ -743,7 +743,7 @@ class SimulationEngine:
                 participants=participants,
                 causes=[action.id],
                 facts=facts,
-                action_type=canonical_action_type(action.action_type),
+                action_type=action.metadata.get("event_action_type", canonical_action_type(action.action_type)),
                 action_result=outcome,
                 consequences=consequences,
             )
