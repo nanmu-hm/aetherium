@@ -243,6 +243,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
                 "destination_confinement": character.human_condition.confinement_at(destination),
+                "world_validated": True,
             },
         ))
 
@@ -299,6 +300,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                     "search_target": target_id,
                     "search_basis": "remembered_location" if remembered else "uncertain_location",
                     "search_destination": destination,
+                    "world_validated": True,
                 },
             ))
             break
