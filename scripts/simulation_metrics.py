@@ -26,6 +26,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
     chosen_rest = 0
     action_counts = Counter()
     travel_ticks: defaultdict[str, list[int]] = defaultdict(list)
+    travel_reasons: Counter[tuple[str, str]] = Counter()
+    location_absent = 0
 
     for _ in range(ticks):
         pools = {
@@ -43,6 +45,10 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
             if event.action_type == "travel" and event.action_result and event.action_result.status == "success":
                 actor_id = event.participants[0]
                 travel_ticks[actor_id].append(event.tick)
+                reason = "search" if any("search for" in fact.lower() for fact in event.facts) else "freedom"
+                travel_reasons[(actor_id, reason)] += 1
+            if any("is not there" in fact.lower() for fact in event.facts):
+                location_absent += 1
 
     intervals = []
     for ticks_for_actor in travel_ticks.values():
@@ -56,6 +62,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
         "chosen_rest": chosen_rest,
         "action_counts": dict(sorted(action_counts.items())),
         "travel_intervals": intervals,
+        "travel_reasons": {f"{actor}:{reason}": count for (actor, reason), count in sorted(travel_reasons.items())},
+        "location_absent": location_absent,
         "final_locations": {
             cid: world.characters[cid].location for cid in sorted(world.characters)
         },
@@ -96,6 +104,8 @@ def main() -> None:
             f"chosen_rest={result['chosen_rest']} "
             f"actions={result['action_counts']} "
             f"travel_intervals={result['travel_intervals']} "
+            f"travel_reasons={result['travel_reasons']} "
+            f"location_absent={result['location_absent']} "
             f"final_locations={result['final_locations']}"
         )
     print(f"checkpoint_replay={checkpoint_replay_check()}")
