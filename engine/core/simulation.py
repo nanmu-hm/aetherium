@@ -53,7 +53,7 @@ class SimulationEngine:
         selected: list[ActionCandidate] = []
         for character in state.characters.values():
             pool = generate_action_pool(state, character.id)
-            action, _ = self.decision_kernel.choose(state, pool)
+            action, _ = self.decision_kernel.choose(state, pool, allow_quiet=True)
             if action is not None:
                 selected.append(action)
         return selected
