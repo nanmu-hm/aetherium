@@ -30,6 +30,11 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
     travel_ticks: defaultdict[str, list[int]] = defaultdict(list)
     travel_reasons: Counter[tuple[str, str]] = Counter()
     location_absent = 0
+    emotion_samples: defaultdict[str, list[float]] = defaultdict(list)
+    emotion_saturated: Counter[str] = Counter()
+    travel_reversals = 0
+    travel_successes = 0
+    travel_locations: defaultdict[str, list[str]] = defaultdict(list)
 
     for _ in range(ticks):
         pools = {
@@ -51,6 +56,11 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
             and world.characters[character_id].emotions.get("sorrow", 0.0) < 35.0
         )
         result = engine.step(world)
+        for character in world.characters.values():
+            for emotion_name, value in character.emotions.items():
+                emotion_samples[emotion_name].append(value)
+                if value >= 99.0:
+                    emotion_saturated[emotion_name] += 1
         for action in result.actions:
             action_counts[action.action_type] += 1
             if action.action_type == "rest":
@@ -61,6 +71,12 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
             if event.action_type == "travel" and event.action_result and event.action_result.status == "success":
                 actor_id = event.participants[0]
                 travel_ticks[actor_id].append(event.tick)
+                travel_successes += 1
+                travel_locations[actor_id].append(event.location)
+                if len(travel_locations[actor_id]) >= 3:
+                    seq = travel_locations[actor_id]
+                    if seq[-3] == seq[-1] and seq[-3] != seq[-2]:
+                        travel_reversals += 1
                 reason = "search" if action and action.metadata.get("search_target") else "freedom"
                 travel_reasons[(actor_id, reason)] += 1
             if action and action.metadata.get("search_target") and any(
@@ -87,6 +103,15 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
         "final_locations": {
             cid: world.characters[cid].location for cid in sorted(world.characters)
         },
+        "emotion_distribution": {
+            name: {
+                "mean": sum(values) / len(values),
+                "max": max(values),
+                "saturation_ratio": emotion_saturated[name] / max(1, len(values)),
+            }
+            for name, values in sorted(emotion_samples.items())
+        },
+        "travel_reversal_ratio": travel_reversals / max(1, travel_successes),
     }
 
 
@@ -154,7 +179,9 @@ def main() -> None:
             f"travel_intervals={result['travel_intervals']} "
             f"travel_reasons={result['travel_reasons']} "
             f"location_absent={result['location_absent']} "
-            f"final_locations={result['final_locations']}"
+            f"final_locations={result['final_locations']} "
+            f"emotion_distribution={result['emotion_distribution']} "
+            f"travel_reversal_ratio={result['travel_reversal_ratio']:.3f}"
         )
     print(f"checkpoint_replay={checkpoint_replay_check()}")
     print("search_reroute_probe:")
