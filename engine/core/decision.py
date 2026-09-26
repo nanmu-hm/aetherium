@@ -373,7 +373,7 @@ class DecisionKernel:
         rng = random.Random(stable_seed)
         return (rng.random() * 2.0 - 1.0) * noise_level
 
-    def choose(self, state: WorldState, pool: list[ActionCandidate]) -> tuple[ActionCandidate | None, list[DecisionEvaluation]]:
+    def choose(self, state: WorldState, pool: list[ActionCandidate], allow_quiet: bool = False) -> tuple[ActionCandidate | None, list[DecisionEvaluation]]:
         evaluations = [self.evaluate(state, action) for action in pool]
         if not evaluations:
             return None, []
@@ -405,6 +405,6 @@ class DecisionKernel:
         # A world is allowed to have a quiet tick. If every available action
         # has non-positive expected utility, forcing the least-bad action would
         # manufacture behavior and eventually create artificial loops.
-        if (best.selection_score if best.selection_score is not None else best.utility) <= 0.0:
+        if allow_quiet and (best.selection_score if best.selection_score is not None else best.utility) <= 0.0:
             return None, selected
         return next(action for action in pool if action.id == best.action_id), selected
