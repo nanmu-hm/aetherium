@@ -105,6 +105,9 @@ class ActionCandidate:
     expected_outcomes: list[str] = field(default_factory=list)
     risks: list[str] = field(default_factory=list)
     confidence: float = 0.5
+    # Structured intent/provenance used by resolution; it is actor-generated,
+    # not hidden world state.
+    metadata: dict[str, Any] = field(default_factory=dict)
     difficulty: float = 0.5
     required_ability: str = ""
     score: float = 0.0
