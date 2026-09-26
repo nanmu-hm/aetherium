@@ -18,6 +18,7 @@ _ALIASES = {
 
 
 def canonical_action_type(action_type: str) -> str:
+    """Return the canonical internal action name for an event or action."""
     return _ALIASES.get(action_type, action_type)
 
 
@@ -30,16 +31,21 @@ GOAL_ACTION_KEYWORDS = {
 
 
 def goal_tokens(goal_description: str) -> set[str]:
+    """Tokenize goal language into exact words for semantic action matching."""
     return set(re.findall(r"[a-z]+", goal_description.lower()))
 
 
 def goal_matches_action(goal_description: str, action_type: str) -> bool:
+    """Return whether a goal explicitly names an affordance of the action."""
     return bool(goal_tokens(goal_description) & GOAL_ACTION_KEYWORDS.get(canonical_action_type(action_type), frozenset()))
 
 
 def event_action_type(event) -> str:
     """Return the semantic event type while preserving legacy travel events."""
     explicit = getattr(event, "action_type", "")
+    metadata = getattr(event, "metadata", {}) or {}
+    if metadata.get("event_action_type"):
+        return canonical_action_type(metadata["event_action_type"])
     if explicit:
         if canonical_action_type(explicit) == "travel" and event.causes:
             cause = event.causes[0]
