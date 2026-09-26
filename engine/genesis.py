@@ -24,12 +24,20 @@ def build_genesis_world() -> WorldState:
                 "yan-1",
                 "help an old friend",
                 priority=0.75,
-                stages=["find the old friend", "offer help", "help the old friend"],
+                stages=["find the old friend", "help the old friend"],
+                stage_conditions=[
+                    {"type": "successful_contact", "target_id": "rui", "action_types": ["contact_person"]},
+                    {"type": "successful_help", "target_id": "rui", "action_types": ["help_person"]},
+                ],
             )],
             human_condition=HumanCondition(
                 attachments={"friendship": 85},
                 desires={"reconciliation": 70},
                 fears={"loss": 65},
+                location_pressures={
+                    "river_town": {"confinement": 0.0},
+                    "old_road": {"confinement": 0.0},
+                },
                 virtues={"loyalty": 90, "compassion": 75},
             ),
         )
@@ -45,11 +53,19 @@ def build_genesis_world() -> WorldState:
                 "leave town",
                 priority=0.65,
                 stages=["leave town", "continue toward freedom"],
+                stage_conditions=[
+                    {"type": "location_not", "location": "river_town", "action_types": ["travel"]},
+                    {"type": "location_not_and_action", "location": "river_town", "action_types": ["travel", "contact_person", "help_person"]},
+                ],
             )],
             human_condition=HumanCondition(
                 attachments={"friendship": 70},
                 desires={"freedom": 80},
                 fears={"confinement": 60},
+                location_pressures={
+                    "river_town": {"confinement": 1.0},
+                    "old_road": {"confinement": 0.0},
+                },
                 virtues={"courage": 80},
             ),
         )
