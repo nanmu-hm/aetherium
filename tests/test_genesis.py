@@ -1,5 +1,6 @@
 from engine.genesis import discover_genesis_stories, run_genesis
 from engine.core.action_types import event_action_type
+from engine.core.simulation import SimulationEngine
 
 
 def test_genesis_runs_without_manual_plot_injection():
@@ -141,17 +142,17 @@ def test_genesis_long_run_is_reproducible_and_valid():
 def test_genesis_does_not_immediately_reverse_travel_without_a_new_reason():
     world = run_genesis(ticks=1, seed=7)
     rui = world.characters["rui"]
-    if rui.location == "old_road":
-        before = len(world.event_log)
-        SimulationEngine(seed=7).step(world)
-        new_events = world.event_log[before:]
-        rui_travel = [
-            event for event in new_events
-            if event.participants and event.participants[0] == "rui"
-            and event_action_type(event) == "travel"
-            and event.action_result is not None
-            and event.action_result.status == "success"
-        ]
-        assert not rui_travel or all(
-            event.location != "river_town" for event in rui_travel
-        )
+    assert rui.location == "old_road"
+    before = len(world.event_log)
+    engine = SimulationEngine(seed=7)
+    for _ in range(4):
+        engine.step(world)
+    new_events = world.event_log[before:]
+    rui_travel = [
+        event for event in new_events
+        if event.participants and event.participants[0] == "rui"
+        and event_action_type(event) == "travel"
+        and event.action_result is not None
+        and event.action_result.status == "success"
+    ]
+    assert not any(event.location == "river_town" for event in rui_travel)
