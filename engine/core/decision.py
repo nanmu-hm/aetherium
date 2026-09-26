@@ -209,7 +209,7 @@ class DecisionKernel:
         if goal_matches_action(goal.description, action.action_type):
             alignment = goal.priority
         else:
-            alignment = min(1.0, goal.priority * action.confidence)
+            alignment = 0.0
 
         # Relationship-seeking actions become more compelling when the
         # relationship itself carries unresolved tension. This keeps the
