@@ -15,6 +15,22 @@ class Goal:
     description: str
     priority: float = 1.0
     status: str = "active"
+    # Optional staged plan. The top-level description remains the durable goal;
+    # stages turn it into persistent, inspectable progress rather than a one-shot flag.
+    stages: list[str] = field(default_factory=list)
+    current_stage: int = 0
+
+    @property
+    def current_description(self) -> str:
+        if self.stages and self.current_stage < len(self.stages):
+            return self.stages[self.current_stage]
+        return self.description
+
+    @property
+    def progress(self) -> float:
+        if not self.stages:
+            return 1.0 if self.status == "achieved" else 0.0
+        return min(1.0, self.current_stage / len(self.stages))
 
 
 @dataclass
