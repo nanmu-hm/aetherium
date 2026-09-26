@@ -834,7 +834,11 @@ class SimulationEngine:
                     if desire_name not in desires:
                         continue
                     if action_type == "contact_person" and desire_name == "reconciliation":
-                        relationship = state.get_relationship(character.id, event.participants[1]) if len(event.participants) > 1 else None
+                        relationship = (
+                            state.get_relationship(character.id, event.participants[1])
+                            if len(event.participants) > 1
+                            else None
+                        )
                         if relationship is not None:
                             tension = max(
                                 0.0,
@@ -848,13 +852,20 @@ class SimulationEngine:
                                 ),
                             )
                             satisfaction = min(100.0, 20.0 + 0.50 * tension)
-                            desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
+                            desires[desire_name] = max(
+                                0.0, desires[desire_name] - satisfaction
+                            )
                         continue
-                if action_type == "travel" and desire_name == "freedom":
+
+                    if action_type == "travel" and desire_name == "freedom":
                         # Freedom is satisfied according to the actor's
                         # experienced confinement at the place they left.
                         old_value = desires[desire_name]
-                        old_location = event.consequences[0].old_value if event.consequences else character.location
+                        old_location = (
+                            event.consequences[0].old_value
+                            if event.consequences
+                            else character.location
+                        )
                         confinement = character.human_condition.confinement_at(old_location)
                         # A successful departure is a real release of freedom
                         # pressure. Stronger confinement makes the departure
@@ -870,7 +881,8 @@ class SimulationEngine:
                         prior_visits = sum(
                             1
                             for memory in state.memory_state.memories.values()
-                            if memory.owner_id == character.id and memory.location == destination
+                            if memory.owner_id == character.id
+                            and memory.location == destination
                         )
                         satisfaction = 60.0 if prior_visits <= 1 else 18.0
                         desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
