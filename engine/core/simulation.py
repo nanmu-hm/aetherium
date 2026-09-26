@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import random
 
 from .actions import generate_action_pool
-from .action_types import canonical_action_type, event_action_type, goal_matches_action
+from .action_types import canonical_action_type, event_action_type
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
