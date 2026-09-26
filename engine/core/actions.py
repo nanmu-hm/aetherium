@@ -52,7 +52,6 @@ def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
 def _contextual_desire(character: CharacterState, desire_name: str) -> float:
     """Return a desire as experienced in the actor's current place."""
     base = max(0.0, min(100.0, character.human_condition.desires.get(desire_name, 0.0)))
-    associations = character.human_condition.location_pressures.get(character.location, {})
     if desire_name == "freedom":
         return base * character.human_condition.confinement_at(character.location)
     return base
