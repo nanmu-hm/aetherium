@@ -95,3 +95,26 @@ def test_replay_detects_tampered_history():
     expected[0].facts.append("tampered history")
     verifier = ReplayVerifier()
     assert verifier.verify(initial, expected, seed=7, steps=1) is False
+
+
+def test_checkpoint_replay_preserves_future_rng_sequence():
+    initial = make_state()
+    continuous = world_from_dict(world_to_dict(initial))
+    continuous_engine = SimulationEngine(seed=19)
+    for _ in range(12):
+        continuous_engine.step(continuous)
+
+    split = world_from_dict(world_to_dict(initial))
+    first_engine = SimulationEngine(seed=19)
+    for _ in range(6):
+        first_engine.step(split)
+    checkpoint_payload = world_to_dict(split)
+    restored = world_from_dict(checkpoint_payload)
+    second_engine = SimulationEngine(seed=999)
+    for _ in range(6):
+        second_engine.step(restored)
+
+    assert [ReplayVerifier.event_signature(event) for event in restored.event_log] == [
+        ReplayVerifier.event_signature(event) for event in continuous.event_log
+    ]
+    assert world_to_dict(restored) == world_to_dict(continuous)
