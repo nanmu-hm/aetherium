@@ -34,6 +34,13 @@ class DecisionEvaluation:
 
 
 class DecisionKernel:
+    """Bounded, deterministic decision-making for fictional characters.
+
+    The kernel only sees the character's current model of the world. It does not
+    inspect future events or narrative signals, so story outcomes cannot leak
+    backward into character choice.
+    """
+
     def __init__(self, seed: int = 0, weights: DecisionWeights | None = None) -> None:
         self.seed = seed
         self.weights = weights or DecisionWeights()
@@ -41,12 +48,13 @@ class DecisionKernel:
     @staticmethod
     def _value_alignment(character: CharacterState, action: ActionCandidate) -> float:
         text = f"{action.action_type} {action.motivation}".lower()
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
         if not character.values:
             return 0.0
         affordances = {"freedom": {"travel"}, "loyalty": {"help_person", "contact_person", "search_person"}, "responsibility": {"help_person", "pursue_goal"}, "friendship": {"contact_person", "help_person", "search_person"}, "courage": {"travel", "help_person"}}
         pressure_by_action = {"travel": max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)), "contact_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "search_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "help_person": character.human_condition.desires.get("responsibility", 0.0)}
-        matches = sum(1.0 for value in character.values if value.lower() in text or action.action_type in affordances.get(value.lower(), set()))
-        pressure = max(0.0, min(100.0, pressure_by_action.get(action.action_type, 100.0))) / 100.0
+        matches = sum(1.0 for value in character.values if value.lower() in text or action_type in affordances.get(value.lower(), set()))
+        pressure = max(0.0, min(100.0, pressure_by_action.get(action_type, 100.0))) / 100.0
         return min(1.0, matches / len(character.values)) * pressure
 
     @staticmethod
@@ -59,7 +67,7 @@ class DecisionKernel:
             if rel is None:
                 continue
             compatibility = (rel.trust + rel.loyalty + rel.affection + rel.respect - rel.resentment - rel.fear) / 500.0
-            if canonical_action_type(action.action_type) == "contact_person":
+            if ("search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)) == "contact_person":
                 tension = max(rel.resentment, rel.fear, 100.0 - rel.trust) / 100.0
                 compatibility = 0.60 * compatibility + 0.25 * (rel.trust / 100.0) + 0.15 * tension
             scores.append(compatibility)
@@ -71,7 +79,8 @@ class DecisionKernel:
         recent = [event for event in reversed(state.event_log) if event.id in known_event_ids and event.participants and event.participants[0] == character.id][:3]
         if not recent:
             return 0.0
-        return min(1.0, sum(1 for event in recent if event_action_type(event) == canonical_action_type(action.action_type)) / 3.0)
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
+        return min(1.0, sum(1 for event in recent if event_action_type(event) == action_type) / 3.0)
 
     @staticmethod
     def _belief_friction(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -108,8 +117,9 @@ class DecisionKernel:
 
     @staticmethod
     def _emotion_alignment(character: CharacterState, action: ActionCandidate) -> float:
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
         mappings = {"travel": {"hope": 1.0, "longing": 0.5, "fear": -1.0, "regret": 0.25}, "contact_person": {"love": 1.0, "longing": 1.0, "hope": 0.5, "fear": -0.5, "resentment": -0.8}, "search_person": {"love": 0.8, "longing": 1.0, "hope": 0.8, "fear": -0.3, "resentment": -0.2}, "help_person": {"love": 0.7, "hope": 0.5, "joy": 0.2, "fear": -0.4, "resentment": -0.5, "regret": 0.3}}
-        weights = mappings.get(canonical_action_type(action.action_type), {})
+        weights = mappings.get(action_type, {})
         if not weights:
             return 0.0
         total_weight = sum(abs(value) for value in weights.values())
@@ -118,16 +128,17 @@ class DecisionKernel:
 
     @staticmethod
     def _goal_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
         goal = max((g for g in character.goals if g.status == "active"), key=lambda g: g.priority, default=None)
         if goal is None:
             return 0.0
-        if action.action_type == "pursue_goal":
+        if action_type == "pursue_goal":
             return goal.priority
-        alignment = goal.priority if goal_matches_action(goal.description, action.action_type) else 0.0
+        alignment = goal.priority if goal_matches_action(goal.description, action_type) else 0.0
         if goal.stage_conditions and goal.current_stage < len(goal.stage_conditions) and goal.stage_conditions[goal.current_stage].get("type") == "location_not_and_action":
             pressure = max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)) / 100.0
             alignment *= max(0.0, min(1.0, pressure))
-        if action.action_type == "contact_person" and action.targets:
+        if action_type == "contact_person" and action.targets:
             relationship = state.get_relationship(character.id, action.targets[0])
             if relationship is not None:
                 alignment = min(1.0, alignment + 0.5 * max(relationship.resentment, relationship.fear, 100.0 - relationship.trust) / 100.0)
@@ -136,7 +147,7 @@ class DecisionKernel:
     @staticmethod
     def _human_condition_urgency(character: CharacterState, action: ActionCandidate) -> float:
         desires = character.human_condition.desires
-        action_type = canonical_action_type(action.action_type)
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
         if action_type == "rest":
             return max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
         if action_type == "search_person":
