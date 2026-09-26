@@ -16,7 +16,7 @@ from engine.persistence.replay import ReplayVerifier
 
 
 SEEDS = (1, 2, 3, 7, 42)
-TICKS = 100
+TICKS = 200
 
 
 def run_seed(seed: int, ticks: int = TICKS) -> dict:
@@ -24,6 +24,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
     engine = SimulationEngine(seed=seed)
     idle_no_candidates = 0
     chosen_rest = 0
+    rest_as_sole_option = 0
+    rest_without_effect = 0
     action_counts = Counter()
     travel_ticks: defaultdict[str, list[int]] = defaultdict(list)
     travel_reasons: Counter[tuple[str, str]] = Counter()
@@ -36,6 +38,18 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
             if character.status == "active"
         }
         idle_no_candidates += sum(1 for pool in pools.values() if not pool)
+        rest_as_sole_option += sum(
+            1 for pool in pools.values()
+            if len(pool) == 1 and pool[0].action_type == "rest"
+        )
+        rest_without_effect += sum(
+            1
+            for character_id, pool in pools.items()
+            if any(action.action_type == "rest" for action in pool)
+            and world.characters[character_id].human_condition.fatigue < 10.0
+            and world.characters[character_id].emotions.get("stress", 0.0) < 20.0
+            and world.characters[character_id].emotions.get("sorrow", 0.0) < 35.0
+        )
         result = engine.step(world)
         for action in result.actions:
             action_counts[action.action_type] += 1
@@ -64,6 +78,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
         "events": len(world.event_log),
         "idle_no_candidates": idle_no_candidates,
         "chosen_rest": chosen_rest,
+        "rest_as_sole_option": rest_as_sole_option,
+        "rest_without_effect": rest_without_effect,
         "action_counts": dict(sorted(action_counts.items())),
         "travel_intervals": intervals,
         "travel_reasons": {f"{actor}:{reason}": count for (actor, reason), count in sorted(travel_reasons.items())},
@@ -131,6 +147,8 @@ def main() -> None:
         print(
             f"seed={seed} events={result['events']} "
             f"idle_no_candidates={result['idle_no_candidates']} "
+            f"rest_as_sole_option={result['rest_as_sole_option']} "
+            f"rest_without_effect={result['rest_without_effect']} "
             f"chosen_rest={result['chosen_rest']} "
             f"actions={result['action_counts']} "
             f"travel_intervals={result['travel_intervals']} "
