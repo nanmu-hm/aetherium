@@ -11,6 +11,7 @@ from .action_types import canonical_action_type, event_action_type, goal_matches
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
+from .psychology import social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
 
 
@@ -405,6 +406,65 @@ class SimulationEngine:
             )
         )
 
+    @staticmethod
+    def _apply_social_reactions(
+        state: WorldState,
+        event: Event,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Let affected people interpret the same event through their personalities."""
+        seen = set(event.participants)
+
+        # Direct targets experience the action personally.
+        for target_id in action.targets:
+            target = state.characters.get(target_id)
+            if target is None or target_id == action.actor_id:
+                continue
+            changes = social_reaction(target, action, outcome.status, is_target=True)
+            for name, delta in changes.items():
+                old = target.emotions.get(name, 0.0)
+                new = max(0.0, min(100.0, old + delta))
+                if new != old:
+                    target.emotions[name] = new
+                    consequences.append(
+                        Consequence(
+                            "character",
+                            target.id,
+                            f"emotions.{name}",
+                            old,
+                            new,
+                            f"personality-shaped reaction to {action.action_type}",
+                        )
+                    )
+
+        # Characters sharing the event location witness it. Their reactions
+        # depend on their own personality rather than the actor's interpretation.
+        for observer in state.characters.values():
+            if observer.id in seen or observer.status != "active" or observer.location != event.location:
+                continue
+            changes = witness_reaction(observer, action, outcome.status)
+            if not changes:
+                continue
+            event.participants.append(observer.id)
+            seen.add(observer.id)
+            for name, delta in changes.items():
+                old = observer.emotions.get(name, 0.0)
+                new = max(0.0, min(100.0, old + delta))
+                if new != old:
+                    observer.emotions[name] = new
+                    consequences.append(
+                        Consequence(
+                            "character",
+                            observer.id,
+                            f"emotions.{name}",
+                            old,
+                            new,
+                            f"witnessed {action.action_type} and interpreted it through personality",
+                        )
+                    )
+
     def _apply_failure_consequences(
         self,
         state: WorldState,
@@ -655,20 +715,20 @@ class SimulationEngine:
             if goal_fact:
                 facts.append(goal_fact)
 
-            events.append(
-                Event(
-                    id=f"event-{state.tick}-{actor.id}-{action.action_type}",
-                    tick=state.tick,
-                    timestamp=state.timestamp,
-                    location=actor.location,
-                    participants=participants,
-                    causes=[action.id],
-                    facts=facts,
-                    action_type=canonical_action_type(action.action_type),
-                    action_result=outcome,
-                    consequences=consequences,
-                )
+            event = Event(
+                id=f"event-{state.tick}-{actor.id}-{action.action_type}",
+                tick=state.tick,
+                timestamp=state.timestamp,
+                location=actor.location,
+                participants=participants,
+                causes=[action.id],
+                facts=facts,
+                action_type=canonical_action_type(action.action_type),
+                action_result=outcome,
+                consequences=consequences,
             )
+            self._apply_social_reactions(state, event, action, outcome, consequences)
+            events.append(event)
 
         for event in events:
             state.event_log.append(event)
@@ -702,8 +762,7 @@ class SimulationEngine:
             for desire_name, value in list(desires.items()):
                 growth = 3.0
                 if desire_name == "freedom":
-                    associations = character.human_condition.location_pressures.get(character.location, {})
-                    confinement = max(0.0, min(1.0, associations.get("confinement", 0.0)))
+                    confinement = character.human_condition.confinement_at(character.location)
                     growth *= confinement
                 desires[desire_name] = min(100.0, value + growth)
 
@@ -730,8 +789,7 @@ class SimulationEngine:
                         # experienced confinement at the place they left.
                         old_value = desires[desire_name]
                         old_location = event.consequences[0].old_value if event.consequences else character.location
-                        associations = character.human_condition.location_pressures.get(old_location, {})
-                        confinement = max(0.0, min(1.0, associations.get("confinement", 0.0)))
+                        confinement = character.human_condition.confinement_at(old_location)
                         desires[desire_name] = max(0.0, old_value * (1.0 - confinement))
                     else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
