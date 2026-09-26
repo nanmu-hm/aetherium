@@ -11,7 +11,7 @@ from .action_types import canonical_action_type, event_action_type, goal_matches
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
-from .psychology import social_reaction, witness_reaction
+from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
 
 
@@ -733,6 +733,18 @@ class SimulationEngine:
         return errors
 
     @staticmethod
+    def _settle_emotions(state: WorldState) -> None:
+        """Let emotional arousal settle between lived events."""
+        for character in state.characters.values():
+            for emotion_name, value in list(character.emotions.items()):
+                if value <= 0.0:
+                    continue
+                amount = emotion_decay(character, emotion_name, value)
+                if amount <= 0.0:
+                    continue
+                character.emotions[emotion_name] = max(0.0, value - amount)
+
+    @staticmethod
     def _advance_human_pressures(state: WorldState, events: list[Event]) -> None:
         acted = {
             event.participants[0]
@@ -752,6 +764,11 @@ class SimulationEngine:
                 if desire_name == "freedom":
                     confinement = character.human_condition.confinement_at(character.location)
                     growth *= confinement
+                elif desire_name == "curiosity":
+                    if has_trait(character, "adventurous", "curious", "restless"):
+                        growth *= 1.35
+                    if has_trait(character, "cautious"):
+                        growth *= 0.80
                 desires[desire_name] = min(100.0, value + growth)
 
             for event in events:
@@ -765,7 +782,7 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 0.5},
+                    "travel": {"freedom": 0.5, "curiosity": 0.0},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
@@ -779,6 +796,17 @@ class SimulationEngine:
                         old_location = event.consequences[0].old_value if event.consequences else character.location
                         confinement = character.human_condition.confinement_at(old_location)
                         desires[desire_name] = max(0.0, old_value * (1.0 - confinement))
+                    elif action_type == "travel" and desire_name == "curiosity":
+                        # A genuinely new place satisfies curiosity much more
+                        # than another familiar trip.
+                        destination = event.location
+                        prior_visits = sum(
+                            1
+                            for memory in state.memory_state.memories.values()
+                            if memory.owner_id == character.id and memory.location == destination
+                        )
+                        satisfaction = 60.0 if prior_visits <= 1 else 18.0
+                        desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
                     else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
@@ -788,6 +816,7 @@ class SimulationEngine:
 
     def step(self, state: WorldState) -> SimulationResult:
         self._restore_rng_state(state)
+        self._settle_emotions(state)
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
