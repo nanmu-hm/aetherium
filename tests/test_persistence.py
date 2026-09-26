@@ -127,7 +127,7 @@ def test_checkpoint_restores_decision_noise_seed_even_with_different_engine_seed
     state = make_state()
     state.simulation_seed = 19
     state.tick = 6
-    state.characters["mei"].decision_noise = 1.0
+    state.characters["a"].decision_noise = 1.0
     pool = [
         ActionCandidate("choice-a", "mei", "travel", targets=["town"], confidence=0.8, difficulty=0.4, score=0.5),
         ActionCandidate("choice-b", "mei", "pursue_goal", motivation="find a missing friend", confidence=0.8, difficulty=0.4, score=0.5),
