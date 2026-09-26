@@ -16,7 +16,12 @@ def test_staged_goal_advances_before_final_completion():
                 Goal(
                     "g1",
                     "help a friend",
-                    stages=["help a friend once", "help the friend again"],
+                    stages=["find the friend", "help the friend"],
+                    stage_conditions=[
+                        {"type": "at_same_location", "target_id": "b"},
+                        {"type": "successful_action", "action_type": "help_person"},
+                    ],
+                    preferred_actions=["help_person"],
                 )
             ],
         )
