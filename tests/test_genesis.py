@@ -54,20 +54,65 @@ def test_genesis_records_completed_goal_consequences():
     )
 
 
-def test_genesis_has_recovery_between_repeated_travel_actions():
+def test_genesis_travel_has_a_character_grounded_reason():
     world = run_genesis(ticks=12, seed=7)
-    travel_ticks = [
-        event.tick
+    travel_events = [
+        event
         for event in world.event_log
-        if event.causes and event.causes[0].endswith("travel")
+        if event_action_type(event) == "travel"
         and event.action_result is not None
         and event.action_result.status == "success"
     ]
-    assert travel_ticks
+    assert travel_events
     assert all(
-        second > first + 1
-        for first, second in zip(travel_ticks, travel_ticks[1:])
+        event.consequences
+        and any(item.field == "location" for item in event.consequences)
+        for event in travel_events
     )
+    assert all(
+        not (
+            event.tick > 0
+            and event.participants
+            and event.participants[0] == "rui"
+            and event.location == "river_town"
+            and any("goal" in fact.lower() and "leave town" in fact.lower() for fact in event.facts)
+        )
+        for event in travel_events
+    )
+
+
+def test_genesis_conditioned_goal_does_not_complete_after_returning_to_town():
+    from engine.core.models import ActionCandidate
+    from engine.core.simulation import SimulationEngine
+
+    world = run_genesis(ticks=1, seed=7)
+    # Reopen the goal only for this controlled semantic probe.
+    goal = world.characters["rui"].goals[0]
+    goal.status = "active"
+    goal.current_stage = 1
+    world.characters["rui"].location = "old_road"
+    action = ActionCandidate(
+        "semantic-return",
+        "rui",
+        "travel",
+        targets=["river_town"],
+        confidence=1.0,
+        difficulty=0.1,
+    )
+
+    event = SimulationEngine(seed=7).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["rui"].goals[0].status == "active"
+
+
+def test_genesis_conditioned_goals_do_not_generate_generic_pursuit():
+    from engine.core.actions import generate_action_pool
+
+    world = run_genesis(ticks=0, seed=7)
+    for character in world.characters.values():
+        assert not any(action.action_type == "pursue_goal" for action in generate_action_pool(world, character.id))
 
 
 def test_genesis_clock_advances_with_simulation_ticks():
@@ -91,3 +136,22 @@ def test_genesis_long_run_is_reproducible_and_valid():
         character.location in first.locations
         for character in first.characters.values()
     )
+
+
+def test_genesis_does_not_immediately_reverse_travel_without_a_new_reason():
+    world = run_genesis(ticks=1, seed=7)
+    rui = world.characters["rui"]
+    if rui.location == "old_road":
+        before = len(world.event_log)
+        SimulationEngine(seed=7).step(world)
+        new_events = world.event_log[before:]
+        rui_travel = [
+            event for event in new_events
+            if event.participants and event.participants[0] == "rui"
+            and event_action_type(event) == "travel"
+            and event.action_result is not None
+            and event.action_result.status == "success"
+        ]
+        assert not rui_travel or all(
+            event.location != "river_town" for event in rui_travel
+        )

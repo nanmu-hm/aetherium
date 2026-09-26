@@ -326,7 +326,7 @@ class DecisionKernel:
                     utility=evaluation.utility,
                     reasons=evaluation.reasons,
                     uncertainty=evaluation.uncertainty,
-                    selection_score=evaluation.utility + noise,
+                    selection_score=evaluation.utility + max(-1.0, min(1.0, action.score)) + noise,
                 )
             )
 
