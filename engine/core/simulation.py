@@ -38,6 +38,10 @@ class SimulationEngine:
         self.action_resolver = ActionResolver(self.random)
         self.precondition_engine = PreconditionEngine()
 
+    def _restore_rng_state(self, state: WorldState) -> None:
+        if state.rng_state is not None:
+            self.random.setstate(state.rng_state)
+
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
         """Generate and select one plausible action per active character."""
         selected: list[ActionCandidate] = []
@@ -533,7 +537,7 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 35.0},
+                    "travel": {"freedom": 70.0},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
@@ -546,6 +550,7 @@ class SimulationEngine:
         state.timestamp = (current + self.tick_duration).isoformat()
 
     def step(self, state: WorldState) -> SimulationResult:
+        self._restore_rng_state(state)
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
@@ -555,6 +560,7 @@ class SimulationEngine:
         current_tick = state.tick
         self._advance_clock(state)
         state.tick += 1
+        state.rng_state = self.random.getstate()
         return SimulationResult(current_tick, actions, events, errors)
 
 
