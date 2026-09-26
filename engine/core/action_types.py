@@ -10,6 +10,8 @@ _ALIASES = {
     "help": "help_person",
     "help_person": "help_person",
     "travel": "travel",
+    "search_person": "search_person",
+    "search": "search_person",
     "pursue": "pursue_goal",
     "pursue_goal": "pursue_goal",
 }
@@ -23,6 +25,7 @@ def canonical_action_type(action_type: str) -> str:
 GOAL_ACTION_KEYWORDS = {
     "help_person": frozenset({"help", "protect", "support", "save"}),
     "contact_person": frozenset({"find", "reconcile", "talk", "meet", "contact"}),
+    "search_person": frozenset({"find", "search", "seek", "look"}),
     "travel": frozenset({"leave", "escape", "go", "move", "freedom", "depart"}),
 }
 
