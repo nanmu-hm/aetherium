@@ -131,10 +131,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             character.emotions.get("resentment", 0.0),
             character.emotions.get("love", 0.0),
         )
-        # Reconciliation is not a free-standing command. It becomes strong
-        # when the relationship is actually unresolved. Belonging can still
-        # motivate contact, while emotional pressure provides the character's
-        # immediate interpretation of the relationship.
         relationship_motive = max(
             reconciliation * (tension / 100.0),
             belonging * 0.50,
@@ -148,9 +144,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             and recent_contacts[0].action_result.status == "success"
         )
         severe_pressure = contact_pressure >= 80.0
-        # A successful conversation creates a real social recovery interval.
-        # Only genuinely unresolved pressure can override it; otherwise the
-        # character gets time to live, observe and be affected by other events.
         recent_success_cooldown = bool(recent_contacts) and last_contact_succeeded and not severe_pressure
 
         if contact_pressure > 0.0 and not recent_success_cooldown:
@@ -202,7 +195,16 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
     freedom_pressure = _contextual_desire(character, "freedom")
     curiosity_pressure = _contextual_desire(character, "curiosity")
-    if len(state.locations) > 1:
+    travel_pressure = max(freedom_pressure, curiosity_pressure)
+    adventurous = has_trait(character, "adventurous", "curious", "restless", "explorer")
+    cautious = has_trait(character, "cautious", "fearful")
+
+    # Travel is an affordance, not a default action. A destination can exist
+    # without creating a motive to go there. Curiosity/adventure can sustain a
+    # low but non-zero exploratory pressure; otherwise the character must have
+    # an actual freedom/curiosity pressure before travel enters the pool.
+    can_explore = travel_pressure >= 8.0 or (adventurous and curiosity_pressure >= 3.0)
+    if len(state.locations) > 1 and can_explore:
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
             if memory.owner_id == character.id and memory.location in visit_counts:
@@ -223,6 +225,15 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 if len(recent_travel_locations) >= 3:
                     break
 
+        # Do not immediately undo the previous successful journey when another
+        # destination exists. Returning can still happen later when the actor
+        # develops a new reason to return.
+        if recent_travel_locations:
+            last_destination = recent_travel_locations[0]
+            non_reversal = [location for location in alternatives if location != last_destination]
+            if non_reversal:
+                alternatives = non_reversal
+
         fresh = [location for location in alternatives if visit_counts[location] == 0]
         if fresh:
             alternatives = fresh
@@ -236,10 +247,15 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 if recent_location == location
             )
             familiarity = min(1.0, visit_counts[location] / 3.0 + recent_experience / 2.0)
+            novelty = 1.0 - familiarity
+            adventurous_bonus = 0.15 if adventurous else 0.0
+            cautious_penalty = 0.15 * confinement if cautious else 0.0
             return (
-                0.55 * (1.0 - confinement)
-                + 0.25 * (1.0 - familiarity)
-                + 0.20 * max(0.0, 1.0 - fear)
+                0.50 * (1.0 - confinement)
+                + 0.25 * novelty
+                + 0.15 * max(0.0, 1.0 - fear)
+                + adventurous_bonus
+                - cautious_penalty
             )
 
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
@@ -256,7 +272,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
                 "destination_confinement": character.human_condition.confinement_at(destination),
-                "travel_pressure": max(freedom_pressure, curiosity_pressure),
+                "travel_pressure": travel_pressure,
                 "world_validated": True,
             },
         ))
