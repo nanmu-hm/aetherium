@@ -71,6 +71,7 @@ def build_genesis_world() -> WorldState:
                 },
                 virtues={"courage": 80},
             ),
+            decision_noise=0.05,
         )
     )
 
