@@ -195,6 +195,25 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             if memory.owner_id == character.id and memory.location in visit_counts:
                 visit_counts[memory.location] += 1
         alternatives = [location for location in state.locations if location != character.location]
+        recent_travel_destination = None
+        for event in reversed(state.event_log):
+            if (
+                event.participants
+                and event.participants[0] == character.id
+                and event_action_type(event) == "travel"
+            ):
+                recent_travel_destination = event.location
+                break
+        # Exploration should prefer a genuinely different place. If another
+        # destination exists, do not immediately walk back to the place just
+        # left; returning becomes available again when the world offers no
+        # other unexplored alternative.
+        fresh_alternatives = [
+            location for location in alternatives
+            if location != recent_travel_destination
+        ]
+        if fresh_alternatives:
+            alternatives = fresh_alternatives
         destination = min(alternatives, key=lambda location: (visit_counts[location], location))
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
