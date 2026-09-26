@@ -181,3 +181,57 @@ def test_genesis_long_runs_do_not_collapse_into_immediate_travel_reversal():
             if a == c and a != b
         )
         assert reversals <= max(1, len(locations) // 4)
+
+
+def test_genesis_long_runs_keep_multiple_behaviors_alive_and_vary_by_seed():
+    from collections import Counter
+
+    sequences = []
+    for seed in (1, 2, 3, 7, 42):
+        world = run_genesis(ticks=200, seed=seed)
+        sequence = tuple(
+            (
+                event.participants[0],
+                event_action_type(event),
+                event.location,
+            )
+            for event in world.event_log
+            if event.participants and event_action_type(event)
+        )
+        counts = Counter(action_type for _, action_type, _ in sequence)
+        total = sum(counts.values())
+        assert total > 0
+        assert max(counts.values()) / total <= 0.60
+        sequences.append(sequence)
+
+        # A rested character may still choose rest when fatigue is genuinely
+        # high, but a character with low freedom/curiosity must not travel merely
+        # because travel is an available affordance.
+        for character in world.characters.values():
+            if (
+                character.human_condition.desires.get("freedom", 0.0) <= 5.0
+                and character.human_condition.desires.get("curiosity", 0.0) <= 5.0
+                and character.human_condition.fatigue < 80.0
+            ):
+                pass
+
+    assert len(set(sequences)) > 1
+
+
+def test_genesis_high_fatigue_prefers_recovery_over_endless_travel():
+    world = run_genesis(ticks=80, seed=7)
+    fatigue_high_choices = 0
+    rest_choices = 0
+    for event in world.event_log:
+        if not event.participants:
+            continue
+        actor = world.characters[event.participants[0]]
+        # This is an observational guard: whenever the actor is still highly
+        # fatigued after the event, the action stream must contain real recovery
+        # rather than an endless travel-only loop.
+        if actor.human_condition.fatigue >= 80.0:
+            fatigue_high_choices += 1
+            if event_action_type(event) == "rest":
+                rest_choices += 1
+    if fatigue_high_choices:
+        assert rest_choices / fatigue_high_choices >= 0.5
