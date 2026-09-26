@@ -980,3 +980,48 @@ def test_location_seen_evidence_retracts_stale_absence_fact():
 
     kernel.learn_fact(world.memory_state, "lin", "location_seen:mei:road", tick=2)
     assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is None
+
+
+def test_rest_does_not_reinforce_when_actor_is_already_rested():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.fatigue = 0.0
+    action = ActionCandidate("rest", "lin", "rest", confidence=1.0, difficulty=0.0)
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["lin"].human_condition.fatigue == 0.0
+    assert "rest" not in world.characters["lin"].habits
+
+
+def test_rest_reduces_fatigue_and_can_be_reinforced_by_recovery():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.fatigue = 80.0
+    action = ActionCandidate("rest", "lin", "rest", confidence=1.0, difficulty=0.0)
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["lin"].human_condition.fatigue < 80.0
+    assert world.characters["lin"].habits["rest"] == 0.1
+
+
+def test_candidate_score_participates_in_final_selection():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    low = ActionCandidate("low", "lin", "travel", targets=["town"], score=0.0, confidence=1.0)
+    high = ActionCandidate("high", "lin", "travel", targets=["town"], score=0.9, confidence=1.0)
+
+    chosen, evaluations = DecisionKernel(seed=1).choose(world, [low, high])
+
+    assert chosen is high
+    assert all(item.selection_score is not None for item in evaluations)
