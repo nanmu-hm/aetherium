@@ -38,12 +38,13 @@ Repository: https://github.com/joonspk-research/generative_agents
 Useful implementation ideas:
 - A persistent memory stream is a first-class component of agent cognition.
 - Retrieved memories are used by planning and behavior rather than merely displayed.
+- Hierarchical planning can decompose a durable goal into daily/stage/current-action steps.
 - Agent history can be initialized and persisted as simulation data.
 - The simulation has an explicit server/state layer and supports replaying saved
   simulations.
 
 What Aetherium should borrow:
-- Memory as an active input to future decisions.
+- Memory as an active input to future decisions **(planned in Aetherium; `MemoryKernel.recall()` is not yet wired into `DecisionKernel`)**.
 - Separation of memory retrieval from the simulation loop.
 - Explicit persistence of simulation state.
 - The idea that accumulated experience changes future behavior.
@@ -126,11 +127,16 @@ LLM calls, abstractions, or complexity merely because a reference project has th
 The audit does **not** justify jumping directly to prose generation.
 
 The next simulation work remains:
-1. eliminate the current Goal one-shot semantics;
-2. make character goals persistent/progressive enough to sustain causal activity;
-3. strengthen personality/history/values/relationship interpretation;
-4. validate long-run autonomous history across multiple seeds;
-5. only then deepen Story Archaeology and literary planning.
+1. use staged goals to preserve long-lived intention while advancing through observable steps;
+2. replace hard pressure gates with continuous pressure and causally motivated affordances;
+3. make failed searches update actor-local knowledge and future destination choice;
+4. strengthen personality/history/values/relationship interpretation;
+5. validate long-run autonomous history across multiple seeds;
+6. only then deepen Story Archaeology and literary planning.
+
+Current implementation status:
+- `MemoryKernel.recall()` exists but is **not yet a decision-loop input**; this is deliberately marked as planned rather than claimed as implemented.
+- Staged goals are now implemented in the Genesis world; the next work should validate whether they produce sustained, varied history rather than merely more repeated actions.
 
 The central test remains:
 
