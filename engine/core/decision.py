@@ -296,6 +296,20 @@ class DecisionKernel:
                               if d.owner_id == character.id and d.status == "active"), default=0.0)
         human_condition_urgency = self._human_condition_urgency(character, action)
         urgency = max(memory_urgency, human_condition_urgency)
+
+        # Identity and emotion describe how an actor pursues a motive; they
+        # should not manufacture a motive by themselves. In particular, a
+        # successful journey may strengthen "independent" self-belief and hope,
+        # but those memories must not turn into an autonomous travel loop after
+        # freedom/curiosity have already been satisfied.
+        action_type = canonical_action_type(action.action_type)
+        if action_type == "travel":
+            travel_pressure = human_condition_urgency
+            values *= travel_pressure
+            emotion *= travel_pressure
+            identity = 0.0
+        else:
+            identity = self._identity_alignment(character, action)
         risk = min(1.0, len(action.risks) / 3.0)
         risk_tolerance = max(0.0, min(1.0, character.risk_tolerance))
         perceived_risk = risk * (1.0 - 0.75 * risk_tolerance)
@@ -304,7 +318,6 @@ class DecisionKernel:
         repetition = self._repetition_penalty(state, character, action)
         belief_friction = self._belief_friction(state, character, action)
         habit = self._habit_alignment(character, action)
-        identity = self._identity_alignment(character, action)
         fatigue = max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
         fatigue_cost = {
             "travel": 0.45,
@@ -389,4 +402,9 @@ class DecisionKernel:
                 item.action_id,
             ),
         )
+        # A world is allowed to have a quiet tick. If every available action
+        # has non-positive expected utility, forcing the least-bad action would
+        # manufacture behavior and eventually create artificial loops.
+        if (best.selection_score if best.selection_score is not None else best.utility) <= 0.0:
+            return None, selected
         return next(action for action in pool if action.id == best.action_id), selected
