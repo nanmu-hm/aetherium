@@ -11,7 +11,7 @@ from engine.narrative import StoryArchaeologist
 def build_genesis_world() -> WorldState:
     world = WorldState(
         world_id="genesis-001",
-        locations={"river_town", "old_road"},
+        locations={"river_town", "old_road", "ridge"},
     )
 
     world.add_character(
@@ -19,6 +19,7 @@ def build_genesis_world() -> WorldState:
             id="yan",
             name="Yan",
             location="river_town",
+            traits=["loyal", "compassionate", "cautious"],
             values=["loyalty", "responsibility"],
             goals=[Goal(
                 "yan-1",
@@ -47,6 +48,7 @@ def build_genesis_world() -> WorldState:
             id="rui",
             name="Rui",
             location="river_town",
+            traits=["proud", "adventurous", "impulsive"],
             values=["freedom"],
             goals=[Goal(
                 "rui-1",
@@ -60,7 +62,7 @@ def build_genesis_world() -> WorldState:
             )],
             human_condition=HumanCondition(
                 attachments={"friendship": 70},
-                desires={"freedom": 80},
+                desires={"freedom": 80, "curiosity": 35},
                 fears={"confinement": 60},
                 location_pressures={
                     "river_town": {"confinement": 1.0},
