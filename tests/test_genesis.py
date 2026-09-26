@@ -213,7 +213,12 @@ def test_genesis_long_runs_keep_multiple_behaviors_alive_and_vary_by_seed():
                 and character.human_condition.desires.get("curiosity", 0.0) <= 5.0
                 and character.human_condition.fatigue < 80.0
             ):
-                pass
+                assert not any(
+                    event.participants
+                    and event.participants[0] == character.id
+                    and event_action_type(event) == "travel"
+                    for event in world.event_log[-1:]
+                ), "low travel pressure must not create an unmotivated travel event"
 
     assert len(set(sequences)) > 1
 
