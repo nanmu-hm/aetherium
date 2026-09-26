@@ -70,7 +70,6 @@ def build_genesis_world() -> WorldState:
                     "old_road": {"confinement": 0.0},
                 },
                 virtues={"courage": 80},
-            decision_noise=0.05,
             ),
         )
     )
