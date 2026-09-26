@@ -29,7 +29,7 @@ def test_dashboard_page_and_view_model(tmp_path):
 
     page = client.get("/dashboard/")
     assert page.status_code == 200
-    assert "Aetherium World Dashboard" in page.text
+    assert "Aetherium World Workbench" in page.text
     assert "/dashboard/app.js" in page.text
 
     model = client.get("/api/dashboard")
