@@ -19,6 +19,10 @@ class HumanCondition:
     fears: dict[str, float] = field(default_factory=dict)
     virtues: dict[str, float] = field(default_factory=dict)
     vices: dict[str, float] = field(default_factory=dict)
+    # Actor-local associations between places and human pressures. These are
+    # world/person state, not plot commands: a place can amplify or quiet a
+    # pressure differently for different characters.
+    location_pressures: dict[str, dict[str, float]] = field(default_factory=dict)
     life_stage: str = "adult"
     mortality_pressure: float = 0.0
 
