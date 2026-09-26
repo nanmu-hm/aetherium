@@ -16,3 +16,13 @@ _ALIASES = {
 def canonical_action_type(action_type: str) -> str:
     """Return the canonical internal action name for an event or action."""
     return _ALIASES.get(action_type, action_type)
+
+
+def event_action_type(event) -> str:
+    """Return an event's canonical action type, with legacy-cause fallback."""
+    explicit = getattr(event, "action_type", "")
+    if explicit:
+        return canonical_action_type(explicit)
+    if event.causes:
+        return canonical_action_type(event.causes[0].rsplit("-", 1)[-1])
+    return ""
