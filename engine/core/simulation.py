@@ -448,7 +448,19 @@ class SimulationEngine:
                                 "character", actor.id, "location", old, destination, "travel"
                             )
                         )
-                        facts.append(f"{actor.name} travels from {old} to {destination}.")
+                        reason = action.metadata.get("travel_reason")
+                        if reason == "freedom_exploration":
+                            pressure = float(action.metadata.get("freedom_pressure", 0.0))
+                            facts.append(
+                                f"{actor.name} travels from {old} to {destination} "
+                                f"because contextual freedom pressure is {pressure:.1f}."
+                            )
+                        elif reason == "relationship_search":
+                            facts.append(
+                                f"{actor.name} travels from {old} to {destination} while searching for someone."
+                            )
+                        else:
+                            facts.append(f"{actor.name} travels from {old} to {destination}.")
 
                         search_target_id = action.metadata.get("search_target")
                         if search_target_id and search_target_id in state.characters:
