@@ -85,3 +85,55 @@ def test_genesis_long_run_has_no_single_action_majority():
         total = sum(counts.values())
         assert total > 0
         assert max(counts.values()) / total <= 0.60
+
+
+def test_reconciliation_growth_tracks_relationship_tension():
+    def desire_after_one_tick(trust: float, resentment: float) -> float:
+        world = WorldState(world_id="reconciliation-growth", locations={"town"})
+        world.add_character(
+            CharacterState(
+                id="a",
+                name="A",
+                location="town",
+                human_condition=HumanCondition(desires={"reconciliation": 50.0}),
+            )
+        )
+        world.add_character(CharacterState(id="b", name="B", location="town"))
+        world.add_relationship(RelationshipState("a", "b", trust=trust, resentment=resentment))
+        engine = SimulationEngine(seed=1)
+        engine._advance_human_pressures(world, [])
+        return world.characters["a"].human_condition.desires["reconciliation"]
+
+    unresolved = desire_after_one_tick(25.0, 35.0)
+    settled = desire_after_one_tick(95.0, 0.0)
+    assert unresolved > settled
+
+
+def test_help_addresses_the_condition_that_triggered_it():
+    world = WorldState(world_id="help-effect", locations={"town"})
+    world.add_character(
+        CharacterState(
+            id="a",
+            name="A",
+            location="town",
+            values=["loyalty"],
+            human_condition=HumanCondition(),
+        )
+    )
+    world.add_character(
+        CharacterState(
+            id="b",
+            name="B",
+            location="town",
+            emotions={"sorrow": 30.0, "fear": 20.0},
+            human_condition=HumanCondition(fatigue=20.0),
+        )
+    )
+    world.add_relationship(RelationshipState("a", "b", trust=40.0, loyalty=60.0))
+    engine = SimulationEngine(seed=1)
+    action = ActionCandidate("help", "a", "help_person", targets=["b"], confidence=1.0)
+    engine.resolve(world, [action])
+    target = world.characters["b"]
+    assert target.human_condition.fatigue == 5.0
+    assert target.emotions["sorrow"] == 20.0
+    assert target.emotions["fear"] == 10.0
