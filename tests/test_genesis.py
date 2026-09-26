@@ -64,10 +64,44 @@ def test_genesis_travel_has_a_character_grounded_reason():
         and event.action_result.status == "success"
     ]
     assert travel_events
-    assert all(
-        "travels from" in event.facts[0]
-        for event in travel_events
-    )
+
+    rui_travel = [
+        event for event in travel_events if event.participants[0] == "rui"
+    ]
+    assert rui_travel
+    assert all("contextual freedom pressure is" in event.facts[0] for event in rui_travel)
+
+    for previous, current in zip(rui_travel, rui_travel[1:]):
+        previous_destination = next(
+            item.new_value
+            for item in previous.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        current_destination = next(
+            item.new_value
+            for item in current.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        previous_origin = next(
+            item.old_value
+            for item in previous.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        assert not (
+            current.tick == previous.tick + 1
+            and current_destination == previous_origin
+            and previous_destination == current_destination
+        )
+
+    rui_goal = world.characters["rui"].goals[0]
+    assert rui_goal.status == "achieved"
+    assert world.characters["rui"].location == "old_road"
 
 
 def test_genesis_clock_advances_with_simulation_ticks():
