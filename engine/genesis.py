@@ -26,7 +26,7 @@ def build_genesis_world() -> WorldState:
                 priority=0.75,
                 stages=["find the old friend", "help the old friend"],
                 stage_conditions=[
-                    {"type": "successful_contact", "target_id": "rui", "action_types": ["contact_person"]},
+                    {"type": "target_same_location", "target_id": "rui", "action_types": ["contact_person"]},
                     {"type": "successful_help", "target_id": "rui", "action_types": ["help_person"]},
                 ],
             )],
@@ -55,7 +55,7 @@ def build_genesis_world() -> WorldState:
                 stages=["leave town", "continue toward freedom"],
                 stage_conditions=[
                     {"type": "location_not", "location": "river_town", "action_types": ["travel"]},
-                    {"type": "location_not_and_action", "location": "river_town", "action_types": ["travel", "contact_person", "help_person"]},
+                    {"type": "location_not_and_action", "location": "river_town", "action_types": ["travel"]},
                 ],
             )],
             human_condition=HumanCondition(
