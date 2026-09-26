@@ -149,42 +149,57 @@ class SimulationEngine:
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not self._goal_condition_met(state, actor, goal, action, outcome):
+        if goal is None:
             return None
 
-        old_stage = goal.current_stage
-        goal.current_stage += 1
-        consequences.append(
-            Consequence(
-                "goal",
-                goal.id,
-                "current_stage",
-                old_stage,
-                goal.current_stage,
-                "goal stage condition became true",
-            )
-        )
+        advanced: list[str] = []
+        # A single concrete world-state change may legitimately satisfy more
+        # than one stage. We only advance while each successive condition is
+        # independently true; no action keyword is treated as evidence.
+        while goal.current_stage < len(goal.stages):
+            if not self._goal_condition_met(state, actor, goal, action, outcome):
+                break
 
-        if goal.current_stage < len(goal.stages):
-            return (
-                f"{actor.name} advances the goal '{goal.description}' "
-                f"to stage {goal.current_stage + 1}/{len(goal.stages)}: "
-                f"{goal.current_description}."
+            old_stage = goal.current_stage
+            goal.current_stage += 1
+            consequences.append(
+                Consequence(
+                    "goal",
+                    goal.id,
+                    "current_stage",
+                    old_stage,
+                    goal.current_stage,
+                    "goal stage condition became true",
+                )
+            )
+            advanced.append(
+                f"stage {goal.current_stage}/{len(goal.stages)}"
             )
 
-        old_status = goal.status
-        goal.status = "achieved"
-        consequences.append(
-            Consequence(
-                "goal",
-                goal.id,
-                "status",
-                old_status,
-                goal.status,
-                "goal completion condition became true",
-            )
+            if goal.current_stage >= len(goal.stages):
+                old_status = goal.status
+                goal.status = "achieved"
+                consequences.append(
+                    Consequence(
+                        "goal",
+                        goal.id,
+                        "status",
+                        old_status,
+                        goal.status,
+                        "goal completion condition became true",
+                    )
+                )
+                advanced.append("completed")
+                break
+
+        if not advanced:
+            return None
+        if goal.status == "achieved":
+            return f"{actor.name} achieves the goal: {goal.description}."
+        return (
+            f"{actor.name} advances the goal '{goal.description}' "
+            f"to {goal.current_description}."
         )
-        return f"{actor.name} achieves the goal: {goal.description}."
 
     @staticmethod
     def _apply_emotional_consequences(
