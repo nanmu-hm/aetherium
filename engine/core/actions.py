@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from .models import ActionCandidate, CharacterState, WorldState
 from .action_types import event_action_type, goal_matches_action
+from .psychology import has_trait
 
 
 def _has_value(character: CharacterState, value: str) -> bool:
@@ -115,7 +116,16 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             character.human_condition.desires.get("belonging", 0.0),
         )
         tension = 100.0 - trust
-        contact_pressure = max(0.0, min(100.0, tension + 0.5 * relationship_desire))
+        emotional_pressure = max(
+            character.emotions.get("anger", 0.0),
+            character.emotions.get("longing", 0.0),
+            character.emotions.get("resentment", 0.0),
+            character.emotions.get("love", 0.0),
+        )
+        contact_pressure = max(
+            0.0,
+            min(100.0, tension + 0.5 * relationship_desire + 0.35 * emotional_pressure),
+        )
 
         last_contact_succeeded = bool(
             recent_contacts
@@ -135,17 +145,38 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 motivation="address an important relationship",
                 preconditions=["target is at the same location"],
                 expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35,
-                score=(contact_pressure / 100.0),
+                # score is an affordance prior, not another copy of desire/urgency.
+                score=0.15,
             ))
 
-    if _has_value(character, "loyalty") and _goal_supports_action(character, "help_person") and _relationship_targets(state, character):
+    if _relationship_targets(state, character):
         targets = _relationship_targets(state, character)
-        target_id = max(targets, key=lambda item: _trust(state, character, item))
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-help", actor_id=character.id,
-            action_type="help_person", targets=[target_id],
-            motivation="help someone they feel loyal to", confidence=0.7, score=0.6,
-        ))
+        distressed = [
+            target_id for target_id in targets
+            if state.characters[target_id].emotions.get("sorrow", 0.0)
+            + state.characters[target_id].emotions.get("fear", 0.0)
+            + state.characters[target_id].human_condition.fatigue / 2.0 > 8.0
+        ]
+        if distressed and (
+            _has_value(character, "loyalty")
+            or _has_value(character, "responsibility")
+            or has_trait(character, "compassionate", "protective", "helpful")
+            or character.human_condition.desires.get("responsibility", 0.0) > 20.0
+        ):
+            target_id = max(
+                distressed,
+                key=lambda item: (
+                    state.characters[item].emotions.get("sorrow", 0.0)
+                    + state.characters[item].emotions.get("fear", 0.0),
+                    -_trust(state, character, item),
+                ),
+            )
+            pool.append(ActionCandidate(
+                id=f"tick-{state.tick}-{character.id}-help", actor_id=character.id,
+                action_type="help_person", targets=[target_id],
+                motivation=f"help {state.characters[target_id].name} because their condition looks difficult",
+                confidence=0.7, difficulty=0.35, score=0.20,
+            ))
 
     freedom_pressure = _contextual_desire(character, "freedom")
     if _has_value(character, "freedom") and freedom_pressure > 0.0 and len(state.locations) > 1:
@@ -164,7 +195,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             motivation=f"seek freedom by going somewhere less familiar: {destination}",
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
-            confidence=0.55, score=freedom_pressure / 100.0,
+            confidence=0.55, score=0.10,
             metadata={"travel_reason": "freedom_exploration"},
         ))
 
@@ -216,7 +247,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 expected_outcomes=["may reunite with the person", "may discover they are elsewhere"],
                 confidence=0.45 if remembered is None else 0.65,
                 difficulty=0.5,
-                score=relationship_pressure / 100.0,
+                score=0.20,
                 metadata={
                     "search_target": target_id,
                     "search_basis": "remembered_location" if remembered else "uncertain_location",
@@ -225,15 +256,15 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             ))
             break
 
-    # Rest is always a legal low-cost affordance. Its utility comes from the
-    # actor's current pressure, so it competes naturally with other motives
-    # instead of being gated by a hard threshold.
-    pressure = character.human_condition.pressure()
+    # Rest is a real biological affordance, not a substitute for an empty action
+    # pool. When there is no meaningful recovery need, the character is allowed
+    # to be idle instead of repeatedly "resting" without changing state.
     fatigue = max(0.0, min(100.0, character.human_condition.fatigue))
-    # Rest has value when the body actually needs recovery. Low pressure alone
-    # is not enough to make an otherwise healthy character rest repeatedly.
-    rest_score = min(1.0, 0.05 + 0.70 * (fatigue / 100.0) + 0.05 * (1.0 - pressure))
-    pool.append(ActionCandidate(
+    stress = max(0.0, character.emotions.get("stress", 0.0))
+    sorrow = max(0.0, character.emotions.get("sorrow", 0.0))
+    if fatigue >= 10.0 or stress >= 20.0 or sorrow >= 35.0:
+        rest_score = min(1.0, 0.10 + 0.70 * (fatigue / 100.0))
+        pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-rest",
             actor_id=character.id,
             action_type="rest",
@@ -242,10 +273,11 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             expected_outcomes=["recover and continue later"],
             confidence=0.95,
             difficulty=0.05,
-            score=rest_score,
+            # Recovery need is already represented by fatigue/stress urgency;
+            # this prior only says rest is physically easy to perform.
+            score=0.05,
             metadata={"rest_reason": "fatigue_recovery"},
         ))
-
     return pool
 
 
