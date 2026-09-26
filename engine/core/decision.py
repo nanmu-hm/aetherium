@@ -34,8 +34,6 @@ class DecisionEvaluation:
 
 
 class DecisionKernel:
-    """Bounded, deterministic decision-making for fictional characters."""
-
     def __init__(self, seed: int = 0, weights: DecisionWeights | None = None) -> None:
         self.seed = seed
         self.weights = weights or DecisionWeights()
@@ -45,24 +43,9 @@ class DecisionKernel:
         text = f"{action.action_type} {action.motivation}".lower()
         if not character.values:
             return 0.0
-        affordances = {
-            "freedom": {"travel"},
-            "loyalty": {"help_person", "contact_person", "search_person"},
-            "responsibility": {"help_person", "pursue_goal"},
-            "friendship": {"contact_person", "help_person", "search_person"},
-            "courage": {"travel", "help_person"},
-        }
-        pressure_by_action = {
-            "travel": max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)),
-            "contact_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)),
-            "search_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)),
-            "help_person": character.human_condition.desires.get("responsibility", 0.0),
-        }
-        matches = 0.0
-        for value in character.values:
-            normalized = value.lower()
-            if normalized in text or action.action_type in affordances.get(normalized, set()):
-                matches += 1.0
+        affordances = {"freedom": {"travel"}, "loyalty": {"help_person", "contact_person", "search_person"}, "responsibility": {"help_person", "pursue_goal"}, "friendship": {"contact_person", "help_person", "search_person"}, "courage": {"travel", "help_person"}}
+        pressure_by_action = {"travel": max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)), "contact_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "search_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "help_person": character.human_condition.desires.get("responsibility", 0.0)}
+        matches = sum(1.0 for value in character.values if value.lower() in text or action.action_type in affordances.get(value.lower(), set()))
         alignment = min(1.0, matches / len(character.values))
         pressure = max(0.0, min(100.0, pressure_by_action.get(action.action_type, 100.0))) / 100.0
         return alignment * pressure
@@ -72,16 +55,14 @@ class DecisionKernel:
         if not action.targets:
             return 0.0
         scores: list[float] = []
-        action_type = canonical_action_type(action.action_type)
         for target_id in action.targets:
             rel = state.get_relationship(character.id, target_id)
             if rel is None:
                 continue
             compatibility = (rel.trust + rel.loyalty + rel.affection + rel.respect - rel.resentment - rel.fear) / 500.0
-            if action_type == "contact_person":
+            if canonical_action_type(action.action_type) == "contact_person":
                 tension = max(rel.resentment, rel.fear, 100.0 - rel.trust) / 100.0
-                trust_alignment = rel.trust / 100.0
-                compatibility = 0.60 * compatibility + 0.25 * trust_alignment + 0.15 * tension
+                compatibility = 0.60 * compatibility + 0.25 * (rel.trust / 100.0) + 0.15 * tension
             scores.append(compatibility)
         return sum(scores) / len(scores) if scores else 0.0
 
@@ -91,8 +72,7 @@ class DecisionKernel:
         recent = [event for event in reversed(state.event_log) if event.id in known_event_ids and event.participants and event.participants[0] == character.id][:3]
         if not recent:
             return 0.0
-        repeated = sum(1 for event in recent if event_action_type(event) == canonical_action_type(action.action_type))
-        return min(1.0, repeated / 3.0)
+        return min(1.0, sum(1 for event in recent if event_action_type(event) == canonical_action_type(action.action_type)) / 3.0)
 
     @staticmethod
     def _belief_friction(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -107,10 +87,7 @@ class DecisionKernel:
             _, action_type, belief_targets, outcome = parts
             if canonical_action_type(action_type) != canonical_action_type(action.action_type) or belief_targets != target_text:
                 continue
-            if outcome == "failure":
-                penalties.append(belief.confidence)
-            elif outcome == "success":
-                penalties.append(-0.5 * belief.confidence)
+            penalties.append(belief.confidence if outcome == "failure" else -0.5 * belief.confidence if outcome == "success" else 0.0)
         if not penalties:
             return 0.0
         return max(-0.5, min(1.0, sum(penalties) / min(3, len(penalties))))
@@ -125,23 +102,16 @@ class DecisionKernel:
         dimensions = affordances.get(canonical_action_type(action.action_type), ())
         if not dimensions:
             return 0.0
-        values = [max(-1.0, min(1.0, character.identity_beliefs.get(name, 0.0))) for name in dimensions]
-        return sum(values) / len(values)
+        return sum(max(-1.0, min(1.0, character.identity_beliefs.get(name, 0.0))) for name in dimensions) / len(dimensions)
 
     @staticmethod
     def _emotion_alignment(character: CharacterState, action: ActionCandidate) -> float:
-        emotions = character.emotions
-        mappings = {
-            "travel": {"hope": 1.0, "longing": 0.5, "fear": -1.0, "regret": 0.25},
-            "contact_person": {"love": 1.0, "longing": 1.0, "hope": 0.5, "fear": -0.5, "resentment": -0.8},
-            "search_person": {"love": 0.8, "longing": 1.0, "hope": 0.8, "fear": -0.3, "resentment": -0.2},
-            "help_person": {"love": 0.7, "hope": 0.5, "joy": 0.2, "fear": -0.4, "resentment": -0.5, "regret": 0.3},
-        }
+        mappings = {"travel": {"hope": 1.0, "longing": 0.5, "fear": -1.0, "regret": 0.25}, "contact_person": {"love": 1.0, "longing": 1.0, "hope": 0.5, "fear": -0.5, "resentment": -0.8}, "search_person": {"love": 0.8, "longing": 1.0, "hope": 0.8, "fear": -0.3, "resentment": -0.2}, "help_person": {"love": 0.7, "hope": 0.5, "joy": 0.2, "fear": -0.4, "resentment": -0.5, "regret": 0.3}}
         weights = mappings.get(canonical_action_type(action.action_type), {})
         if not weights:
             return 0.0
         total_weight = sum(abs(value) for value in weights.values())
-        pressure = sum(max(-100.0, min(100.0, emotions.get(name, 0.0))) * weight for name, weight in weights.items())
+        pressure = sum(max(-100.0, min(100.0, character.emotions.get(name, 0.0))) * weight for name, weight in weights.items())
         return max(-1.0, min(1.0, pressure / (100.0 * total_weight) * 2.0))
 
     @staticmethod
@@ -152,16 +122,13 @@ class DecisionKernel:
         if action.action_type == "pursue_goal":
             return goal.priority
         alignment = goal.priority if goal_matches_action(goal.description, action.action_type) else 0.0
-        if goal.stage_conditions and goal.current_stage < len(goal.stage_conditions):
-            condition = goal.stage_conditions[goal.current_stage]
-            if condition.get("type") == "location_not_and_action":
-                pressure = max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)) / 100.0
-                alignment *= max(0.0, min(1.0, pressure))
+        if goal.stage_conditions and goal.current_stage < len(goal.stage_conditions) and goal.stage_conditions[goal.current_stage].get("type") == "location_not_and_action":
+            pressure = max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)) / 100.0
+            alignment *= max(0.0, min(1.0, pressure))
         if action.action_type == "contact_person" and action.targets:
             relationship = state.get_relationship(character.id, action.targets[0])
             if relationship is not None:
-                tension = max(relationship.resentment, relationship.fear, 100.0 - relationship.trust) / 100.0
-                alignment = min(1.0, alignment + 0.5 * tension)
+                alignment = min(1.0, alignment + 0.5 * max(relationship.resentment, relationship.fear, 100.0 - relationship.trust) / 100.0)
         return alignment
 
     @staticmethod
@@ -173,8 +140,7 @@ class DecisionKernel:
         if action_type == "search_person":
             return max(desires.get("reconciliation", 0.0), desires.get("belonging", 0.0)) / 100.0
         mapping = {"travel": ("freedom", "curiosity"), "contact_person": ("reconciliation", "belonging"), "help_person": ("responsibility",)}
-        relevant = mapping.get(action_type, ())
-        return max((max(0.0, min(100.0, desires.get(name, 0.0))) / 100.0 for name in relevant), default=0.0)
+        return max((max(0.0, min(100.0, desires.get(name, 0.0))) / 100.0 for name in mapping.get(action_type, ())), default=0.0)
 
     def evaluate(self, state: WorldState, action: ActionCandidate) -> DecisionEvaluation:
         character = state.characters[action.actor_id]
@@ -183,8 +149,7 @@ class DecisionKernel:
         emotion = self._emotion_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
         if canonical_action_type(action.action_type) == "contact_person":
-            relationship_pressure = max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0), character.emotions.get("longing", 0.0), character.emotions.get("resentment", 0.0), character.emotions.get("love", 0.0)) / 100.0
-            relationship *= max(0.10, min(1.0, relationship_pressure))
+            relationship *= max(0.10, min(1.0, max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0), character.emotions.get("longing", 0.0), character.emotions.get("resentment", 0.0), character.emotions.get("love", 0.0)) / 100.0))
         memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values() if d.owner_id == character.id and d.status == "active"), default=0.0)
         human_condition_urgency = self._human_condition_urgency(character, action)
         urgency = max(memory_urgency, human_condition_urgency)
@@ -196,15 +161,15 @@ class DecisionKernel:
                 emotion *= travel_pressure
             identity = 0.0
             if travel_pressure <= 0.05 and not action.metadata.get("search_target"):
-                goal = min(goal, 0.0)
-                urgency = min(urgency, travel_pressure)
+                goal = 0.0
+                urgency = 0.0
                 emotion = min(emotion, 0.0)
         else:
             identity = self._identity_alignment(character, action)
         risk = min(1.0, len(action.risks) / 3.0)
         risk_tolerance = max(0.0, min(1.0, character.risk_tolerance))
         perceived_risk = risk * (1.0 - 0.75 * risk_tolerance)
-        cost = min(1.0, sum(1.0 for _ in action.risks) * 0.25)
+        cost = min(1.0, len(action.risks) * 0.25)
         uncertainty = max(0.0, min(1.0, 1.0 - action.confidence))
         repetition = self._repetition_penalty(state, character, action)
         belief_friction = self._belief_friction(state, character, action)
@@ -212,16 +177,10 @@ class DecisionKernel:
         fatigue = max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
         fatigue_cost = {"travel": 0.45, "search_person": 0.35, "help_person": 0.20, "contact_person": 0.10}.get(action_type, 0.0)
         fatigue_bonus = 0.10 if action_type == "rest" else 0.0
-        score = (
-            self.weights.goal * goal + self.weights.values * values + self.weights.emotion * emotion
-            + self.weights.relationship * relationship + self.weights.urgency * urgency
-            - self.weights.risk * perceived_risk - self.weights.cost * cost
-            - self.weights.uncertainty * uncertainty + self.weights.habit * habit
-            - self.weights.habit * repetition + self.weights.identity * identity
-            - fatigue_cost * fatigue + fatigue_bonus * fatigue
-            - self.weights.uncertainty * max(0.0, belief_friction)
-            + self.weights.uncertainty * min(0.0, belief_friction)
-        )
+        if action_type == "travel" and human_condition_urgency <= 0.05 and not action.metadata.get("search_target"):
+            habit = min(0.0, habit)
+            repetition = max(repetition, 0.5)
+        score = self.weights.goal * goal + self.weights.values * values + self.weights.emotion * emotion + self.weights.relationship * relationship + self.weights.urgency * urgency - self.weights.risk * perceived_risk - self.weights.cost * cost - self.weights.uncertainty * uncertainty + self.weights.habit * habit - self.weights.habit * repetition + self.weights.identity * identity - fatigue_cost * fatigue + fatigue_bonus * fatigue - self.weights.uncertainty * max(0.0, belief_friction) + self.weights.uncertainty * min(0.0, belief_friction)
         reasons = []
         if goal > 0: reasons.append("goal alignment")
         if values > 0: reasons.append("value alignment")
@@ -242,6 +201,8 @@ class DecisionKernel:
     def _choice_noise(self, state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
         noise_level = max(0.0, min(1.0, character.decision_noise))
         if noise_level <= 0.0:
+            return 0.0
+        if canonical_action_type(action.action_type) == "travel" and not action.metadata.get("search_target") and max(character.human_condition.desires.get("freedom", 0.0) * character.human_condition.confinement_at(character.location), character.human_condition.desires.get("curiosity", 0.0)) <= 5.0:
             return 0.0
         stable_seed = ((state.simulation_seed if state.simulation_seed is not None else self.seed) + state.tick * 1009 + zlib.crc32(f"{character.id}:{action.id}".encode("utf-8")))
         rng = random.Random(stable_seed)
