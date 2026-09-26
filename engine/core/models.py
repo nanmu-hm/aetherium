@@ -139,6 +139,8 @@ class WorldState:
     event_log: list[Event] = field(default_factory=list)
     memory_state: MemoryState = field(default_factory=MemoryState)
     active_branch: str = "main"
+    # Exact PRNG state used by SimulationEngine; persisted so checkpoints can replay future ticks.
+    rng_state: tuple | None = None
 
     def add_character(self, character: CharacterState) -> None:
         if character.id in self.characters:
