@@ -149,8 +149,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     if relationship_pressure >= 70.0 and len(state.locations) > 1:
         for target_id in _relationship_targets(state, character):
             target = state.characters[target_id]
-            if target.location == character.location:
-                continue
             remembered = _remembered_location(state, character, target_id)
             alternatives = sorted(
                 location for location in state.locations if location != character.location
