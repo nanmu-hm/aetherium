@@ -372,7 +372,14 @@ class SimulationEngine:
             meaningful = any(
                 consequence.old_value != consequence.new_value
                 and consequence.field != f"habits.{action_type}"
-                and consequence.target_type in {"relationship", "goal"}
+                and (
+                    consequence.target_type in {"relationship", "goal"}
+                    or (
+                        action_type == "rest"
+                        and consequence.target_type == "character"
+                        and consequence.field == "human_condition.fatigue"
+                    )
+                )
                 for consequence in consequences
             )
             learning_signal = 1.0 if meaningful else 0.0
@@ -695,7 +702,6 @@ class SimulationEngine:
 
             self._apply_fatigue(actor, action, outcome, consequences)
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
-            self._update_procedural_habit(actor, action, outcome, consequences)
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
@@ -716,6 +722,7 @@ class SimulationEngine:
                 consequences=consequences,
             )
             self._apply_social_reactions(state, event, action, outcome, consequences)
+            self._update_procedural_habit(actor, action, outcome, consequences)
             events.append(event)
 
         for event in events:
