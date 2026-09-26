@@ -836,6 +836,10 @@ def test_repetition_penalty_uses_structured_action_type():
         ]
     )
 
+    engine = SimulationEngine(seed=1)
+    for event in world.event_log:
+        engine.memory_kernel.remember_event(world.memory_state, "lin", event, "contact")
+
     evaluation = DecisionKernel(seed=1).evaluate(world, action)
 
     assert "recently repeated action" in evaluation.reasons
