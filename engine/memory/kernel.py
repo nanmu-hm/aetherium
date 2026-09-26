@@ -14,7 +14,7 @@ from .models import (
     RelationshipHistoryEntry,
 )
 from ..core.models import Event
-from ..core.action_types import canonical_action_type, event_action_type
+from ..core.action_types import event_action_type
 
 
 class MemoryKernel:
@@ -195,7 +195,7 @@ class MemoryKernel:
         if event.action_result is None or event.action_result.status not in {"success", "failure"}:
             return []
 
-        action_type = canonical_action_type(event.causes[0].rsplit("-", 1)[-1]) if event.causes else "unknown"
+        action_type = event_action_type(event) or "unknown"
         grouped: dict[str, dict[str, tuple[float, float]]] = {}
         for consequence in event.consequences:
             if consequence.target_type != "relationship":
