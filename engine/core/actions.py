@@ -103,45 +103,56 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             if event.participants and event.participants[0] == character.id:
                 if event_action_type(event) == "contact_person":
                     recent_contacts.append(event)
-                    if len(recent_contacts) >= 2:
+                    if len(recent_contacts) >= 3:
                         break
                 elif recent_contacts:
                     break
 
-        relationship_desire = max(
-            character.human_condition.desires.get("reconciliation", 0.0),
-            character.human_condition.desires.get("belonging", 0.0),
+        reconciliation = character.human_condition.desires.get("reconciliation", 0.0)
+        belonging = character.human_condition.desires.get("belonging", 0.0)
+        tension = max(
+            0.0,
+            min(
+                100.0,
+                max(
+                    100.0 - trust,
+                    state.get_relationship(character.id, target_id).resentment
+                    if state.get_relationship(character.id, target_id) is not None
+                    else 0.0,
+                    state.get_relationship(character.id, target_id).fear
+                    if state.get_relationship(character.id, target_id) is not None
+                    else 0.0,
+                ),
+            ),
         )
-        tension = 100.0 - trust
         emotional_pressure = max(
             character.emotions.get("anger", 0.0),
             character.emotions.get("longing", 0.0),
             character.emotions.get("resentment", 0.0),
             character.emotions.get("love", 0.0),
         )
-        # Relationship tension matters only when there is an actual social
-        # motive. A strained relationship by itself is not a command to make
-        # contact; otherwise every character with a relationship would keep
-        # contacting people forever. The motive is strengthened or weakened by
-        # the current relationship state.
-        social_motive = max(relationship_desire, emotional_pressure)
-        relationship_factor = 0.5 + 0.5 * max(0.0, min(1.0, tension / 100.0))
-        contact_pressure = max(
-            0.0,
-            min(100.0, social_motive * relationship_factor),
+        # Reconciliation is not a free-standing command. It becomes strong
+        # when the relationship is actually unresolved. Belonging can still
+        # motivate contact, while emotional pressure provides the character's
+        # immediate interpretation of the relationship.
+        relationship_motive = max(
+            reconciliation * (tension / 100.0),
+            belonging * 0.50,
+            emotional_pressure,
         )
+        contact_pressure = max(0.0, min(100.0, relationship_motive))
 
         last_contact_succeeded = bool(
             recent_contacts
             and recent_contacts[0].action_result is not None
             and recent_contacts[0].action_result.status == "success"
         )
-        severe_pressure = contact_pressure >= 85.0
-        recent_success_cooldown = len(recent_contacts) >= 2 and last_contact_succeeded and not severe_pressure
+        severe_pressure = contact_pressure >= 80.0
+        # A successful conversation creates a real social recovery interval.
+        # Only genuinely unresolved pressure can override it; otherwise the
+        # character gets time to live, observe and be affected by other events.
+        recent_success_cooldown = bool(recent_contacts) and last_contact_succeeded and not severe_pressure
 
-        # Contact is an available life option, not a mandatory tick action.
-        # A successful recent conversation creates a stronger cooldown; repeated
-        # attempts are still possible when unresolved pressure is genuinely high.
         if contact_pressure > 0.0 and not recent_success_cooldown:
             pool.append(ActionCandidate(
                 id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
@@ -149,9 +160,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 motivation="address an important relationship",
                 preconditions=["target is at the same location"],
                 expected_outcomes=["relationship may change"], confidence=1.0, difficulty=0.0,
-                # The target is co-located and the current world models no
-                # separate social obstacle. Do not invent a random failure;
-                # personality-shaped consequences are applied after contact.
                 score=0.15,
                 metadata={"world_validated": True},
             ))
@@ -188,8 +196,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 motivation=f"help {state.characters[target_id].name} because their condition looks difficult",
                 preconditions=["target is at the same location"],
                 confidence=1.0, difficulty=0.0,
-                # The current world models co-location as sufficient to attempt
-                # help; do not inject an unexplained random failure.
                 score=0.20,
                 metadata={"world_validated": True},
             ))
@@ -197,9 +203,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     freedom_pressure = _contextual_desire(character, "freedom")
     curiosity_pressure = _contextual_desire(character, "curiosity")
     if len(state.locations) > 1:
-        # Travel is a continuous affordance. Pressure and decision utility
-        # determine whether it is chosen; generation does not hide it behind
-        # an arbitrary threshold.
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
             if memory.owner_id == character.id and memory.location in visit_counts:
@@ -220,14 +223,10 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 if len(recent_travel_locations) >= 3:
                     break
 
-        # New places satisfy curiosity more strongly. Once everything is
-        # familiar, destination meaning matters: confinement and fear reduce
-        # the attraction of a place for this particular character. Recent
-        # experience also increases effective familiarity: this is a memory-
-        # grounded novelty effect, not a hard travel cooldown.
         fresh = [location for location in alternatives if visit_counts[location] == 0]
         if fresh:
             alternatives = fresh
+
         def destination_score(location: str) -> float:
             confinement = character.human_condition.confinement_at(location)
             fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
@@ -252,21 +251,16 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
             confidence=1.0, difficulty=0.5,
-            # Destination affordance selects where to go; it must not create
-            # motivation to travel in the first place.
             score=0.0,
             metadata={
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
                 "destination_confinement": character.human_condition.confinement_at(destination),
+                "travel_pressure": max(freedom_pressure, curiosity_pressure),
                 "world_validated": True,
             },
         ))
 
-    # Relationship pressure can create a search journey even for a character
-    # whose values do not include freedom. The destination comes from the
-    # character's own remembered/uncertain model, never from the target's
-    # current world-state location.
     relationship_pressure = max(
         character.human_condition.desires.get("reconciliation", 0.0),
         character.human_condition.desires.get("belonging", 0.0),
@@ -274,11 +268,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     if relationship_pressure > 0.0 and len(state.locations) > 1:
         for target_id in _relationship_targets(state, character):
             target = state.characters[target_id]
-
-            # A character can directly perceive another character at the same
-            # location. Searching for someone who is already present would
-            # contradict the actor's available information, so contact (or
-            # another same-location action) must remain the available path.
             if target.location == character.location:
                 continue
 
@@ -321,14 +310,10 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             ))
             break
 
-    # Rest is a real biological affordance, not a substitute for an empty action
-    # pool. When there is no meaningful recovery need, the character is allowed
-    # to be idle instead of repeatedly "resting" without changing state.
     fatigue = max(0.0, min(100.0, character.human_condition.fatigue))
     stress = max(0.0, character.emotions.get("stress", 0.0))
     sorrow = max(0.0, character.emotions.get("sorrow", 0.0))
     if fatigue >= 10.0 or stress >= 20.0 or sorrow >= 35.0:
-        rest_score = min(1.0, 0.10 + 0.70 * (fatigue / 100.0))
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-rest",
             actor_id=character.id,
@@ -338,8 +323,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             expected_outcomes=["recover and continue later"],
             confidence=0.95,
             difficulty=0.05,
-            # Recovery need is already represented by fatigue/stress urgency;
-            # this prior only says rest is physically easy to perform.
             score=0.05,
             metadata={"rest_reason": "fatigue_recovery"},
         ))
