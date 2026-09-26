@@ -8,7 +8,6 @@ import zlib
 
 from .models import ActionCandidate, CharacterState, WorldState
 from .action_types import canonical_action_type, event_action_type, goal_matches_action
-from ..memory.kernel import MemoryKernel
 
 
 @dataclass(frozen=True)
@@ -47,13 +46,16 @@ class DecisionKernel:
         if not character.values:
             return 0.0
         affordances = {
-            "freedom": {"travel"}, "loyalty": {"help_person", "contact_person"},
-            "responsibility": {"help_person", "pursue_goal"}, "friendship": {"contact_person", "help_person"},
+            "freedom": {"travel"},
+            "loyalty": {"help_person", "contact_person", "search_person"},
+            "responsibility": {"help_person", "pursue_goal"},
+            "friendship": {"contact_person", "help_person", "search_person"},
             "courage": {"travel", "help_person"},
         }
         pressure_by_action = {
             "travel": max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)),
             "contact_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)),
+            "search_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)),
             "help_person": character.human_condition.desires.get("responsibility", 0.0),
         }
         matches = 0.0
@@ -78,7 +80,8 @@ class DecisionKernel:
             compatibility = (rel.trust + rel.loyalty + rel.affection + rel.respect - rel.resentment - rel.fear) / 500.0
             if action_type == "contact_person":
                 tension = max(rel.resentment, rel.fear, 100.0 - rel.trust) / 100.0
-                compatibility = 0.65 * compatibility + 0.35 * tension
+                trust_alignment = rel.trust / 100.0
+                compatibility = 0.60 * compatibility + 0.25 * trust_alignment + 0.15 * tension
             scores.append(compatibility)
         return sum(scores) / len(scores) if scores else 0.0
 
@@ -118,7 +121,7 @@ class DecisionKernel:
 
     @staticmethod
     def _identity_alignment(character: CharacterState, action: ActionCandidate) -> float:
-        affordances = {"travel": ("independent", "capable"), "contact_person": ("loyal", "reliable"), "help_person": ("compassionate", "reliable")}
+        affordances = {"travel": ("independent", "capable"), "contact_person": ("loyal", "reliable"), "search_person": ("loyal", "reliable"), "help_person": ("compassionate", "reliable")}
         dimensions = affordances.get(canonical_action_type(action.action_type), ())
         if not dimensions:
             return 0.0
@@ -131,6 +134,7 @@ class DecisionKernel:
         mappings = {
             "travel": {"hope": 1.0, "longing": 0.5, "fear": -1.0, "regret": 0.25},
             "contact_person": {"love": 1.0, "longing": 1.0, "hope": 0.5, "fear": -0.5, "resentment": -0.8},
+            "search_person": {"love": 0.8, "longing": 1.0, "hope": 0.8, "fear": -0.3, "resentment": -0.2},
             "help_person": {"love": 0.7, "hope": 0.5, "joy": 0.2, "fear": -0.4, "resentment": -0.5, "regret": 0.3},
         }
         weights = mappings.get(canonical_action_type(action.action_type), {})
@@ -166,8 +170,8 @@ class DecisionKernel:
         action_type = canonical_action_type(action.action_type)
         if action_type == "rest":
             return max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
-        if action_type == "travel" and action.metadata.get("search_target"):
-            return max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)) / 100.0
+        if action_type == "search_person":
+            return max(desires.get("reconciliation", 0.0), desires.get("belonging", 0.0)) / 100.0
         mapping = {"travel": ("freedom", "curiosity"), "contact_person": ("reconciliation", "belonging"), "help_person": ("responsibility",)}
         relevant = mapping.get(action_type, ())
         return max((max(0.0, min(100.0, desires.get(name, 0.0))) / 100.0 for name in relevant), default=0.0)
@@ -191,9 +195,6 @@ class DecisionKernel:
             if emotion > 0.0:
                 emotion *= travel_pressure
             identity = 0.0
-            # A travel candidate may exist as an affordance at zero pressure,
-            # but the absence of a motive must lower its utility enough for a
-            # quiet tick to win over an arbitrary journey.
             if travel_pressure <= 0.05 and not action.metadata.get("search_target"):
                 goal = min(goal, 0.0)
                 urgency = min(urgency, travel_pressure)
@@ -209,7 +210,7 @@ class DecisionKernel:
         belief_friction = self._belief_friction(state, character, action)
         habit = self._habit_alignment(character, action)
         fatigue = max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
-        fatigue_cost = {"travel": 0.45, "help_person": 0.20, "contact_person": 0.10}.get(action_type, 0.0)
+        fatigue_cost = {"travel": 0.45, "search_person": 0.35, "help_person": 0.20, "contact_person": 0.10}.get(action_type, 0.0)
         fatigue_bonus = 0.10 if action_type == "rest" else 0.0
         score = (
             self.weights.goal * goal + self.weights.values * values + self.weights.emotion * emotion
@@ -255,11 +256,7 @@ class DecisionKernel:
             action = next(item for item in pool if item.id == evaluation.action_id)
             character = state.characters[action.actor_id]
             noise = self._choice_noise(state, character, action)
-            selected.append(DecisionEvaluation(
-                action_id=evaluation.action_id, utility=evaluation.utility,
-                reasons=evaluation.reasons, uncertainty=evaluation.uncertainty,
-                selection_score=evaluation.utility + max(-1.0, min(1.0, action.score)) + noise,
-            ))
+            selected.append(DecisionEvaluation(action_id=evaluation.action_id, utility=evaluation.utility, reasons=evaluation.reasons, uncertainty=evaluation.uncertainty, selection_score=evaluation.utility + max(-1.0, min(1.0, action.score)) + noise))
         best = max(selected, key=lambda item: (item.selection_score if item.selection_score is not None else item.utility, -item.uncertainty, item.action_id))
         if allow_quiet and (best.selection_score if best.selection_score is not None else best.utility) <= 0.0:
             return None, selected
