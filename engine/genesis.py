@@ -20,7 +20,12 @@ def build_genesis_world() -> WorldState:
             name="Yan",
             location="river_town",
             values=["loyalty", "responsibility"],
-            goals=[Goal("yan-1", "help an old friend", priority=0.75)],
+            goals=[Goal(
+                "yan-1",
+                "help an old friend",
+                priority=0.75,
+                stages=["find the old friend", "offer help", "help the old friend"],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 85},
                 desires={"reconciliation": 70},
@@ -35,7 +40,12 @@ def build_genesis_world() -> WorldState:
             name="Rui",
             location="river_town",
             values=["freedom"],
-            goals=[Goal("rui-1", "leave town", priority=0.65)],
+            goals=[Goal(
+                "rui-1",
+                "leave town",
+                priority=0.65,
+                stages=["leave town", "continue toward freedom"],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 70},
                 desires={"freedom": 80},
