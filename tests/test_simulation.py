@@ -111,17 +111,21 @@ def test_precondition_blocks_without_roll() -> None:
     assert "does not exist" in result.reasons[0]
 
 
-def test_successful_goal_action_marks_goal_achieved():
+def test_successful_goal_action_advances_or_completes_goal():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.characters["lin"].goals[0].description = "help a friend"
+    world.characters["lin"].goals[0].stages = ["help a friend", "help the friend again"]
     action = ActionCandidate(
         "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
     )
     events = SimulationEngine(seed=1).resolve(world, [action])
-    assert world.characters["lin"].goals[0].status == "achieved"
-    assert any(item.target_type == "goal" for item in events[0].consequences)
+    goal = world.characters["lin"].goals[0]
+    assert goal.status == "active"
+    assert goal.current_stage == 1
+    assert goal.progress == 0.5
+    assert any(item.target_type == "goal" and item.field == "current_stage" for item in events[0].consequences)
 
 
 def test_achieved_goal_no_longer_generates_matching_help_action():
