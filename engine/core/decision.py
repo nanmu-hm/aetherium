@@ -61,6 +61,17 @@ class DecisionKernel:
             "friendship": {"contact_person", "help_person"},
             "courage": {"travel", "help_person"},
         }
+        pressure_by_action = {
+            "travel": max(
+                character.human_condition.desires.get("freedom", 0.0),
+                character.human_condition.desires.get("curiosity", 0.0),
+            ),
+            "contact_person": max(
+                character.human_condition.desires.get("reconciliation", 0.0),
+                character.human_condition.desires.get("belonging", 0.0),
+            ),
+            "help_person": character.human_condition.desires.get("responsibility", 0.0),
+        }
 
         matches = 0.0
         for value in character.values:
@@ -70,7 +81,9 @@ class DecisionKernel:
             elif action.action_type in affordances.get(normalized, set()):
                 matches += 1.0
 
-        return min(1.0, matches / len(character.values))
+        alignment = min(1.0, matches / len(character.values))
+        pressure = max(0.0, min(100.0, pressure_by_action.get(action.action_type, 100.0))) / 100.0
+        return alignment * pressure
 
     @staticmethod
     def _relationship_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -220,6 +233,15 @@ class DecisionKernel:
         else:
             alignment = 0.0
 
+        if goal.stage_conditions and goal.current_stage < len(goal.stage_conditions):
+            condition = goal.stage_conditions[goal.current_stage]
+            if condition.get("type") == "location_not_and_action":
+                pressure = max(
+                    character.human_condition.desires.get("freedom", 0.0),
+                    character.human_condition.desires.get("curiosity", 0.0),
+                ) / 100.0
+                alignment *= max(0.0, min(1.0, pressure))
+
         # Relationship-seeking actions become more compelling when the
         # relationship itself carries unresolved tension. This keeps the
         # decision grounded in the character's present situation rather than
@@ -245,8 +267,11 @@ class DecisionKernel:
         generation and the final decision instead of acting as mere availability flags.
         """
         desires = character.human_condition.desires
+        if canonical_action_type(action.action_type) == "rest":
+            return max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
+
         mapping = {
-            "travel": ("freedom",),
+            "travel": ("freedom", "curiosity"),
             "contact_person": ("reconciliation", "belonging"),
             "help_person": ("responsibility",),
         }
@@ -274,6 +299,14 @@ class DecisionKernel:
         belief_friction = self._belief_friction(state, character, action)
         habit = self._habit_alignment(character, action)
         identity = self._identity_alignment(character, action)
+        fatigue = max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
+        fatigue_cost = {
+            "travel": 0.45,
+            "help_person": 0.20,
+            "contact_person": 0.10,
+        }.get(canonical_action_type(action.action_type), 0.0)
+        fatigue_bonus = 0.10 if canonical_action_type(action.action_type) == "rest" else 0.0
+
         score = (
             self.weights.goal * goal
             + self.weights.values * values
@@ -286,6 +319,8 @@ class DecisionKernel:
             + self.weights.habit * habit
             - self.weights.habit * repetition
             + self.weights.identity * identity
+            - fatigue_cost * fatigue
+            + fatigue_bonus * fatigue
             - self.weights.uncertainty * max(0.0, belief_friction)
             + self.weights.uncertainty * min(0.0, belief_friction)
         )
