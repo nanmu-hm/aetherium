@@ -39,7 +39,7 @@ def test_genesis_allows_goal_and_value_driven_action_change():
         for event in world.event_log
         if event.causes
     }
-    assert "contact_person" in action_types
+    assert "help_person" in action_types
     assert "travel" in action_types
 
 
