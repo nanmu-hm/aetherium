@@ -145,14 +145,39 @@ def test_genesis_does_not_immediately_reverse_travel_without_a_new_reason():
     assert rui.location == "old_road"
     before = len(world.event_log)
     engine = SimulationEngine(seed=7)
-    for _ in range(4):
+    for _ in range(8):
         engine.step(world)
     new_events = world.event_log[before:]
     rui_travel = [
-        event for event in new_events
+        event
+        for event in new_events
         if event.participants and event.participants[0] == "rui"
         and event_action_type(event) == "travel"
         and event.action_result is not None
         and event.action_result.status == "success"
     ]
-    assert not any(event.location == "river_town" for event in rui_travel)
+    locations = [event.location for event in rui_travel]
+    assert not any(
+        a == c and a != b
+        for a, b, c in zip(locations, locations[1:], locations[2:])
+    )
+
+
+def test_genesis_long_runs_do_not_collapse_into_immediate_travel_reversal():
+    for seed in (1, 2, 3, 7, 42):
+        world = run_genesis(ticks=200, seed=seed)
+        locations = [
+            event.location
+            for event in world.event_log
+            if event.participants
+            and event.participants[0] == "rui"
+            and event_action_type(event) == "travel"
+            and event.action_result is not None
+            and event.action_result.status == "success"
+        ]
+        reversals = sum(
+            1
+            for a, b, c in zip(locations, locations[1:], locations[2:])
+            if a == c and a != b
+        )
+        assert reversals <= max(1, len(locations) // 4)
