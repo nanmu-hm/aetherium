@@ -41,13 +41,17 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
             action_counts[action.action_type] += 1
             if action.action_type == "rest":
                 chosen_rest += 1
+        actions_by_id = {action.id: action for action in result.actions}
         for event in result.events:
+            action = actions_by_id.get(event.causes[0]) if event.causes else None
             if event.action_type == "travel" and event.action_result and event.action_result.status == "success":
                 actor_id = event.participants[0]
                 travel_ticks[actor_id].append(event.tick)
-                reason = "search" if any("search for" in fact.lower() for fact in event.facts) else "freedom"
+                reason = "search" if action and action.metadata.get("search_target") else "freedom"
                 travel_reasons[(actor_id, reason)] += 1
-            if any("is not there" in fact.lower() for fact in event.facts):
+            if action and action.metadata.get("search_target") and any(
+                fact.endswith("is not there.") for fact in event.facts
+            ):
                 location_absent += 1
 
     intervals = []
@@ -88,12 +92,11 @@ def search_reroute_probe() -> list[str]:
     engine = SimulationEngine(seed=31)
     for _ in range(3):
         result = engine.step(world)
-        events.extend(
-            fact
-            for event in result.events
-            for fact in event.facts
-            if "search for" in fact.lower()
-        )
+        actions_by_id = {action.id: action for action in result.actions}
+        for event in result.events:
+            action = actions_by_id.get(event.causes[0]) if event.causes else None
+            if action and action.metadata.get("search_target"):
+                events.extend(event.facts)
     return events
 
 
