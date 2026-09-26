@@ -402,12 +402,12 @@ def test_failed_attempt_increases_unresolved_desire_pressure():
 
     world = build_demo_world()
     world.characters["mei"].goals[0].status = "achieved"
-    world.characters["mei"].human_condition.desires["freedom"] = 40.0
+    world.characters["mei"].human_condition.desires["reconciliation"] = 40.0
     action = ActionCandidate(
-        "hard-travel",
+        "hard-contact",
         "mei",
-        "travel",
-        targets=["town"],
+        "contact_person",
+        targets=["lin"],
         confidence=0.1,
         difficulty=0.99,
     )
@@ -416,9 +416,9 @@ def test_failed_attempt_increases_unresolved_desire_pressure():
 
     assert events[0].action_result is not None
     assert events[0].action_result.status == "failure"
-    assert world.characters["mei"].human_condition.desires["freedom"] == 48.0
+    assert world.characters["mei"].human_condition.desires["reconciliation"] == 48.0
     assert any(
-        consequence.field == "human_condition.desires.freedom"
+        consequence.field == "human_condition.desires.reconciliation"
         for consequence in events[0].consequences
     )
 
@@ -509,10 +509,10 @@ def test_failed_experience_builds_a_behavioral_avoidance():
     world = build_demo_world()
     world.characters["mei"].goals[0].status = "achieved"
     action = ActionCandidate(
-        "hard-travel",
+        "hard-help",
         "mei",
-        "travel",
-        targets=["town"],
+        "help_person",
+        targets=["lin"],
         confidence=0.1,
         difficulty=0.99,
     )
@@ -521,9 +521,9 @@ def test_failed_experience_builds_a_behavioral_avoidance():
 
     assert events[0].action_result is not None
     assert events[0].action_result.status == "failure"
-    assert world.characters["mei"].habits["travel"] == -0.1
+    assert world.characters["mei"].habits["help_person"] == -0.1
     assert any(
-        consequence.field == "habits.travel"
+        consequence.field == "habits.help_person"
         and consequence.new_value == -0.1
         for consequence in events[0].consequences
     )
