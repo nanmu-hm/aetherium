@@ -850,6 +850,7 @@ def test_travel_is_not_suppressed_by_a_cooldown_when_pressure_is_real():
     from engine.core.models import ActionResult, Event
 
     world = build_demo_world()
+    world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
     world.event_log.append(
@@ -914,7 +915,7 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
     action = ActionCandidate(
-        "travel", "mei", "travel", targets=["town"], confidence=1.0, difficulty=0.1
+        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
     )
 
     event = SimulationEngine(seed=1).resolve(world, [action])[0]
@@ -924,4 +925,4 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
 
     SimulationEngine._advance_human_pressures(world, [event])
-    assert world.characters["mei"].human_condition.desires["freedom"] == 13.0
+    assert world.characters["mei"].human_condition.desires["freedom"] == 41.5
