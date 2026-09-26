@@ -834,22 +834,22 @@ class SimulationEngine:
                     if desire_name not in desires:
                         continue
                     if action_type == "contact_person" and desire_name == "reconciliation":
-                    relationship = state.get_relationship(character.id, event.participants[1]) if len(event.participants) > 1 else None
-                    if relationship is not None:
-                        tension = max(
-                            0.0,
-                            min(
-                                100.0,
-                                max(
-                                    100.0 - relationship.trust,
-                                    relationship.resentment,
-                                    relationship.fear,
+                        relationship = state.get_relationship(character.id, event.participants[1]) if len(event.participants) > 1 else None
+                        if relationship is not None:
+                            tension = max(
+                                0.0,
+                                min(
+                                    100.0,
+                                    max(
+                                        100.0 - relationship.trust,
+                                        relationship.resentment,
+                                        relationship.fear,
+                                    ),
                                 ),
-                            ),
-                        )
-                        satisfaction = min(100.0, 20.0 + 0.50 * tension)
-                        desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
-                    continue
+                            )
+                            satisfaction = min(100.0, 20.0 + 0.50 * tension)
+                            desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
+                        continue
                 if action_type == "travel" and desire_name == "freedom":
                         # Freedom is satisfied according to the actor's
                         # experienced confinement at the place they left.
