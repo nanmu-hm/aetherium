@@ -96,7 +96,6 @@ def test_genesis_travel_has_a_character_grounded_reason():
         assert not (
             current.tick == previous.tick + 1
             and current_destination == previous_origin
-            and previous_destination == current_destination
         )
 
     rui_goal = world.characters["rui"].goals[0]
