@@ -28,6 +28,16 @@ class HumanCondition:
     # Physical recovery state. 0 means rested; 100 means severely fatigued.
     fatigue: float = 0.0
 
+    def confinement_at(self, location: str) -> float:
+        """Return experienced confinement at a place, with a neutral default.
+
+        The same rule is used by action generation and pressure evolution so an
+        unannotated world does not accidentally create hidden ping-pong behavior.
+        """
+        associations = self.location_pressures.get(location, {})
+        value = associations.get("confinement", 0.0)
+        return max(0.0, min(1.0, value))
+
     def pressure(self) -> float:
         """Return a bounded measure of unresolved human pressure."""
         values = list(self.desires.values()) + list(self.losses.values()) + list(self.fears.values())
