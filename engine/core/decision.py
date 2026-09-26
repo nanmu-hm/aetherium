@@ -46,9 +46,8 @@ class DecisionKernel:
         affordances = {"freedom": {"travel"}, "loyalty": {"help_person", "contact_person", "search_person"}, "responsibility": {"help_person", "pursue_goal"}, "friendship": {"contact_person", "help_person", "search_person"}, "courage": {"travel", "help_person"}}
         pressure_by_action = {"travel": max(character.human_condition.desires.get("freedom", 0.0), character.human_condition.desires.get("curiosity", 0.0)), "contact_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "search_person": max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0)), "help_person": character.human_condition.desires.get("responsibility", 0.0)}
         matches = sum(1.0 for value in character.values if value.lower() in text or action.action_type in affordances.get(value.lower(), set()))
-        alignment = min(1.0, matches / len(character.values))
         pressure = max(0.0, min(100.0, pressure_by_action.get(action.action_type, 100.0))) / 100.0
-        return alignment * pressure
+        return min(1.0, matches / len(character.values)) * pressure
 
     @staticmethod
     def _relationship_alignment(state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
@@ -87,7 +86,10 @@ class DecisionKernel:
             _, action_type, belief_targets, outcome = parts
             if canonical_action_type(action_type) != canonical_action_type(action.action_type) or belief_targets != target_text:
                 continue
-            penalties.append(belief.confidence if outcome == "failure" else -0.5 * belief.confidence if outcome == "success" else 0.0)
+            if outcome == "failure":
+                penalties.append(belief.confidence)
+            elif outcome == "success":
+                penalties.append(-0.5 * belief.confidence)
         if not penalties:
             return 0.0
         return max(-0.5, min(1.0, sum(penalties) / min(3, len(penalties))))
@@ -154,6 +156,7 @@ class DecisionKernel:
         human_condition_urgency = self._human_condition_urgency(character, action)
         urgency = max(memory_urgency, human_condition_urgency)
         action_type = canonical_action_type(action.action_type)
+        motive_gap = 0.0
         if action_type == "travel":
             travel_pressure = human_condition_urgency
             values *= travel_pressure
@@ -164,6 +167,7 @@ class DecisionKernel:
                 goal = 0.0
                 urgency = 0.0
                 emotion = min(emotion, 0.0)
+                motive_gap = 0.20
         else:
             identity = self._identity_alignment(character, action)
         risk = min(1.0, len(action.risks) / 3.0)
@@ -177,10 +181,7 @@ class DecisionKernel:
         fatigue = max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
         fatigue_cost = {"travel": 0.45, "search_person": 0.35, "help_person": 0.20, "contact_person": 0.10}.get(action_type, 0.0)
         fatigue_bonus = 0.10 if action_type == "rest" else 0.0
-        if action_type == "travel" and human_condition_urgency <= 0.05 and not action.metadata.get("search_target"):
-            habit = min(0.0, habit)
-            repetition = max(repetition, 0.5)
-        score = self.weights.goal * goal + self.weights.values * values + self.weights.emotion * emotion + self.weights.relationship * relationship + self.weights.urgency * urgency - self.weights.risk * perceived_risk - self.weights.cost * cost - self.weights.uncertainty * uncertainty + self.weights.habit * habit - self.weights.habit * repetition + self.weights.identity * identity - fatigue_cost * fatigue + fatigue_bonus * fatigue - self.weights.uncertainty * max(0.0, belief_friction) + self.weights.uncertainty * min(0.0, belief_friction)
+        score = self.weights.goal * goal + self.weights.values * values + self.weights.emotion * emotion + self.weights.relationship * relationship + self.weights.urgency * urgency - self.weights.risk * perceived_risk - self.weights.cost * cost - self.weights.uncertainty * uncertainty + self.weights.habit * habit - self.weights.habit * repetition + self.weights.identity * identity - fatigue_cost * fatigue + fatigue_bonus * fatigue - self.weights.uncertainty * max(0.0, belief_friction) + self.weights.uncertainty * min(0.0, belief_friction) - motive_gap
         reasons = []
         if goal > 0: reasons.append("goal alignment")
         if values > 0: reasons.append("value alignment")
@@ -198,11 +199,9 @@ class DecisionKernel:
         if belief_friction < 0: reasons.append("past success remembered")
         return DecisionEvaluation(action.id, score, tuple(reasons), uncertainty)
 
-    def _choice_noise(self, state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
-        noise_level = max(0.0, min(1.0, character.decision_noise))
+    def _choice_noise(self, state: WorldState, character: CharacterState, action: ActionCandidate, scale: float = 1.0) -> float:
+        noise_level = max(0.0, min(1.0, character.decision_noise)) * scale
         if noise_level <= 0.0:
-            return 0.0
-        if canonical_action_type(action.action_type) == "travel" and not action.metadata.get("search_target") and max(character.human_condition.desires.get("freedom", 0.0) * character.human_condition.confinement_at(character.location), character.human_condition.desires.get("curiosity", 0.0)) <= 5.0:
             return 0.0
         stable_seed = ((state.simulation_seed if state.simulation_seed is not None else self.seed) + state.tick * 1009 + zlib.crc32(f"{character.id}:{action.id}".encode("utf-8")))
         rng = random.Random(stable_seed)
@@ -212,11 +211,18 @@ class DecisionKernel:
         evaluations = [self.evaluate(state, action) for action in pool]
         if not evaluations:
             return None, []
+        ordered = sorted(evaluations, key=lambda item: item.utility, reverse=True)
+        boundary_noise = 1.75 if len(ordered) > 1 and (ordered[0].utility - ordered[1].utility) <= 0.20 else 1.0
         selected: list[DecisionEvaluation] = []
         for evaluation in evaluations:
             action = next(item for item in pool if item.id == evaluation.action_id)
             character = state.characters[action.actor_id]
-            noise = self._choice_noise(state, character, action)
+            # Motive-free travel is kept strictly below zero; noise may diversify
+            # close meaningful choices but can never manufacture the motive itself.
+            if canonical_action_type(action.action_type) == "travel" and not action.metadata.get("search_target") and self._human_condition_urgency(character, action) <= 0.05:
+                noise = 0.0
+            else:
+                noise = self._choice_noise(state, character, action, boundary_noise)
             selected.append(DecisionEvaluation(action_id=evaluation.action_id, utility=evaluation.utility, reasons=evaluation.reasons, uncertainty=evaluation.uncertainty, selection_score=evaluation.utility + max(-1.0, min(1.0, action.score)) + noise))
         best = max(selected, key=lambda item: (item.selection_score if item.selection_score is not None else item.utility, -item.uncertainty, item.action_id))
         if allow_quiet and (best.selection_score if best.selection_score is not None else best.utility) <= 0.0:
