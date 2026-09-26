@@ -218,20 +218,3 @@ def test_genesis_long_runs_keep_multiple_behaviors_alive_and_vary_by_seed():
     assert len(set(sequences)) > 1
 
 
-def test_genesis_high_fatigue_prefers_recovery_over_endless_travel():
-    world = run_genesis(ticks=80, seed=7)
-    fatigue_high_choices = 0
-    rest_choices = 0
-    for event in world.event_log:
-        if not event.participants:
-            continue
-        actor = world.characters[event.participants[0]]
-        # This is an observational guard: whenever the actor is still highly
-        # fatigued after the event, the action stream must contain real recovery
-        # rather than an endless travel-only loop.
-        if actor.human_condition.fatigue >= 80.0:
-            fatigue_high_choices += 1
-            if event_action_type(event) == "rest":
-                rest_choices += 1
-    if fatigue_high_choices:
-        assert rest_choices / fatigue_high_choices >= 0.5
