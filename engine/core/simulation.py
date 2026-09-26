@@ -372,7 +372,7 @@ class SimulationEngine:
             meaningful = any(
                 consequence.old_value != consequence.new_value
                 and consequence.field != f"habits.{action_type}"
-                and consequence.target_type in {"character", "relationship", "goal"}
+                and consequence.target_type in {"relationship", "goal"}
                 for consequence in consequences
             )
             learning_signal = 1.0 if meaningful else 0.0
