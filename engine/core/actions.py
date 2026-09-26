@@ -41,6 +41,23 @@ def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
     return goal_matches_action(goal.description, action_type)
 
 
+def _remembered_location(state: WorldState, character: CharacterState, target_id: str) -> str | None:
+    """Return the latest location the character remembers for a target.
+
+    This reads only the actor's knowledge model. It never consults the target's
+    current world-state location, preserving information asymmetry.
+    """
+    prefix = f"location_seen:{target_id}:"
+    facts = [
+        fact for fact in state.memory_state.knowledge.get(character.id, {}).values()
+        if fact.proposition.startswith(prefix)
+    ]
+    if not facts:
+        return None
+    latest = max(facts, key=lambda fact: (fact.last_confirmed_tick, fact.confidence, fact.id))
+    return latest.proposition[len(prefix):]
+
+
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
     """Generate plausible actions without deciding which one must happen."""
     character = state.characters[character_id]
@@ -113,9 +130,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         ))
 
     freedom_pressure = character.human_condition.desires.get("freedom", 0.0)
-    # Travel is driven by an unresolved freedom pressure. Do not suppress
-    # travel after a success with an arbitrary cooldown: a successful trip must
-    # change the underlying pressure so the next decision has a different reason.
     if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1:
         destination = sorted(location for location in state.locations if location != character.location)[0]
         pool.append(ActionCandidate(
@@ -123,6 +137,44 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             action_type="travel", targets=[destination],
             motivation=f"move toward {destination}", confidence=0.55, score=0.5,
         ))
+
+    # Relationship pressure can create a search journey even for a character
+    # whose values do not include freedom. The destination comes from the
+    # character's own remembered/uncertain model, never from the target's
+    # current world-state location.
+    relationship_pressure = max(
+        character.human_condition.desires.get("reconciliation", 0.0),
+        character.human_condition.desires.get("belonging", 0.0),
+    )
+    if relationship_pressure >= 70.0 and len(state.locations) > 1:
+        for target_id in _relationship_targets(state, character):
+            target = state.characters[target_id]
+            if target.location == character.location:
+                continue
+            remembered = _remembered_location(state, character, target_id)
+            alternatives = sorted(
+                location for location in state.locations if location != character.location
+            )
+            destination = remembered if remembered in alternatives else (alternatives[0] if alternatives else None)
+            if destination is None:
+                continue
+            pool.append(ActionCandidate(
+                id=f"tick-{state.tick}-{character.id}-search-{target_id}",
+                actor_id=character.id,
+                action_type="travel",
+                targets=[destination],
+                motivation=(
+                    f"search for {target.name} after losing contact"
+                    if remembered is None
+                    else f"search for {target.name}; last remembered location was {remembered}"
+                ),
+                preconditions=[f"search is based on {target.name}'s remembered or uncertain location"],
+                expected_outcomes=["may reunite with the person", "may discover they are elsewhere"],
+                confidence=0.45 if remembered is None else 0.65,
+                difficulty=0.5,
+                score=relationship_pressure / 100.0,
+            ))
+            break
 
     return pool
 
