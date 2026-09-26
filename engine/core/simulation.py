@@ -808,14 +808,6 @@ class SimulationEngine:
                 character.emotions[emotion_name] = max(0.0, value - amount)
 
     @staticmethod
-    def _relationship_targets_for_pressure(state: WorldState, character_id: str) -> list[str]:
-        return [
-            relationship.target_id
-            for relationship in state.relationships.values()
-            if relationship.source_id == character_id and relationship.target_id in state.characters
-        ]
-
-    @staticmethod
     def _advance_human_pressures(state: WorldState, events: list[Event]) -> None:
         acted = {
             event.participants[0]
@@ -840,7 +832,12 @@ class SimulationEngine:
                     # A settled relationship should not manufacture a permanent
                     # desire to reconnect, while unresolved tension may naturally
                     # rebuild the pressure after a successful contact.
-                    targets = _relationship_targets_for_pressure(state, character.id)
+                    targets = [
+                        relationship.target_id
+                        for relationship in state.relationships.values()
+                        if relationship.source_id == character.id
+                        and relationship.target_id in state.characters
+                    ]
                     tensions = []
                     for target_id in targets:
                         relationship = state.get_relationship(character.id, target_id)
