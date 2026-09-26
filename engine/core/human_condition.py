@@ -35,7 +35,7 @@ class HumanCondition:
         unannotated world does not accidentally create hidden ping-pong behavior.
         """
         associations = self.location_pressures.get(location, {})
-        value = associations.get("confinement", 0.0)
+        value = associations.get("confinement", 0.5)
         return max(0.0, min(1.0, value))
 
     def pressure(self) -> float:
