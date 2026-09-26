@@ -43,14 +43,7 @@ def goal_matches_action(goal_description: str, action_type: str) -> bool:
 def event_action_type(event) -> str:
     """Return the semantic event type while preserving legacy travel events."""
     explicit = getattr(event, "action_type", "")
-    metadata = getattr(event, "metadata", {}) or {}
-    if metadata.get("event_action_type"):
-        return canonical_action_type(metadata["event_action_type"])
     if explicit:
-        if canonical_action_type(explicit) == "travel" and event.causes:
-            cause = event.causes[0]
-            if "-search-" in cause:
-                return "search_person"
         return canonical_action_type(explicit)
     if event.causes:
         cause = event.causes[0]
