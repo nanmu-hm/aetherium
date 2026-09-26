@@ -5,7 +5,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import random
-import re
 
 from .actions import generate_action_pool
 from .action_types import canonical_action_type, event_action_type, goal_matches_action
