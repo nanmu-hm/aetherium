@@ -292,6 +292,16 @@ class DecisionKernel:
         values = self._value_alignment(character, action)
         emotion = self._emotion_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
+        if action_type := canonical_action_type(action.action_type):
+            if action_type == "contact_person":
+                relationship_pressure = max(
+                    character.human_condition.desires.get("reconciliation", 0.0),
+                    character.human_condition.desires.get("belonging", 0.0),
+                    character.emotions.get("longing", 0.0),
+                    character.emotions.get("resentment", 0.0),
+                    character.emotions.get("love", 0.0),
+                ) / 100.0
+                relationship *= max(0.0, min(1.0, relationship_pressure))
         memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
                               if d.owner_id == character.id and d.status == "active"), default=0.0)
         human_condition_urgency = self._human_condition_urgency(character, action)
@@ -306,7 +316,12 @@ class DecisionKernel:
         if action_type == "travel":
             travel_pressure = human_condition_urgency
             values *= travel_pressure
-            emotion *= travel_pressure
+            # Positive travel emotions should only reinforce an existing
+            # motive; negative emotion remains a direct resistance signal.
+            # Otherwise fear learned from a failed journey would disappear
+            # exactly when freedom pressure is low.
+            if emotion > 0.0:
+                emotion *= travel_pressure
             identity = 0.0
         else:
             identity = self._identity_alignment(character, action)
