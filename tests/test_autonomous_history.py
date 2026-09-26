@@ -122,7 +122,7 @@ def test_low_pressure_does_not_invent_a_recovery_action():
     assert not any(item.action_type == "rest" for item in pool)
 
 
-def test_low_freedom_pressure_does_not_generate_travel_before_threshold():
+def test_low_freedom_pressure_keeps_travel_as_an_affordance():
     world = WorldState(world_id="continuous", locations={"town", "road"})
     world.add_character(
         CharacterState(
@@ -134,4 +134,6 @@ def test_low_freedom_pressure_does_not_generate_travel_before_threshold():
         )
     )
     pool = generate_action_pool(world, "a")
-    assert not any(item.action_type == "travel" for item in pool)
+    travel = next(item for item in pool if item.action_type == "travel")
+    assert travel.metadata["world_validated"] is True
+    assert travel.score == 0.0
