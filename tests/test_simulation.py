@@ -936,6 +936,7 @@ def test_successful_travel_changes_contextual_freedom_pressure_instead_of_using_
     world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.characters["mei"].human_condition.location_desire_modifiers = {"road": {"freedom": -80.0}}
     action = ActionCandidate(
         "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
     )
