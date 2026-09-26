@@ -455,6 +455,14 @@ class SimulationEngine:
                             target = state.characters[search_target_id]
                             if target.location == destination:
                                 participants.append(search_target_id)
+                                self.memory_kernel.learn_fact(
+                                    state.memory_state,
+                                    actor.id,
+                                    f"location_seen:{search_target_id}:{destination}",
+                                    tick=state.tick,
+                                    source="direct_experience",
+                                    confidence=1.0,
+                                )
                                 facts.append(
                                     f"{actor.name} finds {target.name} at {destination}."
                                 )
