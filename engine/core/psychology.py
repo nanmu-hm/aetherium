@@ -42,12 +42,12 @@ def social_reaction(
                 return {"hope": 1.0, "resentment": 1.5}
             if has_trait(character, "warm", "forgiving", "loyal", "compassionate"):
                 return {"joy": 3.0, "hope": 2.0, "longing": -2.0}
-            return {"joy": 1.5, "hope": 1.0}
+            return {"joy": 2.0, "hope": 1.0}
         if has_trait(character, "proud", "independent"):
             return {"respect": 1.0, "resentment": 1.0}
         if has_trait(character, "grateful", "loyal", "compassionate"):
             return {"joy": 3.0, "love": 2.0, "hope": 2.0}
-        return {"joy": 1.0, "hope": 1.0}
+        return {"joy": 2.0, "hope": 1.0}
 
     if outcome_status == "failure":
         if has_trait(character, "proud", "hot_tempered", "impulsive"):
@@ -56,7 +56,7 @@ def social_reaction(
             return {"fear": 3.0, "sorrow": 2.0, "hope": -2.0}
         if has_trait(character, "loyal", "forgiving", "compassionate"):
             return {"sorrow": 2.0, "longing": 2.0}
-        return {"resentment": 1.0, "sorrow": 1.0}
+        return {"sorrow": 2.0, "resentment": 2.0}
 
     return {}
 
