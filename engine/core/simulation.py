@@ -558,12 +558,19 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 70.0},
+                    "travel": {"freedom": 0.5},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
-                    if desire_name in desires:
+                    if desire_name not in desires:
+                        continue
+                    if action_type == "travel" and desire_name == "freedom":
+                        # Travel resolves a proportion of the pressure it was
+                        # responding to; it is not a fixed cooldown clock.
+                        old_value = desires[desire_name]
+                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
+                    else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
     def _advance_clock(self, state: WorldState) -> None:
