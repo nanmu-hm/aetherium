@@ -1,5 +1,6 @@
 from engine.core.demo import build_demo_world, run_demo
 from engine.core.models import RelationshipState
+from engine.core.human_condition import HumanCondition
 from engine.core.simulation import SimulationEngine
 
 
