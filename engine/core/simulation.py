@@ -795,7 +795,13 @@ class SimulationEngine:
                         old_value = desires[desire_name]
                         old_location = event.consequences[0].old_value if event.consequences else character.location
                         confinement = character.human_condition.confinement_at(old_location)
-                        desires[desire_name] = max(0.0, old_value * (1.0 - confinement))
+                        # A successful departure is a real release of freedom
+                        # pressure. Stronger confinement makes the departure
+                        # more satisfying, while an actual journey should not
+                        # leave the same pressure immediately demanding another
+                        # journey.
+                        satisfaction = min(100.0, 100.0 * max(0.5, confinement))
+                        desires[desire_name] = max(0.0, old_value - satisfaction)
                     elif action_type == "travel" and desire_name == "curiosity":
                         # A genuinely new place satisfies curiosity much more
                         # than another familiar trip.
