@@ -121,8 +121,28 @@ class SimulationEngine:
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not goal_matches_action(goal.description, action.action_type):
+        if goal is None or not goal_matches_action(goal.current_description, action.action_type):
             return None
+
+        if goal.stages and goal.current_stage < len(goal.stages):
+            old_stage = goal.current_stage
+            goal.current_stage += 1
+            consequences.append(
+                Consequence(
+                    "goal",
+                    goal.id,
+                    "current_stage",
+                    old_stage,
+                    goal.current_stage,
+                    f"goal stage advanced by {action.action_type}",
+                )
+            )
+            if goal.current_stage < len(goal.stages):
+                return (
+                    f"{actor.name} advances the goal '{goal.description}' "
+                    f"to stage {goal.current_stage + 1}/{len(goal.stages)}: "
+                    f"{goal.current_description}."
+                )
 
         old_status = goal.status
         goal.status = "achieved"
@@ -379,6 +399,7 @@ class SimulationEngine:
             actor = state.characters[action.actor_id]
             consequences: list[Consequence] = []
             facts: list[str] = []
+            participants = [actor.id, *action.targets]
 
             precondition = self.precondition_engine.check(state, action)
             if not precondition.satisfied:
@@ -400,6 +421,28 @@ class SimulationEngine:
                             )
                         )
                         facts.append(f"{actor.name} travels from {old} to {destination}.")
+
+                        search_target_id = action.metadata.get("search_target")
+                        if search_target_id and search_target_id in state.characters:
+                            target = state.characters[search_target_id]
+                            if target.location == destination:
+                                participants.append(search_target_id)
+                                facts.append(
+                                    f"{actor.name} finds {target.name} at {destination}."
+                                )
+                            else:
+                                self.memory_kernel.learn_fact(
+                                    state.memory_state,
+                                    actor.id,
+                                    f"location_absent:{search_target_id}:{destination}",
+                                    tick=state.tick,
+                                    source="direct_experience",
+                                    confidence=1.0,
+                                )
+                                facts.append(
+                                    f"{actor.name} searches for {target.name} at {destination}, "
+                                    f"but {target.name} is not there."
+                                )
                     else:
                         facts.append(
                             f"{actor.name} attempts to travel to {destination}, but fails."
@@ -486,6 +529,11 @@ class SimulationEngine:
                     else:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
+                elif action.action_type == "rest":
+                    if outcome.status == "success":
+                        facts.append(f"{actor.name} rests at {actor.location}.")
+                    else:
+                        facts.append(f"{actor.name} tries to rest at {actor.location}, but fails.")
                 else:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
@@ -506,7 +554,7 @@ class SimulationEngine:
                     tick=state.tick,
                     timestamp=state.timestamp,
                     location=actor.location,
-                    participants=[actor.id, *action.targets],
+                    participants=participants,
                     causes=[action.id],
                     facts=facts,
                     action_type=canonical_action_type(action.action_type),
