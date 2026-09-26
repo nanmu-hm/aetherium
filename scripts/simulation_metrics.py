@@ -34,6 +34,7 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
     emotion_saturated: Counter[str] = Counter()
     travel_reversals = 0
     travel_successes = 0
+    action_sequences: defaultdict[str, list[str]] = defaultdict(list)
     travel_locations: defaultdict[str, list[str]] = defaultdict(list)
 
     for _ in range(ticks):
@@ -63,6 +64,7 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
                     emotion_saturated[emotion_name] += 1
         for action in result.actions:
             action_counts[action.action_type] += 1
+            action_sequences[action.actor_id].append(action.action_type)
             if action.action_type == "rest":
                 chosen_rest += 1
         actions_by_id = {action.id: action for action in result.actions}
@@ -97,6 +99,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
         "rest_as_sole_option": rest_as_sole_option,
         "rest_without_effect": rest_without_effect,
         "action_counts": dict(sorted(action_counts.items())),
+        "action_share_max": max(action_counts.values()) / max(1, sum(action_counts.values())),
+        "action_sequences": {actor: sequence for actor, sequence in sorted(action_sequences.items())},
         "travel_intervals": intervals,
         "travel_reasons": {f"{actor}:{reason}": count for (actor, reason), count in sorted(travel_reasons.items())},
         "location_absent": location_absent,
