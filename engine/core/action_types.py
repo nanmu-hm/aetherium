@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 _ALIASES = {
     "contact": "contact_person",
     "contact_person": "contact_person",
@@ -27,7 +29,6 @@ GOAL_ACTION_KEYWORDS = {
 
 def goal_tokens(goal_description: str) -> set[str]:
     """Tokenize goal language into exact words for semantic action matching."""
-    import re
     return set(re.findall(r"[a-z]+", goal_description.lower()))
 
 
