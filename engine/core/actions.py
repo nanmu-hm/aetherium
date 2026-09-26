@@ -187,7 +187,11 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 action_type="help_person", targets=[target_id],
                 motivation=f"help {state.characters[target_id].name} because their condition looks difficult",
                 preconditions=["target is at the same location"],
-                confidence=0.7, difficulty=0.35, score=0.20,
+                confidence=1.0, difficulty=0.0,
+                # The current world models co-location as sufficient to attempt
+                # help; do not inject an unexplained random failure.
+                score=0.20,
+                metadata={"world_validated": True},
             ))
 
     freedom_pressure = _contextual_desire(character, "freedom")
