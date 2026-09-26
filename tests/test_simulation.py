@@ -1129,3 +1129,48 @@ def test_candidate_score_participates_in_final_selection():
 
     assert chosen is high
     assert all(item.selection_score is not None for item in evaluations)
+
+
+def test_low_freedom_pressure_keeps_travel_as_an_affordance():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import CharacterState, WorldState
+
+    world = WorldState(world_id="low-pressure-travel", locations={"town", "road"})
+    world.add_character(
+        CharacterState(
+            id="r",
+            name="R",
+            location="town",
+            values=["freedom"],
+            human_condition=HumanCondition(
+                desires={"freedom": 1.0, "curiosity": 0.0},
+                location_pressures={"town": {"confinement": 1.0}, "road": {"confinement": 0.0}},
+            ),
+        )
+    )
+    pool = generate_action_pool(world, "r")
+    assert any(action.action_type == "travel" for action in pool)
+
+
+def test_high_fatigue_makes_recovery_more_valuable_than_unmotivated_travel():
+    from engine.core.actions import generate_action_pool
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.locations.add("road")
+    character = world.characters["lin"]
+    character.goals.clear()
+    character.human_condition.fatigue = 90.0
+    character.human_condition.desires["freedom"] = 0.0
+    character.human_condition.desires["curiosity"] = 0.0
+
+    pool = generate_action_pool(world, "lin")
+    travel = next(action for action in pool if action.action_type == "travel")
+    rest = next(action for action in pool if action.action_type == "rest")
+    kernel = DecisionKernel(seed=1)
+    travel_eval = kernel.evaluate(world, travel)
+    rest_eval = kernel.evaluate(world, rest)
+
+    assert rest_eval.utility > travel_eval.utility
+    chosen, _ = kernel.choose(world, [travel, rest])
+    assert chosen is rest
