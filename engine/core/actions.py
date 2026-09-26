@@ -119,9 +119,16 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             character.emotions.get("resentment", 0.0),
             character.emotions.get("love", 0.0),
         )
+        # Relationship tension matters only when there is an actual social
+        # motive. A strained relationship by itself is not a command to make
+        # contact; otherwise every character with a relationship would keep
+        # contacting people forever. The motive is strengthened or weakened by
+        # the current relationship state.
+        social_motive = max(relationship_desire, emotional_pressure)
+        relationship_factor = 0.5 + 0.5 * max(0.0, min(1.0, tension / 100.0))
         contact_pressure = max(
             0.0,
-            min(100.0, tension + 0.5 * relationship_desire + 0.35 * emotional_pressure),
+            min(100.0, social_motive * relationship_factor),
         )
 
         last_contact_succeeded = bool(
@@ -141,9 +148,12 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 action_type="contact_person", targets=[target_id],
                 motivation="address an important relationship",
                 preconditions=["target is at the same location"],
-                expected_outcomes=["relationship may change"], confidence=0.65, difficulty=0.35,
-                # score is an affordance prior, not another copy of desire/urgency.
+                expected_outcomes=["relationship may change"], confidence=1.0, difficulty=0.0,
+                # The target is co-located and the current world models no
+                # separate social obstacle. Do not invent a random failure;
+                # personality-shaped consequences are applied after contact.
                 score=0.15,
+                metadata={"world_validated": True},
             ))
 
     if _relationship_targets(state, character):
