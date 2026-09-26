@@ -11,7 +11,7 @@ from engine.narrative import StoryArchaeologist
 def build_genesis_world() -> WorldState:
     world = WorldState(
         world_id="genesis-001",
-        locations={"river_town", "old_road"},
+        locations={"river_town", "old_road", "ridge"},
     )
 
     world.add_character(
@@ -19,14 +19,29 @@ def build_genesis_world() -> WorldState:
             id="yan",
             name="Yan",
             location="river_town",
+            traits=["loyal", "compassionate", "cautious"],
             values=["loyalty", "responsibility"],
-            goals=[Goal("yan-1", "help an old friend", priority=0.75)],
+            goals=[Goal(
+                "yan-1",
+                "help an old friend",
+                priority=0.75,
+                stages=["find the old friend", "help the old friend"],
+                stage_conditions=[
+                    {"type": "target_same_location", "target_id": "rui", "action_types": ["contact_person"]},
+                    {"type": "successful_help", "target_id": "rui", "action_types": ["help_person"]},
+                ],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 85},
                 desires={"reconciliation": 70},
                 fears={"loss": 65},
+                location_pressures={
+                    "river_town": {"confinement": 0.0},
+                    "old_road": {"confinement": 0.0},
+                },
                 virtues={"loyalty": 90, "compassion": 75},
             ),
+            decision_noise=0.05,
         )
     )
     world.add_character(
@@ -34,14 +49,29 @@ def build_genesis_world() -> WorldState:
             id="rui",
             name="Rui",
             location="river_town",
+            traits=["proud", "adventurous", "impulsive"],
             values=["freedom"],
-            goals=[Goal("rui-1", "leave town", priority=0.65)],
+            goals=[Goal(
+                "rui-1",
+                "leave town",
+                priority=0.65,
+                stages=["leave town", "continue toward freedom"],
+                stage_conditions=[
+                    {"type": "location_not", "location": "river_town", "action_types": ["travel"]},
+                    {"type": "location_not_and_action", "location": "river_town", "action_types": ["travel"]},
+                ],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 70},
-                desires={"freedom": 80},
+                desires={"freedom": 80, "curiosity": 35},
                 fears={"confinement": 60},
+                location_pressures={
+                    "river_town": {"confinement": 1.0},
+                    "old_road": {"confinement": 0.0},
+                },
                 virtues={"courage": 80},
             ),
+            decision_noise=0.05,
         )
     )
 

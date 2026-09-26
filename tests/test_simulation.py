@@ -1,6 +1,7 @@
 from engine.core.demo import build_demo_world, run_demo
 from engine.core.models import RelationshipState
-from engine.core.simulation import SimulationEngine
+from engine.core.human_condition import HumanCondition
+from engine.core.simulation import SimulationEngine, event_action_type
 
 
 def test_demo_world_produces_history() -> None:
@@ -44,11 +45,20 @@ def test_simulation_records_structured_memories_for_participants() -> None:
 
 def test_authoritative_relationship_is_used_for_action_scoring() -> None:
     world = build_demo_world()
+    world.characters["lin"].human_condition.desires["reconciliation"] = 40.0
     world.characters["lin"].relationships["mei"] = 99.0
-    world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    world.add_relationship(RelationshipState("lin", "mei", trust=90.0))
+    from engine.core.decision import DecisionKernel
     pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(world, "lin")
     contact = next(action for action in pool if action.action_type == "contact_person")
-    assert contact.score == 0.9
+    low_world = build_demo_world()
+    low_world.characters["lin"].human_condition.desires["reconciliation"] = 40.0
+    low_world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    low_pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(low_world, "lin")
+    low_contact = next(action for action in low_pool if action.action_type == "contact_person")
+    high_eval = DecisionKernel(seed=1).evaluate(world, contact)
+    low_eval = DecisionKernel(seed=1).evaluate(low_world, low_contact)
+    assert high_eval.utility > low_eval.utility
 
 
 def test_decision_kernel_uses_character_state_not_narrative_outcomes() -> None:
@@ -88,11 +98,29 @@ def test_blocked_contact_is_explicit() -> None:
     assert events[0].consequences == []
 
 
+def test_blocked_help_requires_same_location() -> None:
+    from engine.core.models import ActionCandidate
+    world = build_demo_world()
+    world.characters["mei"].location = "elsewhere"
+    action = ActionCandidate("help", "lin", "help_person", targets=["mei"], confidence=1.0)
+    events = SimulationEngine(seed=42).resolve(world, [action])
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert "same location" in events[0].action_result.reason
+
+
+def test_emotions_settle_between_ticks() -> None:
+    world = build_demo_world()
+    world.characters["lin"].emotions["resentment"] = 80.0
+    SimulationEngine(seed=1).step(world)
+    assert world.characters["lin"].emotions["resentment"] < 80.0
+
+
 def test_action_resolver_can_fail_and_is_seed_reproducible() -> None:
     from engine.core.models import ActionCandidate
     from engine.core.simulation import ActionResolver
     world = build_demo_world()
-    action = ActionCandidate("hard", "mei", "travel", targets=["town"], confidence=0.1, difficulty=0.99)
+    action = ActionCandidate("hard", "mei", "contact_person", targets=["lin"], confidence=0.1, difficulty=0.99)
     first = ActionResolver(__import__("random").Random(1)).resolve_outcome(world, action)
     second = ActionResolver(__import__("random").Random(1)).resolve_outcome(world, action)
     assert first.status == second.status
@@ -111,17 +139,21 @@ def test_precondition_blocks_without_roll() -> None:
     assert "does not exist" in result.reasons[0]
 
 
-def test_successful_goal_action_marks_goal_achieved():
+def test_successful_goal_action_advances_or_completes_goal():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.characters["lin"].goals[0].description = "help a friend"
+    world.characters["lin"].goals[0].stages = ["help a friend", "help the friend again"]
     action = ActionCandidate(
         "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
     )
     events = SimulationEngine(seed=1).resolve(world, [action])
-    assert world.characters["lin"].goals[0].status == "achieved"
-    assert any(item.target_type == "goal" for item in events[0].consequences)
+    goal = world.characters["lin"].goals[0]
+    assert goal.status == "active"
+    assert goal.current_stage == 1
+    assert goal.progress == 0.5
+    assert any(item.target_type == "goal" and item.field == "current_stage" for item in events[0].consequences)
 
 
 def test_achieved_goal_no_longer_generates_matching_help_action():
@@ -308,6 +340,7 @@ def test_successful_help_changes_reciprocal_relationship_state():
     world.characters["lin"].values = ["loyalty"]
     world.add_relationship(RelationshipState("lin", "mei", trust=60.0, affection=50.0, loyalty=50.0))
     world.add_relationship(RelationshipState("mei", "lin", trust=20.0, affection=40.0, loyalty=30.0))
+    world.characters["lin"].location = world.characters["mei"].location
 
     action = ActionCandidate(
         "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
@@ -329,8 +362,10 @@ def test_successful_help_changes_reciprocal_relationship_state():
 
 
 def test_relationship_consequence_is_visible_to_later_action_generation():
+    import copy
     from engine.core.actions import generate_action_pool
     from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
 
     world = build_demo_world()
     world.characters["lin"].goals[0].status = "achieved"
@@ -338,9 +373,11 @@ def test_relationship_consequence_is_visible_to_later_action_generation():
     world.add_relationship(RelationshipState("lin", "mei", trust=60.0, affection=50.0, loyalty=50.0))
     world.add_relationship(RelationshipState("mei", "lin", trust=20.0, affection=40.0, loyalty=30.0))
     world.characters["mei"].human_condition.desires["belonging"] = 40.0
+    world.characters["lin"].location = world.characters["mei"].location
 
+    before_world = copy.deepcopy(world)
     before = next(
-        action for action in generate_action_pool(world, "mei")
+        action for action in generate_action_pool(before_world, "mei")
         if action.action_type == "contact_person"
     )
 
@@ -354,7 +391,11 @@ def test_relationship_consequence_is_visible_to_later_action_generation():
         if action.action_type == "contact_person"
     )
 
-    assert after.score < before.score
+    before_utility = DecisionKernel(seed=1).evaluate(before_world, before).utility
+    after_utility = DecisionKernel(seed=1).evaluate(world, after).utility
+    # Successful help raises Mei's trust in Lin, so relationship alignment
+    # makes subsequent contact more attractive under the current semantics.
+    assert after_utility > before_utility
 
 
 def test_failed_attempt_increases_unresolved_desire_pressure():
@@ -363,12 +404,12 @@ def test_failed_attempt_increases_unresolved_desire_pressure():
 
     world = build_demo_world()
     world.characters["mei"].goals[0].status = "achieved"
-    world.characters["mei"].human_condition.desires["freedom"] = 40.0
+    world.characters["mei"].human_condition.desires["reconciliation"] = 40.0
     action = ActionCandidate(
-        "hard-travel",
+        "hard-contact",
         "mei",
-        "travel",
-        targets=["town"],
+        "contact_person",
+        targets=["lin"],
         confidence=0.1,
         difficulty=0.99,
     )
@@ -377,9 +418,9 @@ def test_failed_attempt_increases_unresolved_desire_pressure():
 
     assert events[0].action_result is not None
     assert events[0].action_result.status == "failure"
-    assert world.characters["mei"].human_condition.desires["freedom"] == 48.0
+    assert world.characters["mei"].human_condition.desires["reconciliation"] == 48.0
     assert any(
-        consequence.field == "human_condition.desires.freedom"
+        consequence.field == "human_condition.desires.reconciliation"
         for consequence in events[0].consequences
     )
 
@@ -443,6 +484,7 @@ def test_successful_experience_builds_a_behavioral_habit():
 
     world = build_demo_world()
     world.characters["lin"].goals[0].status = "achieved"
+    world.add_relationship(RelationshipState("mei", "lin", trust=50.0))
     action = ActionCandidate(
         "help",
         "lin",
@@ -470,10 +512,10 @@ def test_failed_experience_builds_a_behavioral_avoidance():
     world = build_demo_world()
     world.characters["mei"].goals[0].status = "achieved"
     action = ActionCandidate(
-        "hard-travel",
+        "hard-help",
         "mei",
-        "travel",
-        targets=["town"],
+        "help_person",
+        targets=["lin"],
         confidence=0.1,
         difficulty=0.99,
     )
@@ -482,9 +524,9 @@ def test_failed_experience_builds_a_behavioral_avoidance():
 
     assert events[0].action_result is not None
     assert events[0].action_result.status == "failure"
-    assert world.characters["mei"].habits["travel"] == -0.1
+    assert world.characters["mei"].habits["help_person"] == -0.1
     assert any(
-        consequence.field == "habits.travel"
+        consequence.field == "habits.help_person"
         and consequence.new_value == -0.1
         for consequence in events[0].consequences
     )
@@ -908,15 +950,17 @@ def test_repetition_penalty_covers_help_and_pursue_goal():
         assert "recently repeated action" in evaluation.reasons
 
 
-def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown():
+def test_successful_travel_satisfies_freedom_pressure_from_place_context():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.characters["mei"].human_condition.location_pressures["town"] = {"confinement": 0.75}
     action = ActionCandidate(
-        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
+        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1,
+        metadata={"travel_reason": "freedom_exploration"},
     )
 
     event = SimulationEngine(seed=1).resolve(world, [action])[0]
@@ -926,4 +970,210 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
 
     SimulationEngine._advance_human_pressures(world, [event])
-    assert world.characters["mei"].human_condition.desires["freedom"] == 41.5
+    assert world.characters["mei"].human_condition.desires["freedom"] < 21.0
+    assert world.characters["mei"].human_condition.desires["freedom"] == 6.5
+
+
+def test_freedom_pressure_does_not_recover_away_from_confining_context():
+    from engine.core.models import CharacterState, WorldState
+
+    world = WorldState(world_id="freedom-context", locations={"town", "road"})
+    world.add_character(
+        CharacterState(
+            id="r",
+            name="R",
+            location="road",
+            values=["freedom"],
+            human_condition=HumanCondition(
+                desires={"freedom": 20.0},
+                location_pressures={"road": {"confinement": 0.0}},
+            ),
+        )
+    )
+    SimulationEngine._advance_human_pressures(world, [])
+    assert world.characters["r"].human_condition.desires["freedom"] == 20.0
+
+
+def test_rest_requires_a_real_recovery_need():
+    from engine.core.actions import generate_action_pool
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.fatigue = 0.0
+    pool = generate_action_pool(world, "lin")
+    assert not any(action.action_type == "rest" for action in pool)
+
+    world.characters["lin"].human_condition.fatigue = 40.0
+    pool = generate_action_pool(world, "lin")
+    assert any(action.action_type == "rest" for action in pool)
+
+
+def test_location_seen_evidence_retracts_stale_absence_fact():
+    from engine.memory.kernel import MemoryKernel
+
+    world = build_demo_world()
+    kernel = MemoryKernel()
+    kernel.learn_fact(world.memory_state, "lin", "location_absent:mei:road", tick=1)
+    assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is not None
+
+    kernel.learn_fact(world.memory_state, "lin", "location_seen:mei:road", tick=2)
+    assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is None
+
+
+def test_unannotated_places_use_neutral_confinement_and_do_not_lock_freedom():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import CharacterState, WorldState
+
+    world = WorldState(world_id="neutral-place", locations={"a", "b", "c"})
+    world.add_character(
+        CharacterState(
+            id="wanderer",
+            name="Wanderer",
+            location="a",
+            values=["freedom"],
+            human_condition=HumanCondition(desires={"freedom": 100.0}),
+        )
+    )
+    character = world.characters["wanderer"]
+    assert character.human_condition.confinement_at("a") == 0.5
+
+    engine = SimulationEngine(seed=4)
+    travel_destinations = []
+    for _ in range(20):
+        result = engine.step(world)
+        for action in result.actions:
+            if action.actor_id == "wanderer" and action.action_type == "travel":
+                travel_destinations.append((action.targets[0], world.tick))
+
+    assert travel_destinations
+    assert character.human_condition.desires["freedom"] < 100.0
+
+    locations = [character.location]
+    for event in world.event_log:
+        if event.participants and event.participants[0] == "wanderer" and event_action_type(event) == "travel":
+            if event.action_result and event.action_result.status == "success":
+                locations.append(event.location)
+
+    reversals = sum(
+        1 for a, b, c in zip(locations, locations[1:], locations[2:]) if a == c and a != b
+    )
+    assert reversals <= max(1, len(locations) // 4)
+
+
+def test_same_event_can_produce_different_personality_reactions():
+    from engine.core.models import ActionCandidate, CharacterState, RelationshipState, WorldState
+    from engine.core.human_condition import HumanCondition
+
+    def run_target(traits):
+        world = WorldState(world_id="personality-reaction", locations={"town"})
+        world.add_character(CharacterState(
+            id="actor", name="Actor", location="town", values=["loyalty"],
+            human_condition=HumanCondition(),
+        ))
+        world.add_character(CharacterState(
+            id="target", name="Target", location="town", traits=traits,
+            human_condition=HumanCondition(),
+        ))
+        world.add_relationship(RelationshipState("actor", "target", trust=50))
+        action = ActionCandidate(
+            "contact", "actor", "contact_person", targets=["target"], confidence=1.0, difficulty=0.0,
+        )
+        event = SimulationEngine(seed=1).resolve(world, [action])[0]
+        return world, event
+
+    proud_world, proud_event = run_target(["proud", "independent"])
+    warm_world, warm_event = run_target(["warm", "forgiving"])
+
+    assert proud_world.characters["target"].emotions["resentment"] > 0.0
+    assert warm_world.characters["target"].emotions["joy"] > 0.0
+    assert any(item.target_id == "target" and item.field == "emotions.resentment" for item in proud_event.consequences)
+    assert any(item.target_id == "target" and item.field == "emotions.joy" for item in warm_event.consequences)
+
+
+def test_rest_does_not_reinforce_when_actor_is_already_rested():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.fatigue = 0.0
+    action = ActionCandidate("rest", "lin", "rest", confidence=1.0, difficulty=0.0)
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["lin"].human_condition.fatigue == 0.0
+    assert "rest" not in world.characters["lin"].habits
+
+
+def test_rest_reduces_fatigue_and_can_be_reinforced_by_recovery():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.fatigue = 80.0
+    action = ActionCandidate("rest", "lin", "rest", confidence=1.0, difficulty=0.0)
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["lin"].human_condition.fatigue < 80.0
+    assert world.characters["lin"].habits["rest"] == 0.1
+
+
+def test_candidate_score_participates_in_final_selection():
+    from engine.core.models import ActionCandidate
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals.clear()
+    low = ActionCandidate("low", "lin", "travel", targets=["town"], score=0.0, confidence=1.0)
+    high = ActionCandidate("high", "lin", "travel", targets=["town"], score=0.9, confidence=1.0)
+
+    chosen, evaluations = DecisionKernel(seed=1).choose(world, [low, high])
+
+    assert chosen is high
+    assert all(item.selection_score is not None for item in evaluations)
+
+
+def test_low_freedom_pressure_keeps_travel_as_an_affordance():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import CharacterState, WorldState
+
+    world = WorldState(world_id="low-pressure-travel", locations={"town", "road"})
+    world.add_character(
+        CharacterState(
+            id="r",
+            name="R",
+            location="town",
+            values=["freedom"],
+            human_condition=HumanCondition(
+                desires={"freedom": 1.0, "curiosity": 0.0},
+                location_pressures={"town": {"confinement": 1.0}, "road": {"confinement": 0.0}},
+            ),
+        )
+    )
+    pool = generate_action_pool(world, "r")
+    assert any(action.action_type == "travel" for action in pool)
+
+
+def test_high_fatigue_makes_recovery_more_valuable_than_unmotivated_travel():
+    from engine.core.actions import generate_action_pool
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.locations.add("road")
+    character = world.characters["lin"]
+    character.goals.clear()
+    character.human_condition.fatigue = 90.0
+    character.human_condition.desires["freedom"] = 0.0
+    character.human_condition.desires["curiosity"] = 0.0
+
+    pool = generate_action_pool(world, "lin")
+    travel = next(action for action in pool if action.action_type == "travel")
+    rest = next(action for action in pool if action.action_type == "rest")
+    kernel = DecisionKernel(seed=1)
+    travel_eval = kernel.evaluate(world, travel)
+    rest_eval = kernel.evaluate(world, rest)
+
+    assert rest_eval.utility > travel_eval.utility
+    chosen, _ = kernel.choose(world, [travel, rest])
+    assert chosen is rest

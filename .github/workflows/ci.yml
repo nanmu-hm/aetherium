@@ -24,3 +24,6 @@ jobs:
 
       - name: Run tests
         run: python -m pytest -q
+
+      - name: Run long-run metrics
+        run: python scripts/simulation_metrics.py

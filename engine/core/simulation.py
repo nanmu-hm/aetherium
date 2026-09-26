@@ -11,6 +11,7 @@ from .action_types import canonical_action_type, event_action_type, goal_matches
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
+from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
 
 
@@ -52,7 +53,7 @@ class SimulationEngine:
         selected: list[ActionCandidate] = []
         for character in state.characters.values():
             pool = generate_action_pool(state, character.id)
-            action, _ = self.decision_kernel.choose(state, pool)
+            action, _ = self.decision_kernel.choose(state, pool, allow_quiet=True)
             if action is not None:
                 selected.append(action)
         return selected
@@ -106,8 +107,56 @@ class SimulationEngine:
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
+    @staticmethod
+    def _goal_condition_satisfied(
+        state: WorldState,
+        actor,
+        goal,
+        action: ActionCandidate,
+        outcome: ActionResult,
+    ) -> bool:
+        """Evaluate a staged goal against current world/character state."""
+        if not goal.stage_conditions or goal.current_stage >= len(goal.stage_conditions):
+            return goal_matches_action(goal.current_description, action.action_type) and outcome.status == "success"
+
+        condition = goal.stage_conditions[goal.current_stage]
+        condition_type = condition.get("type")
+
+        if condition_type == "location_not":
+            return actor.location != condition.get("location")
+
+        if condition_type == "target_same_location":
+            target_id = condition.get("target_id")
+            target = state.characters.get(target_id)
+            return target is not None and target.location == actor.location
+
+        if condition_type == "successful_contact":
+            target_id = condition.get("target_id")
+            return (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "contact_person"
+                and target_id in action.targets
+            )
+
+        if condition_type == "successful_help":
+            target_id = condition.get("target_id")
+            return (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "help_person"
+                and target_id in action.targets
+            )
+
+        if condition_type == "location_not_and_action":
+            return (
+                actor.location != condition.get("location")
+                and canonical_action_type(action.action_type) in set(condition.get("action_types", ()))
+            )
+
+        return False
+
     def _apply_goal_progress(
         self,
+        state: WorldState,
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
@@ -121,8 +170,28 @@ class SimulationEngine:
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not goal_matches_action(goal.description, action.action_type):
+        if goal is None or not self._goal_condition_satisfied(state, actor, goal, action, outcome):
             return None
+
+        if goal.stages and goal.current_stage < len(goal.stages):
+            old_stage = goal.current_stage
+            goal.current_stage += 1
+            consequences.append(
+                Consequence(
+                    "goal",
+                    goal.id,
+                    "current_stage",
+                    old_stage,
+                    goal.current_stage,
+                    "goal stage advanced by a world-state condition",
+                )
+            )
+            if goal.current_stage < len(goal.stages):
+                return (
+                    f"{actor.name} advances the goal '{goal.description}' "
+                    f"to stage {goal.current_stage + 1}/{len(goal.stages)}: "
+                    f"{goal.current_description}."
+                )
 
         old_status = goal.status
         goal.status = "achieved"
@@ -133,7 +202,7 @@ class SimulationEngine:
                 "status",
                 old_status,
                 goal.status,
-                f"goal fulfilled by {action.action_type}",
+                "goal fulfilled by a world-state condition",
             )
         )
         return f"{actor.name} achieves the goal: {goal.description}."
@@ -194,20 +263,8 @@ class SimulationEngine:
         if target is None:
             return
 
-        if action_type == "contact_person":
-            target_effects = (
-                {"joy": 2.0, "hope": 1.0}
-                if outcome.status == "success"
-                else {"sorrow": 2.0, "resentment": 2.0}
-            )
-            apply(target, target_effects, f"emotional response to contact {outcome.status}")
-        elif action_type == "help_person":
-            target_effects = (
-                {"joy": 4.0, "hope": 2.0}
-                if outcome.status == "success"
-                else {"sorrow": 4.0, "resentment": 2.0}
-            )
-            apply(target, target_effects, f"emotional response to help {outcome.status}")
+        # The target's response is deliberately handled by _apply_social_reactions
+        # so personality, values, and prior disposition can change interpretation.
 
     @staticmethod
     def _update_identity_beliefs(
@@ -250,23 +307,87 @@ class SimulationEngine:
             )
 
     @staticmethod
+    def _apply_fatigue(
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Turn lived activity into a small physical recovery cost."""
+        if outcome.status not in {"success", "failure"}:
+            return
+
+        action_type = canonical_action_type(action.action_type)
+        old_value = max(0.0, min(100.0, actor.human_condition.fatigue))
+        if action_type == "rest":
+            new_value = max(0.0, old_value - min(30.0, 10.0 + old_value * 0.25))
+        else:
+            exertion = {
+                "travel": 8.0,
+                "contact_person": 3.0,
+                "help_person": 5.0,
+            }.get(action_type, 2.0)
+            if outcome.status == "failure":
+                exertion *= 1.25
+            new_value = min(100.0, old_value + exertion)
+
+        if new_value == old_value:
+            return
+
+        actor.human_condition.fatigue = new_value
+        consequences.append(
+            Consequence(
+                "character",
+                actor.id,
+                "human_condition.fatigue",
+                old_value,
+                new_value,
+                f"physical cost/recovery from {action_type}",
+            )
+        )
+
+    @staticmethod
     def _update_procedural_habit(
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
         consequences: list[Consequence],
     ) -> None:
-        """Learn a small action preference from an experienced outcome."""
+        """Learn from whether an action produced a meaningful experienced result.
+
+        Success alone is not reinforcement. A blocked action is ignored, a failed
+        attempt teaches avoidance, and a successful action is reinforced only when
+        it produced a concrete world/character consequence. Rest therefore does not
+        self-reinforce when the actor was already rested.
+        """
         if outcome.status not in {"success", "failure"}:
             return
 
         action_type = canonical_action_type(action.action_type)
         old_value = actor.habits.get(action_type, 0.0)
-        if outcome.status == "success":
-            new_value = old_value + 0.10 * (1.0 - old_value)
-        else:
-            new_value = old_value - 0.10 * (old_value + 1.0)
 
+        if outcome.status == "failure":
+            learning_signal = -1.0
+        else:
+            meaningful = any(
+                consequence.old_value != consequence.new_value
+                and consequence.field != f"habits.{action_type}"
+                and (
+                    consequence.target_type in {"relationship", "goal"}
+                    or (
+                        action_type == "rest"
+                        and consequence.target_type == "character"
+                        and consequence.field == "human_condition.fatigue"
+                    )
+                )
+                for consequence in consequences
+            )
+            learning_signal = 1.0 if meaningful else 0.0
+
+        if learning_signal == 0.0:
+            return
+
+        new_value = old_value + 0.10 * (learning_signal - old_value)
         new_value = max(-1.0, min(1.0, new_value))
         actor.habits[action_type] = new_value
         consequences.append(
@@ -276,9 +397,68 @@ class SimulationEngine:
                 f"habits.{action_type}",
                 old_value,
                 new_value,
-                f"procedural learning from {outcome.status}",
+                f"procedural learning from experienced value {learning_signal:.1f}",
             )
         )
+
+    @staticmethod
+    def _apply_social_reactions(
+        state: WorldState,
+        event: Event,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Let affected people interpret the same event through their personalities."""
+        seen = set(event.participants)
+
+        # Direct targets experience the action personally.
+        for target_id in action.targets:
+            target = state.characters.get(target_id)
+            if target is None or target_id == action.actor_id:
+                continue
+            changes = social_reaction(target, action, outcome.status, is_target=True)
+            for name, delta in changes.items():
+                old = target.emotions.get(name, 0.0)
+                new = max(0.0, min(100.0, old + delta))
+                if new != old:
+                    target.emotions[name] = new
+                    consequences.append(
+                        Consequence(
+                            "character",
+                            target.id,
+                            f"emotions.{name}",
+                            old,
+                            new,
+                            f"personality-shaped reaction to {action.action_type}",
+                        )
+                    )
+
+        # Characters sharing the event location witness it. Their reactions
+        # depend on their own personality rather than the actor's interpretation.
+        for observer in state.characters.values():
+            if observer.id in seen or observer.status != "active" or observer.location != event.location:
+                continue
+            changes = witness_reaction(observer, action, outcome.status)
+            if not changes:
+                continue
+            event.participants.append(observer.id)
+            seen.add(observer.id)
+            for name, delta in changes.items():
+                old = observer.emotions.get(name, 0.0)
+                new = max(0.0, min(100.0, old + delta))
+                if new != old:
+                    observer.emotions[name] = new
+                    consequences.append(
+                        Consequence(
+                            "character",
+                            observer.id,
+                            f"emotions.{name}",
+                            old,
+                            new,
+                            f"witnessed {action.action_type} and interpreted it through personality",
+                        )
+                    )
 
     def _apply_failure_consequences(
         self,
@@ -379,6 +559,7 @@ class SimulationEngine:
             actor = state.characters[action.actor_id]
             consequences: list[Consequence] = []
             facts: list[str] = []
+            participants = [actor.id, *action.targets]
 
             precondition = self.precondition_engine.check(state, action)
             if not precondition.satisfied:
@@ -400,6 +581,29 @@ class SimulationEngine:
                             )
                         )
                         facts.append(f"{actor.name} travels from {old} to {destination}.")
+
+                        search_target_id = action.metadata.get("search_target")
+                        if search_target_id and search_target_id in state.characters:
+                            target = state.characters[search_target_id]
+                            if target.location == destination:
+                                participants.append(search_target_id)
+                                facts.append(
+                                    f"{actor.name} finds {target.name} at {destination}."
+                                )
+                            else:
+                                absent_fact = self.memory_kernel.learn_fact(
+                                    state.memory_state,
+                                    actor.id,
+                                    f"location_absent:{search_target_id}:{destination}",
+                                    tick=state.tick,
+                                    source="direct_experience",
+                                    confidence=1.0,
+                                )
+                                actor.knowledge.add(absent_fact.proposition)
+                                facts.append(
+                                    f"{actor.name} searches for {target.name} at {destination}, "
+                                    f"but {target.name} is not there."
+                                )
                     else:
                         facts.append(
                             f"{actor.name} attempts to travel to {destination}, but fails."
@@ -486,34 +690,96 @@ class SimulationEngine:
                     else:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
+                elif action.action_type == "rest":
+                    # Rest is deterministic when attempted, but its value is
+                    # determined by the actor's actual recovery state.
+                    outcome = ActionResult("success", "rest completed", 1.0)
+                    facts.append(f"{actor.name} rests at {actor.location}.")
                 else:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
 
+            self._apply_fatigue(actor, action, outcome, consequences)
+
+            # Helping is meaningful only if it changes the condition that caused
+            # the help affordance. In the Genesis world, fatigue is one such
+            # modeled condition, so successful help provides direct recovery.
+            if (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "help_person"
+                and action.targets
+            ):
+                target = state.characters.get(action.targets[0])
+                if target is not None:
+                    old_fatigue = target.human_condition.fatigue
+                    recovery = min(15.0, old_fatigue)
+                    target.human_condition.fatigue = old_fatigue - recovery
+                    if recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "human_condition.fatigue",
+                                old_fatigue,
+                                target.human_condition.fatigue,
+                                "successful help addresses the target's fatigue",
+                            )
+                        )
+
+                    old_sorrow = target.emotions.get("sorrow", 0.0)
+                    sorrow_recovery = min(10.0, old_sorrow)
+                    target.emotions["sorrow"] = old_sorrow - sorrow_recovery
+                    if sorrow_recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "emotions.sorrow",
+                                old_sorrow,
+                                target.emotions["sorrow"],
+                                "successful help addresses the target's sorrow",
+                            )
+                        )
+
+                    old_fear = target.emotions.get("fear", 0.0)
+                    fear_recovery = min(10.0, old_fear)
+                    target.emotions["fear"] = old_fear - fear_recovery
+                    if fear_recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "emotions.fear",
+                                old_fear,
+                                target.emotions["fear"],
+                                "successful help addresses the target's fear",
+                            )
+                        )
+
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
-            self._update_procedural_habit(actor, action, outcome, consequences)
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
-            goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
+            goal_fact = self._apply_goal_progress(state, actor, action, outcome, consequences)
             if goal_fact:
                 facts.append(goal_fact)
 
-            events.append(
-                Event(
-                    id=f"event-{state.tick}-{actor.id}-{action.action_type}",
-                    tick=state.tick,
-                    timestamp=state.timestamp,
-                    location=actor.location,
-                    participants=[actor.id, *action.targets],
-                    causes=[action.id],
-                    facts=facts,
-                    action_type=canonical_action_type(action.action_type),
-                    action_result=outcome,
-                    consequences=consequences,
-                )
+            event = Event(
+                id=f"event-{state.tick}-{actor.id}-{action.action_type}",
+                tick=state.tick,
+                timestamp=state.timestamp,
+                location=actor.location,
+                participants=participants,
+                causes=[action.id],
+                facts=facts,
+                action_type=action.metadata.get("event_action_type", canonical_action_type(action.action_type)),
+                action_result=outcome,
+                consequences=consequences,
             )
+            self._apply_social_reactions(state, event, action, outcome, consequences)
+            self._update_procedural_habit(actor, action, outcome, consequences)
+            events.append(event)
 
         for event in events:
             state.event_log.append(event)
@@ -528,6 +794,18 @@ class SimulationEngine:
                     f"{character.id} is at unknown location {character.location!r}"
                 )
         return errors
+
+    @staticmethod
+    def _settle_emotions(state: WorldState) -> None:
+        """Let emotional arousal settle between lived events."""
+        for character in state.characters.values():
+            for emotion_name, value in list(character.emotions.items()):
+                if value <= 0.0:
+                    continue
+                amount = emotion_decay(character, emotion_name, value)
+                if amount <= 0.0:
+                    continue
+                character.emotions[emotion_name] = max(0.0, value - amount)
 
     @staticmethod
     def _advance_human_pressures(state: WorldState, events: list[Event]) -> None:
@@ -545,7 +823,57 @@ class SimulationEngine:
                 continue
 
             for desire_name, value in list(desires.items()):
-                desires[desire_name] = min(100.0, value + 3.0)
+                growth = 3.0
+                if desire_name == "freedom":
+                    confinement = character.human_condition.confinement_at(character.location)
+                    growth *= confinement
+                elif desire_name == "reconciliation":
+                    # Reconciliation pressure grows with the relationship gap.
+                    # A settled relationship should not manufacture a permanent
+                    # desire to reconnect, while unresolved tension may naturally
+                    # rebuild the pressure after a successful contact.
+                    targets = [
+                        relationship.target_id
+                        for relationship in state.relationships.values()
+                        if relationship.source_id == character.id
+                        and relationship.target_id in state.characters
+                    ]
+                    tensions = []
+                    for target_id in targets:
+                        relationship = state.get_relationship(character.id, target_id)
+                        if relationship is None:
+                            continue
+                        tensions.append(
+                            max(
+                                0.0,
+                                min(
+                                    1.0,
+                                    max(
+                                        100.0 - relationship.trust,
+                                        relationship.resentment,
+                                        relationship.fear,
+                                    ) / 100.0,
+                                ),
+                            )
+                        )
+                    growth *= max(tensions, default=1.0)
+                elif desire_name == "curiosity":
+                    if has_trait(character, "adventurous", "curious", "restless"):
+                        growth *= 1.35
+                    if has_trait(character, "cautious"):
+                        growth *= 0.80
+                    explored = {
+                        state.memory_state.memories[memory_id].location
+                        for memory_id in character.memory_ids
+                        if memory_id in state.memory_state.memories
+                        and state.memory_state.memories[memory_id].location in state.locations
+                    }
+                    if len(explored) >= len(state.locations):
+                        # Curiosity habituates when every available place has
+                        # already been experienced. Do not manufacture an
+                        # endless need to travel without a new frontier.
+                        growth = -min(2.0, max(0.5, growth * 0.5))
+                desires[desire_name] = max(0.0, min(100.0, value + growth))
 
             for event in events:
                 if not event.participants or event.participants[0] not in acted:
@@ -558,18 +886,66 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 0.5},
+                    "travel": {"freedom": 0.5, "curiosity": 0.0},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
                     if desire_name not in desires:
                         continue
+                    if action_type == "contact_person" and desire_name == "reconciliation":
+                        relationship = (
+                            state.get_relationship(character.id, event.participants[1])
+                            if len(event.participants) > 1
+                            else None
+                        )
+                        if relationship is not None:
+                            tension = max(
+                                0.0,
+                                min(
+                                    100.0,
+                                    max(
+                                        100.0 - relationship.trust,
+                                        relationship.resentment,
+                                        relationship.fear,
+                                    ),
+                                ),
+                            )
+                            satisfaction = min(100.0, 20.0 + 0.50 * tension)
+                            desires[desire_name] = max(
+                                0.0, desires[desire_name] - satisfaction
+                            )
+                        continue
+
                     if action_type == "travel" and desire_name == "freedom":
-                        # Travel resolves a proportion of the pressure it was
-                        # responding to; it is not a fixed cooldown clock.
+                        # Freedom is satisfied according to the actor's
+                        # experienced confinement at the place they left.
                         old_value = desires[desire_name]
-                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
+                        old_location = (
+                            event.consequences[0].old_value
+                            if event.consequences
+                            else character.location
+                        )
+                        confinement = character.human_condition.confinement_at(old_location)
+                        # A successful departure is a real release of freedom
+                        # pressure. Stronger confinement makes the departure
+                        # more satisfying, while an actual journey should not
+                        # leave the same pressure immediately demanding another
+                        # journey.
+                        satisfaction = min(100.0, 100.0 * max(0.5, confinement))
+                        desires[desire_name] = max(0.0, old_value - satisfaction)
+                    elif action_type == "travel" and desire_name == "curiosity":
+                        # A genuinely new place satisfies curiosity much more
+                        # than another familiar trip.
+                        destination = event.location
+                        prior_visits = sum(
+                            1
+                            for memory in state.memory_state.memories.values()
+                            if memory.owner_id == character.id
+                            and memory.location == destination
+                        )
+                        satisfaction = 60.0 if prior_visits <= 1 else 18.0
+                        desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
                     else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
@@ -579,10 +955,23 @@ class SimulationEngine:
 
     def step(self, state: WorldState) -> SimulationResult:
         self._restore_rng_state(state)
+        self._settle_emotions(state)
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
         self.memory_kernel.advance_desires(state.memory_state, state.tick)
+        # Quiet time is part of the world, not a missing event. A character
+        # who takes no action can still recover from ordinary fatigue.
+        acted = {action.actor_id for action in actions}
+        for character in state.characters.values():
+            if character.id in acted or character.status != "active":
+                continue
+            old_fatigue = character.human_condition.fatigue
+            if old_fatigue <= 0.0:
+                continue
+            recovery = min(2.0, old_fatigue)
+            character.human_condition.fatigue = old_fatigue - recovery
+
         self._advance_human_pressures(state, events)
         errors = self.validate(state)
         current_tick = state.tick
@@ -606,10 +995,13 @@ class ActionResolver:
             if action.required_ability
             else 0.5
         )
+        if action.metadata.get("world_validated"):
+            # Generated actions already passed the world-level preconditions.
+            # The current world has no modeled stochastic obstacle or social
+            # failure system, so do not invent random failure after selection.
+            return 1.0
+
         base = 0.5 + 0.35 * (ability - action.difficulty)
-        # Confidence should materially affect willingness to take an uncertain
-        # action: low confidence must not turn a very difficult action into a
-        # near-even roll.
         confidence_factor = 0.25 + 0.75 * action.confidence
         return max(0.05, min(0.95, base * confidence_factor))
 
