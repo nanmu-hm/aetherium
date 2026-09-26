@@ -263,20 +263,8 @@ class SimulationEngine:
         if target is None:
             return
 
-        if action_type == "contact_person":
-            target_effects = (
-                {"joy": 2.0, "hope": 1.0}
-                if outcome.status == "success"
-                else {"sorrow": 2.0, "resentment": 2.0}
-            )
-            apply(target, target_effects, f"emotional response to contact {outcome.status}")
-        elif action_type == "help_person":
-            target_effects = (
-                {"joy": 4.0, "hope": 2.0}
-                if outcome.status == "success"
-                else {"sorrow": 4.0, "resentment": 2.0}
-            )
-            apply(target, target_effects, f"emotional response to help {outcome.status}")
+        # The target's response is deliberately handled by _apply_social_reactions
+        # so personality, values, and prior disposition can change interpretation.
 
     @staticmethod
     def _update_identity_beliefs(
