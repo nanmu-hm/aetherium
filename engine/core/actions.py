@@ -214,11 +214,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         fresh = [location for location in alternatives if visit_counts[location] == 0]
         if fresh:
             alternatives = fresh
-        if recent_departure is not None:
-            non_returning = [location for location in alternatives if location != recent_departure]
-            if non_returning:
-                alternatives = non_returning
-
         def destination_score(location: str) -> float:
             confinement = character.human_condition.confinement_at(location)
             fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
@@ -238,7 +233,9 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
             confidence=1.0, difficulty=0.5,
-            score=destination_affordance,
+            # Destination affordance selects where to go; it must not create
+            # motivation to travel in the first place.
+            score=0.0,
             metadata={
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
