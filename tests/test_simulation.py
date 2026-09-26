@@ -981,6 +981,36 @@ def test_location_seen_evidence_retracts_stale_absence_fact():
     assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is None
 
 
+def test_unannotated_places_use_neutral_confinement_and_do_not_lock_freedom():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import CharacterState, WorldState
+    from engine.core.human_condition import HumanCondition
+
+    world = WorldState(world_id="neutral-place", locations={"a", "b", "c"})
+    world.add_character(
+        CharacterState(
+            id="wanderer",
+            name="Wanderer",
+            location="a",
+            values=["freedom"],
+            human_condition=HumanCondition(desires={"freedom": 100.0}),
+        )
+    )
+    character = world.characters["wanderer"]
+    assert character.human_condition.confinement_at("a") == 0.5
+
+    engine = SimulationEngine(seed=4)
+    travel_destinations = []
+    for _ in range(20):
+        result = engine.step(world)
+        for action in result.actions:
+            if action.actor_id == "wanderer" and action.action_type == "travel":
+                travel_destinations.append(action.targets[0])
+    assert travel_destinations
+    assert character.human_condition.desires["freedom"] < 100.0
+    assert len(travel_destinations) < 20
+
+
 def test_same_event_can_produce_different_personality_reactions():
     from engine.core.models import ActionCandidate, CharacterState
     from engine.core.human_condition import HumanCondition
