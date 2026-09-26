@@ -120,6 +120,8 @@ class Event:
     participants: list[str]
     causes: list[str]
     facts: list[str]
+    # Structured action identity; causes remain as provenance IDs for compatibility.
+    action_type: str = ""
     action_result: ActionResult | None = None
     consequences: list[Consequence] = field(default_factory=list)
 

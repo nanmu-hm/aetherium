@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import random
+import re
 
 from .actions import generate_action_pool
 from .action_types import canonical_action_type
@@ -83,13 +84,13 @@ class SimulationEngine:
 
     @staticmethod
     def _goal_matches_action(goal_description: str, action_type: str) -> bool:
-        text = goal_description.lower()
+        words = set(re.findall(r"[a-z]+", goal_description.lower()))
         keywords = {
-            "help_person": ("help", "protect", "support", "save"),
-            "contact_person": ("find", "reconcile", "talk", "meet", "contact", "friend"),
-            "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
+            "help_person": {"help", "protect", "support", "save"},
+            "contact_person": {"find", "reconcile", "talk", "meet", "contact"},
+            "travel": {"leave", "escape", "go", "move", "freedom", "depart"},
         }
-        return any(word in text for word in keywords.get(action_type, ()))
+        return bool(words & keywords.get(action_type, set()))
 
     def _apply_goal_progress(
         self,
@@ -494,6 +495,7 @@ class SimulationEngine:
                     participants=[actor.id, *action.targets],
                     causes=[action.id],
                     facts=facts,
+                    action_type=canonical_action_type(action.action_type),
                     action_result=outcome,
                     consequences=consequences,
                 )
@@ -540,7 +542,9 @@ class SimulationEngine:
                 if event.action_result.status != "success":
                     continue
 
-                action_type = canonical_action_type(event.causes[0].rsplit("-", 1)[-1]) if event.causes else ""
+                action_type = event.action_type or (
+                    canonical_action_type(event.causes[0].rsplit("-", 1)[-1]) if event.causes else ""
+                )
                 satisfaction = {
                     "travel": {"freedom": 35.0},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
