@@ -5,6 +5,7 @@ from __future__ import annotations
 import re
 
 from .models import ActionCandidate, CharacterState, WorldState
+from .action_types import event_action_type
 
 
 def _goal_words(description: str) -> set[str]:
@@ -79,7 +80,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         recent_contacts: list = []
         for event in reversed(state.event_log):
             if event.participants and event.participants[0] == character.id:
-                if event.action_type == "contact_person":
+                if event_action_type(event) == "contact_person":
                     recent_contacts.append(event)
                     if len(recent_contacts) >= 2:
                         break
@@ -129,7 +130,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             event for event in reversed(state.event_log)
             if event.participants
             and event.participants[0] == character.id
-            and event.action_type == "travel"
+            and event_action_type(event) == "travel"
         ),
         None,
     )
