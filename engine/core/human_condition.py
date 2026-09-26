@@ -25,6 +25,8 @@ class HumanCondition:
     location_pressures: dict[str, dict[str, float]] = field(default_factory=dict)
     life_stage: str = "adult"
     mortality_pressure: float = 0.0
+    # Physical recovery state. 0 means rested; 100 means severely fatigued.
+    fatigue: float = 0.0
 
     def pressure(self) -> float:
         """Return a bounded measure of unresolved human pressure."""
