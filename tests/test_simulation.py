@@ -46,7 +46,7 @@ def test_simulation_records_structured_memories_for_participants() -> None:
 def test_authoritative_relationship_is_used_for_action_scoring() -> None:
     world = build_demo_world()
     world.characters["lin"].relationships["mei"] = 99.0
-    world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    world.add_relationship(RelationshipState("lin", "mei", trust=90.0))
     from engine.core.decision import DecisionKernel
     pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(world, "lin")
     contact = next(action for action in pool if action.action_type == "contact_person")
