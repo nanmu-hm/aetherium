@@ -212,13 +212,11 @@ class DecisionKernel:
         if not evaluations:
             return None, []
         ordered = sorted(evaluations, key=lambda item: item.utility, reverse=True)
-        boundary_noise = 1.75 if len(ordered) > 1 and (ordered[0].utility - ordered[1].utility) <= 0.20 else 1.0
+        boundary_noise = 3.5 if len(ordered) > 1 and (ordered[0].utility - ordered[1].utility) <= 0.75 else 1.0
         selected: list[DecisionEvaluation] = []
         for evaluation in evaluations:
             action = next(item for item in pool if item.id == evaluation.action_id)
             character = state.characters[action.actor_id]
-            # Motive-free travel is kept strictly below zero; noise may diversify
-            # close meaningful choices but can never manufacture the motive itself.
             if canonical_action_type(action.action_type) == "travel" and not action.metadata.get("search_target") and self._human_condition_urgency(character, action) <= 0.05:
                 noise = 0.0
             else:
