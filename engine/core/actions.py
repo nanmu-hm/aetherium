@@ -54,20 +54,14 @@ def _remembered_location(state: WorldState, character: CharacterState, target_id
 
 
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
-    """Generate plausible actions without deciding which one must happen."""
     character = state.characters[character_id]
     if character.status != "active":
         return []
 
     pool: list[ActionCandidate] = []
     goal = max((g for g in character.goals if g.status == "active"), key=lambda item: item.priority, default=None)
-
     if goal and not goal.stage_conditions:
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id,
-            action_type="pursue_goal", motivation=goal.current_description,
-            confidence=0.8, difficulty=0.5, score=0.10,
-        ))
+        pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id, action_type="pursue_goal", motivation=goal.current_description, confidence=0.8, difficulty=0.5, score=0.10))
 
     nearby = [target_id for target_id in _relationship_targets(state, character) if state.characters[target_id].location == character.location]
     if nearby:
@@ -82,7 +76,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                         break
                 elif recent_contacts:
                     break
-
         reconciliation = character.human_condition.desires.get("reconciliation", 0.0)
         belonging = character.human_condition.desires.get("belonging", 0.0)
         relationship = state.get_relationship(character.id, target_id)
@@ -96,39 +89,19 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         severe_pressure = contact_pressure >= 80.0
         recent_success_cooldown = bool(recent_contacts) and last_contact_succeeded and not severe_pressure
         if contact_pressure >= 0.2 and not recent_success_cooldown:
-            pool.append(ActionCandidate(
-                id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
-                action_type="contact_person", targets=[target_id], motivation="address an important relationship",
-                preconditions=["target is at the same location"], expected_outcomes=["relationship may change"],
-                confidence=1.0, difficulty=0.0, score=0.15, metadata={"world_validated": True},
-            ))
+            pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id, action_type="contact_person", targets=[target_id], motivation="address an important relationship", preconditions=["target is at the same location"], expected_outcomes=["relationship may change"], confidence=1.0, difficulty=0.0, score=0.15, metadata={"world_validated": True}))
 
     targets = _relationship_targets(state, character)
-    distressed = [
-        target_id for target_id in targets
-        if state.characters[target_id].location == character.location
-        and state.characters[target_id].emotions.get("sorrow", 0.0) + state.characters[target_id].emotions.get("fear", 0.0) + state.characters[target_id].human_condition.fatigue / 2.0 > 8.0
-    ]
-    if distressed and (
-        _has_value(character, "loyalty") or _has_value(character, "responsibility")
-        or has_trait(character, "compassionate", "protective", "helpful")
-        or character.human_condition.desires.get("responsibility", 0.0) > 20.0
-    ):
+    distressed = [target_id for target_id in targets if state.characters[target_id].location == character.location and state.characters[target_id].emotions.get("sorrow", 0.0) + state.characters[target_id].emotions.get("fear", 0.0) + state.characters[target_id].human_condition.fatigue / 2.0 > 8.0]
+    if distressed and (_has_value(character, "loyalty") or _has_value(character, "responsibility") or has_trait(character, "compassionate", "protective", "helpful") or character.human_condition.desires.get("responsibility", 0.0) > 20.0):
         target_id = max(distressed, key=lambda item: (state.characters[item].emotions.get("sorrow", 0.0) + state.characters[item].emotions.get("fear", 0.0), -_trust(state, character, item)))
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-help", actor_id=character.id,
-            action_type="help_person", targets=[target_id],
-            motivation=f"help {state.characters[target_id].name} because their condition looks difficult",
-            preconditions=["target is at the same location"], confidence=1.0, difficulty=0.0, score=0.20,
-            metadata={"world_validated": True},
-        ))
+        pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-help", actor_id=character.id, action_type="help_person", targets=[target_id], motivation=f"help {state.characters[target_id].name} because their condition looks difficult", preconditions=["target is at the same location"], confidence=1.0, difficulty=0.0, score=0.20, metadata={"world_validated": True}))
 
     freedom_pressure = _contextual_desire(character, "freedom")
     curiosity_pressure = _contextual_desire(character, "curiosity")
     travel_pressure = max(freedom_pressure, curiosity_pressure)
     adventurous = has_trait(character, "adventurous", "curious", "restless", "explorer")
     cautious = has_trait(character, "cautious", "fearful")
-
     if len(state.locations) > 1:
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
@@ -149,7 +122,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         fresh = [location for location in alternatives if visit_counts[location] == 0]
         if fresh:
             alternatives = fresh
-
         def destination_score(location: str) -> float:
             confinement = character.human_condition.confinement_at(location)
             fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
@@ -159,14 +131,8 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             adventurous_bonus = 0.15 if adventurous else 0.0
             cautious_penalty = 0.15 * confinement if cautious else 0.0
             return 0.50 * (1.0 - confinement) + 0.25 * novelty + 0.15 * max(0.0, 1.0 - fear) + adventurous_bonus - cautious_penalty
-
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id, action_type="travel", targets=[destination],
-            motivation=f"explore beyond the familiar: {destination}", preconditions=["destination is a place the actor can reach"],
-            expected_outcomes=["experience a different place"], confidence=1.0, difficulty=0.5, score=0.0,
-            metadata={"travel_reason": "freedom_exploration", "destination_affordance": destination_score(destination), "destination_confinement": character.human_condition.confinement_at(destination), "travel_pressure": travel_pressure, "world_validated": True},
-        ))
+        pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id, action_type="travel", targets=[destination], motivation=f"explore beyond the familiar: {destination}", preconditions=["destination is a place the actor can reach"], expected_outcomes=["experience a different place"], confidence=1.0, difficulty=0.5, score=0.0, metadata={"travel_reason": "freedom_exploration", "destination_affordance": destination_score(destination), "destination_confinement": character.human_condition.confinement_at(destination), "travel_pressure": travel_pressure, "world_validated": True}))
 
     relationship_pressure = max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0))
     if relationship_pressure > 0.0 and len(state.locations) > 1:
@@ -181,27 +147,14 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             destination = remembered if remembered in alternatives else (alternatives[0] if alternatives else None)
             if destination is None:
                 continue
-            pool.append(ActionCandidate(
-                id=f"tick-{state.tick}-{character.id}-search-{target_id}", actor_id=character.id,
-                action_type="search_person", targets=[destination],
-                motivation=(f"search for {target.name} after losing contact" if remembered is None else f"search for {target.name}; last remembered location was {remembered}"),
-                preconditions=[f"search is based on {target.name}'s remembered or uncertain location"],
-                expected_outcomes=["may reunite with the person", "may discover they are elsewhere"],
-                confidence=0.45 if remembered is None else 0.65, difficulty=0.5, score=0.20,
-                metadata={"search_target": target_id, "search_basis": "remembered_location" if remembered else "uncertain_location", "search_destination": destination, "world_validated": True},
-            ))
+            pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-search-{target_id}", actor_id=character.id, action_type="travel", targets=[destination], motivation=(f"search for {target.name} after losing contact" if remembered is None else f"search for {target.name}; last remembered location was {remembered}"), preconditions=[f"search is based on {target.name}'s remembered or uncertain location"], expected_outcomes=["may reunite with the person", "may discover they are elsewhere"], confidence=0.45 if remembered is None else 0.65, difficulty=0.5, score=0.20, metadata={"search_target": target_id, "search_basis": "remembered_location" if remembered else "uncertain_location", "search_destination": destination, "event_action_type": "search_person", "world_validated": True}))
             break
 
     fatigue = max(0.0, min(100.0, character.human_condition.fatigue))
     stress = max(0.0, character.emotions.get("stress", 0.0))
     sorrow = max(0.0, character.emotions.get("sorrow", 0.0))
     if fatigue >= 10.0 or stress >= 20.0 or sorrow >= 35.0:
-        pool.append(ActionCandidate(
-            id=f"tick-{state.tick}-{character.id}-rest", actor_id=character.id, action_type="rest",
-            motivation="rest and recover from current pressures", preconditions=["current location permits rest"],
-            expected_outcomes=["recover and continue later"], confidence=0.95, difficulty=0.05, score=0.05,
-            metadata={"rest_reason": "fatigue_recovery"},
-        ))
+        pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-rest", actor_id=character.id, action_type="rest", motivation="rest and recover from current pressures", preconditions=["current location permits rest"], expected_outcomes=["recover and continue later"], confidence=0.95, difficulty=0.05, score=0.05, metadata={"rest_reason": "fatigue_recovery"}))
     return pool
 
 
