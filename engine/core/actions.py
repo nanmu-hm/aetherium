@@ -2,14 +2,8 @@
 
 from __future__ import annotations
 
-import re
-
 from .models import ActionCandidate, CharacterState, WorldState
-from .action_types import event_action_type
-
-
-def _goal_words(description: str) -> set[str]:
-    return set(re.findall(r"[a-z]+", description.lower()))
+from .action_types import event_action_type, goal_matches_action
 
 
 def _has_value(character: CharacterState, value: str) -> bool:
@@ -44,13 +38,7 @@ def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
     if goal is None:
         return False
 
-    words = _goal_words(goal.description)
-    keywords = {
-        "help_person": {"help", "protect", "support", "save"},
-        "contact_person": {"find", "reconcile", "talk", "meet", "contact"},
-        "travel": {"leave", "escape", "go", "move", "freedom", "depart"},
-    }
-    return bool(words & keywords.get(action_type, set()))
+    return goal_matches_action(goal.description, action_type)
 
 
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
