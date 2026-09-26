@@ -861,11 +861,10 @@ class ActionResolver:
             if action.required_ability
             else 0.5
         )
-        if canonical_action_type(action.action_type) == "travel":
-            # The current world models valid travel between known locations but
-            # models no terrain, weather, gate, transport, or other obstacle.
-            # A valid travel attempt therefore succeeds; physical impossibility
-            # is represented explicitly by the precondition layer as blocked.
+        if canonical_action_type(action.action_type) == "travel" and action.metadata.get("world_validated"):
+            # Generated travel candidates already passed the world-level
+            # reachability model. Since the current world has no modeled
+            # obstacle system, do not invent an unexplained random failure.
             return 1.0
 
         base = 0.5 + 0.35 * (ability - action.difficulty)
