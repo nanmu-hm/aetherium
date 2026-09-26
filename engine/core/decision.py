@@ -298,12 +298,12 @@ class DecisionKernel:
         return DecisionEvaluation(action.id, score, tuple(reasons), uncertainty)
 
     def _choice_noise(self, state: WorldState, character: CharacterState, action: ActionCandidate) -> float:
-        """Return a reproducible bounded perturbation for imperfect decisions."""
+        """Return reproducible bounded perturbation; restored state overrides constructor seed."""
         noise_level = max(0.0, min(1.0, character.decision_noise))
         if noise_level <= 0.0:
             return 0.0
         stable_seed = (
-            self.seed
+            (state.simulation_seed if state.simulation_seed is not None else self.seed)
             + state.tick * 1009
             + zlib.crc32(f"{character.id}:{action.id}".encode("utf-8"))
         )
