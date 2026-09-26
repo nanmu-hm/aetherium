@@ -912,6 +912,7 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
+    world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
     action = ActionCandidate(
