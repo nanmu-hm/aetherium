@@ -9,6 +9,7 @@ from __future__ import annotations
 from collections import Counter, defaultdict
 
 from engine.core.actions import generate_action_pool
+from engine.core.action_types import event_action_type
 from engine.core.simulation import SimulationEngine
 from engine.genesis import build_genesis_world
 from engine.persistence.codec import world_from_dict, world_to_dict
@@ -70,7 +71,8 @@ def run_seed(seed: int, ticks: int = TICKS) -> dict:
         actions_by_id = {action.id: action for action in result.actions}
         for event in result.events:
             action = actions_by_id.get(event.causes[0]) if event.causes else None
-            if event.action_type == "travel" and event.action_result and event.action_result.status == "success":
+            semantic_event_type = event_action_type(event)
+            if semantic_event_type in {"travel", "search_person"} and event.action_result and event.action_result.status == "success":
                 actor_id = event.participants[0]
                 travel_ticks[actor_id].append(event.tick)
                 travel_successes += 1
