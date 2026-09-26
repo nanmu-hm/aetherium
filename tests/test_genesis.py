@@ -54,19 +54,19 @@ def test_genesis_records_completed_goal_consequences():
     )
 
 
-def test_genesis_has_recovery_between_repeated_travel_actions():
+def test_genesis_travel_has_a_character_grounded_reason():
     world = run_genesis(ticks=12, seed=7)
-    travel_ticks = [
-        event.tick
+    travel_events = [
+        event
         for event in world.event_log
-        if event.causes and event.causes[0].endswith("travel")
+        if event_action_type(event) == "travel"
         and event.action_result is not None
         and event.action_result.status == "success"
     ]
-    assert travel_ticks
+    assert travel_events
     assert all(
-        second > first + 1
-        for first, second in zip(travel_ticks, travel_ticks[1:])
+        "travels from" in event.facts[0]
+        for event in travel_events
     )
 
 
