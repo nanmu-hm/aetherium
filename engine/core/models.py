@@ -141,6 +141,8 @@ class WorldState:
     active_branch: str = "main"
     # Exact PRNG state used by SimulationEngine; persisted so checkpoints can replay future ticks.
     rng_state: tuple | None = None
+    # Seed used for deterministic decision noise; a restored snapshot is authoritative.
+    simulation_seed: int | None = None
 
     def add_character(self, character: CharacterState) -> None:
         if character.id in self.characters:
