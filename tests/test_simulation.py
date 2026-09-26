@@ -864,3 +864,43 @@ def test_successful_travel_gets_short_cooldown_in_two_location_world():
     pool = generate_action_pool(world, "mei")
 
     assert not any(action.action_type == "travel" for action in pool)
+
+
+def test_goal_alignment_uses_exact_words_not_substrings():
+    from engine.core.decision import DecisionKernel
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].description = "be a good neighbor"
+    action = ActionCandidate(
+        "travel", "lin", "travel", targets=["town"], confidence=0.8, difficulty=0.4
+    )
+
+    evaluation = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert evaluation.utility < 1.0
+    assert "goal alignment" not in evaluation.reasons
+
+
+def test_repetition_penalty_covers_help_and_pursue_goal():
+    from engine.core.models import ActionCandidate, ActionResult, Event
+    from engine.core.decision import DecisionKernel
+    from engine.memory.kernel import MemoryKernel
+
+    for action_type, event_action in (("help_person", "help_person"), ("pursue_goal", "pursue_goal")):
+        world = build_demo_world()
+        world.characters["lin"].goals.clear()
+        action = ActionCandidate(
+            f"repeat-{action_type}", "lin", action_type, targets=["mei"], confidence=0.8, difficulty=0.4
+        )
+        event = Event(
+            f"known-{action_type}", 1, "0001-01-02T00:00:00", "town",
+            ["lin", "mei"], [f"tick-1-lin-{action_type}"], ["known action"],
+            action_type=event_action, action_result=ActionResult("success"),
+        )
+        world.event_log.append(event)
+        MemoryKernel().remember_event(world.memory_state, "lin", event, "known action")
+
+        evaluation = DecisionKernel(seed=1).evaluate(world, action)
+
+        assert "recently repeated action" in evaluation.reasons

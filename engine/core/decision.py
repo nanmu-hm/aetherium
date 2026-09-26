@@ -7,7 +7,7 @@ import random
 import zlib
 
 from .models import ActionCandidate, CharacterState, WorldState
-from .action_types import canonical_action_type, event_action_type
+from .action_types import canonical_action_type, event_action_type, goal_matches_action
 from ..memory.kernel import MemoryKernel
 
 
@@ -206,17 +206,10 @@ class DecisionKernel:
         if action.action_type == "pursue_goal":
             return goal.priority
 
-        goal_text = goal.description.lower()
-        goal_affordances = {
-            "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
-            "contact_person": ("find", "reconcile", "talk", "meet", "contact"),
-            "help_person": ("help", "protect", "support", "save"),
-        }
-        keywords = goal_affordances.get(action.action_type, ())
-        if any(keyword in goal_text for keyword in keywords):
+        if goal_matches_action(goal.description, action.action_type):
             alignment = goal.priority
         else:
-            alignment = min(1.0, goal.priority * action.confidence)
+            alignment = 0.0
 
         # Relationship-seeking actions become more compelling when the
         # relationship itself carries unresolved tension. This keeps the

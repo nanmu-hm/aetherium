@@ -1,4 +1,5 @@
 from engine.genesis import discover_genesis_stories, run_genesis
+from engine.core.action_types import event_action_type
 
 
 def test_genesis_runs_without_manual_plot_injection():
@@ -34,11 +35,11 @@ def test_genesis_can_produce_story_candidates():
 def test_genesis_allows_goal_and_value_driven_action_change():
     world = run_genesis(ticks=12, seed=7)
     action_types = {
-        event.causes[0].rsplit("-", 1)[-1]
+        event_action_type(event)
         for event in world.event_log
         if event.causes
     }
-    assert "contact" in action_types
+    assert "contact_person" in action_types
     assert "travel" in action_types
 
 

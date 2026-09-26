@@ -5,10 +5,9 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import random
-import re
 
 from .actions import generate_action_pool
-from .action_types import canonical_action_type
+from .action_types import canonical_action_type, event_action_type, goal_matches_action
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
@@ -82,16 +81,6 @@ class SimulationEngine:
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
-    @staticmethod
-    def _goal_matches_action(goal_description: str, action_type: str) -> bool:
-        words = set(re.findall(r"[a-z]+", goal_description.lower()))
-        keywords = {
-            "help_person": {"help", "protect", "support", "save"},
-            "contact_person": {"find", "reconcile", "talk", "meet", "contact"},
-            "travel": {"leave", "escape", "go", "move", "freedom", "depart"},
-        }
-        return bool(words & keywords.get(action_type, set()))
-
     def _apply_goal_progress(
         self,
         actor,
@@ -107,7 +96,7 @@ class SimulationEngine:
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not self._goal_matches_action(goal.description, action.action_type):
+        if goal is None or not goal_matches_action(goal.description, action.action_type):
             return None
 
         old_status = goal.status
@@ -542,9 +531,7 @@ class SimulationEngine:
                 if event.action_result.status != "success":
                     continue
 
-                action_type = event.action_type or (
-                    canonical_action_type(event.causes[0].rsplit("-", 1)[-1]) if event.causes else ""
-                )
+                action_type = event_action_type(event)
                 satisfaction = {
                     "travel": {"freedom": 35.0},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
