@@ -128,9 +128,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             character.emotions.get("resentment", 0.0),
             character.emotions.get("love", 0.0),
         )
-        # Reconciliation is deliberately nonlinear: a small amount of residual
-        # distrust should not keep a settled relationship in an endless contact
-        # loop, while substantial unresolved tension still creates pressure.
         reconciliation_motive = reconciliation * (tension / 100.0) ** 2
         relationship_motive = max(
             reconciliation_motive,
@@ -138,7 +135,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             emotional_pressure,
         )
         goal_motive = 100.0 * goal.priority if goal and _goal_supports_action(character, "contact_person") else 0.0
-        contact_pressure = max(0.0, min(100.0, relationship_motive, 100.0))
+        contact_pressure = max(0.0, min(100.0, relationship_motive))
         contact_pressure = max(contact_pressure, goal_motive)
 
         last_contact_succeeded = bool(
@@ -149,7 +146,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         severe_pressure = contact_pressure >= 80.0
         recent_success_cooldown = bool(recent_contacts) and last_contact_succeeded and not severe_pressure
 
-        if contact_pressure > 0.0 and not recent_success_cooldown:
+        if contact_pressure >= 0.2 and not recent_success_cooldown:
             pool.append(ActionCandidate(
                 id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id,
                 action_type="contact_person", targets=[target_id],
@@ -202,10 +199,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     adventurous = has_trait(character, "adventurous", "curious", "restless", "explorer")
     cautious = has_trait(character, "cautious", "fearful")
 
-    # Travel remains an affordance even when pressure is currently low. The
-    # decision kernel may then reject it as unmotivated; removing it here would
-    # erase the character's available option and make later pressure changes
-    # invisible to the action layer.
     if len(state.locations) > 1:
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
@@ -259,13 +252,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
         destination_affordance = destination_score(destination)
-        # Keep the affordance visible but make the absence of a motive explicit
-        # to bounded-rational choice. Positive pressure can overcome this prior.
-        travel_prior = -0.35 + 0.50 * (travel_pressure / 100.0)
-        if adventurous:
-            travel_prior += 0.05
-        if cautious:
-            travel_prior -= 0.05
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
             action_type="travel", targets=[destination],
@@ -273,7 +259,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
             confidence=1.0, difficulty=0.5,
-            score=travel_prior,
+            score=0.0,
             metadata={
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
@@ -287,7 +273,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         character.human_condition.desires.get("reconciliation", 0.0),
         character.human_condition.desires.get("belonging", 0.0),
     )
-    if relationship_pressure > 0.0 and len(state.locations) > 1:
+    if relationship_pressure > 0.0 and relationship_pressure > 5.0 and len(state.locations) > 1:
         for target_id in _relationship_targets(state, character):
             target = state.characters[target_id]
             if target.location == character.location:
