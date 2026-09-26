@@ -106,43 +106,71 @@ class SimulationEngine:
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
+    @staticmethod
+    def _goal_condition_met(state: WorldState, actor, goal, action: ActionCandidate, outcome: ActionResult) -> bool:
+        """Evaluate goal progress from observed world state and concrete outcomes."""
+        if outcome.status != "success":
+            return False
+        if not goal.stage_conditions or goal.current_stage >= len(goal.stage_conditions):
+            return False
+
+        condition = goal.stage_conditions[goal.current_stage]
+        kind = condition.get("type")
+
+        if kind == "not_at_location":
+            return actor.location != condition.get("location")
+
+        if kind == "at_same_location":
+            target_id = condition.get("target_id")
+            target = state.characters.get(target_id)
+            return target is not None and actor.location == target.location
+
+        if kind == "desire_at_most":
+            desire = str(condition.get("desire", ""))
+            limit = float(condition.get("value", 0.0))
+            return actor.human_condition.effective_desire(desire, actor.location) <= limit
+
+        if kind == "successful_action":
+            expected = canonical_action_type(str(condition.get("action_type", "")))
+            return canonical_action_type(action.action_type) == expected
+
+        return False
+
     def _apply_goal_progress(
         self,
+        state: WorldState,
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
         consequences: list[Consequence],
     ) -> str | None:
-        if outcome.status != "success":
-            return None
-
         goal = max(
             (item for item in actor.goals if item.status == "active"),
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not goal_matches_action(goal.current_description, action.action_type):
+        if goal is None or not self._goal_condition_met(state, actor, goal, action, outcome):
             return None
 
-        if goal.stages and goal.current_stage < len(goal.stages):
-            old_stage = goal.current_stage
-            goal.current_stage += 1
-            consequences.append(
-                Consequence(
-                    "goal",
-                    goal.id,
-                    "current_stage",
-                    old_stage,
-                    goal.current_stage,
-                    f"goal stage advanced by {action.action_type}",
-                )
+        old_stage = goal.current_stage
+        goal.current_stage += 1
+        consequences.append(
+            Consequence(
+                "goal",
+                goal.id,
+                "current_stage",
+                old_stage,
+                goal.current_stage,
+                "goal stage condition became true",
             )
-            if goal.current_stage < len(goal.stages):
-                return (
-                    f"{actor.name} advances the goal '{goal.description}' "
-                    f"to stage {goal.current_stage + 1}/{len(goal.stages)}: "
-                    f"{goal.current_description}."
-                )
+        )
+
+        if goal.current_stage < len(goal.stages):
+            return (
+                f"{actor.name} advances the goal '{goal.description}' "
+                f"to stage {goal.current_stage + 1}/{len(goal.stages)}: "
+                f"{goal.current_description}."
+            )
 
         old_status = goal.status
         goal.status = "achieved"
@@ -153,7 +181,7 @@ class SimulationEngine:
                 "status",
                 old_status,
                 goal.status,
-                f"goal fulfilled by {action.action_type}",
+                "goal completion condition became true",
             )
         )
         return f"{actor.name} achieves the goal: {goal.description}."
@@ -545,7 +573,7 @@ class SimulationEngine:
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
-            goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
+            goal_fact = self._apply_goal_progress(state, actor, action, outcome, consequences)
             if goal_fact:
                 facts.append(goal_fact)
 
@@ -594,7 +622,12 @@ class SimulationEngine:
                 continue
 
             for desire_name, value in list(desires.items()):
-                desires[desire_name] = min(100.0, value + 3.0)
+                modifiers = character.human_condition.location_desire_modifiers
+                if desire_name in modifiers.get(character.location, {}):
+                    delta = modifiers[character.location][desire_name]
+                    desires[desire_name] = max(0.0, min(100.0, value + delta))
+                elif desire_name != "freedom":
+                    desires[desire_name] = min(100.0, value + 3.0)
 
             for event in events:
                 if not event.participants or event.participants[0] not in acted:
@@ -607,20 +640,14 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 0.5},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
                     if desire_name not in desires:
                         continue
-                    if action_type == "travel" and desire_name == "freedom":
-                        # Travel resolves a proportion of the pressure it was
-                        # responding to; it is not a fixed cooldown clock.
-                        old_value = desires[desire_name]
-                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
-                    else:
-                        desires[desire_name] = max(0.0, desires[desire_name] - amount)
+                    old_value = desires[desire_name]
+                    desires[desire_name] = max(0.0, old_value - amount)
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)
