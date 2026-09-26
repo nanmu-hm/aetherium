@@ -270,6 +270,12 @@ class DecisionKernel:
         if canonical_action_type(action.action_type) == "rest":
             return max(0.0, min(100.0, character.human_condition.fatigue)) / 100.0
 
+        if canonical_action_type(action.action_type) == "travel" and action.metadata.get("search_target"):
+            return max(
+                character.human_condition.desires.get("reconciliation", 0.0),
+                character.human_condition.desires.get("belonging", 0.0),
+            ) / 100.0
+
         mapping = {
             "travel": ("freedom", "curiosity"),
             "contact_person": ("reconciliation", "belonging"),
