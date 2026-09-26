@@ -2,11 +2,11 @@
 
 ## What this repo is
 
-Aetherium is a **deterministic world-simulation engine**. It advances a small fictional world tick-by-tick without plot injection; characters choose, events change state, memory persists, and story threads are *discovered* from accumulated history. No LLM calls, no external dependencies — pure Python dataclasses + random.Random seed for reproducibility.
+Aetherium is a **deterministic world-simulation engine**. It advances a small fictional world tick-by-tick without plot injection; characters choose, events change state, memory persists, and story threads are *discovered* from accumulated history. No LLM calls are required by the core runtime; the core is pure Python dataclasses plus seeded `random.Random` for reproducibility.
 
 ## Binding design constitution
 
-**Before changing architecture, simulation rules, character behavior, narrative systems, or tests, read docs/DESIGN-PRINCIPLES.md.**
+**Before changing architecture, simulation rules, character behavior, narrative systems, or tests, read [`docs/DESIGN-PRINCIPLES.md`](docs/DESIGN-PRINCIPLES.md).**
 
 The following principles are binding:
 
@@ -24,6 +24,7 @@ The following principles are binding:
 12. **Genesis is a regression anchor, not the whole world.** The canonical seed=7 scenario protects reproducibility but must not become a reason to overfit the simulation.
 
 When principles conflict, prioritize:
+
 **world integrity and causal consistency → character agency → determinism/reproducibility → faithful history/auditability → story discovery → literary expression → implementation convenience.**
 
 The central review question is:
@@ -32,22 +33,35 @@ The central review question is:
 
 ## Commands
 
-- Run all tests: python -m pytest -q
-- Run a single test file: python -m pytest tests/test_genesis.py -q
-- Run the demo smoke test: python -m engine.core.demo
-- Run Genesis: python -c "from engine.genesis import discover_genesis_stories; w, c = discover_genesis_stories(ticks=12, seed=7); [print(e.facts[0]) for e in w.event_log]"
+```bash
+# Run all tests
+python -m pytest -q
 
-CI (GitHub Actions, .github/workflows/ci.yml): Python 3.12, pip install pytest, python -m pytest -q.
+# Run a single test file
+python -m pytest tests/test_genesis.py -q
+
+# Run the demo smoke test
+python -m engine.core.demo
+
+# Run the Genesis scenario manually
+python -c "from engine.genesis import discover_genesis_stories; w, c = discover_genesis_stories(ticks=12, seed=7); [print(e.facts[0]) for e in w.event_log]"
+```
+
+CI workflow: `.github/workflows/ci.yml`.
+
+The CI installs the project in editable mode and runs the test suite. See `pyproject.toml` and the workflow for the authoritative dependency configuration.
 
 ## Module layout
 
+```
 engine/
   core/       WorldState, CharacterState, SimulationEngine (tick loop, seed-driven)
   memory/     MemoryKernel (deterministic decay + cue-based recall), InMemoryStore
-  narrative/  StoryArchaeologist (thread discovery), NarrativePressureAnalyzer, NarrativeObserver
+  narrative/  StoryArchaeologist, NarrativePressureAnalyzer, NarrativeObserver
   genesis.py  Deterministic 12-tick scenario; the primary reproducible test fixture
+```
 
-Tests mirror the module names under tests/.
+Tests mirror the module names under `tests/`.
 
 ## Design invariants
 
@@ -55,22 +69,22 @@ These are **binding constraints on what code may do**:
 
 1. The narrative layer observes history — it never writes world facts.
 2. Human-condition values are pressures/affordances, not mandatory plot beats.
-3. SimulationEngine is the only authority that mutates WorldState.
+3. `SimulationEngine` is the only authority that mutates `WorldState`.
 4. Reproducibility: same seed → same event sequence. Tests assert this explicitly.
-5. WorldState.timestamp advances 24 h per tick from 0001-01-01 (tick 12 → 0001-01-13).
+5. `WorldState.timestamp` advances 24 h per tick from `0001-01-01` (tick 12 → `0001-01-13`).
 
 ## Key gotchas
 
-- CharacterState.relationships (dict) is **deprecated** — authoritative relationship state is WorldState.relationships (list of RelationshipState).
-- MemoryKernel.decay() computes effective decay as rate × (1 − protection) where protection blends salience, personal importance, relationship importance, and unresolved flag. Do not add a new protection factor without adjusting the cap (currently 0.9).
-- StoryArchaeologist.discover() groups events into one thread per connected chain (events within 6 ticks sharing participants). It deliberately returns one candidate per chain, not one per event.
-- engine/genesis.py hard-codes seed=7 for the canonical test scenario; changing the seed will break test_genesis.py reproducibility assertions.
-- pyproject.toml sets pythonpath = ["."] — run pytest from the repo root; do not cd into engine/.
-- No external runtime dependencies. Only pytest is needed to run tests.
+- `CharacterState.relationships` (dict) is **deprecated** — authoritative relationship state is `WorldState.relationships` (list of `RelationshipState`).
+- `MemoryKernel.decay()` computes effective decay as `rate × (1 − protection)` where protection blends salience, personal importance, relationship importance, and unresolved flag. Do not add a new protection factor without adjusting the cap (currently 0.9).
+- `StoryArchaeologist.discover()` groups events into one thread per connected chain (events within 6 ticks sharing participants). It deliberately returns one candidate per chain, not one per event.
+- `engine/genesis.py` hard-codes `seed=7` for the canonical test scenario; changing the seed will break `test_genesis.py` reproducibility assertions.
+- `pyproject.toml` sets `pythonpath = ["."]` — run pytest from the repo root; do not `cd` into `engine/`.
+- Keep the core runtime independently runnable; consult `pyproject.toml` and CI before describing dependency requirements.
 
 ## Docs worth reading before large changes
 
-- docs/DESIGN-PRINCIPLES.md — **binding project design constitution; read this first**
-- docs/ROADMAP.md — phase checklist and cross-cutting invariants
-- docs/GENESIS-TEST.md — current test-phase spec and success criteria
-- docs/WORLD-CONSTITUTION.md — world-simulation rules
+- `docs/DESIGN-PRINCIPLES.md` — **binding project design constitution; read this first**
+- `docs/ROADMAP.md` — phase checklist and cross-cutting invariants
+- `docs/GENESIS-TEST.md` — current test-phase spec and success criteria
+- `docs/WORLD-CONSTITUTION.md` — world-simulation rules
