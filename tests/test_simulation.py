@@ -482,7 +482,7 @@ def test_successful_experience_builds_a_behavioral_habit():
 
     world = build_demo_world()
     world.characters["lin"].goals[0].status = "achieved"
-    world.add_relationship(RelationshipState("lin", "mei", trust=50.0))
+    world.add_relationship(RelationshipState("mei", "lin", trust=50.0))
     action = ActionCandidate(
         "help",
         "lin",
