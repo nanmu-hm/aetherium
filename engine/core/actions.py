@@ -87,7 +87,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id,
             action_type="pursue_goal", motivation=goal.current_description,
-            confidence=0.8, difficulty=0.5, score=goal.priority,
+            confidence=0.8, difficulty=0.5, score=0.10,
         ))
 
     nearby = [
