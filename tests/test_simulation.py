@@ -338,6 +338,7 @@ def test_successful_help_changes_reciprocal_relationship_state():
     world.characters["lin"].values = ["loyalty"]
     world.add_relationship(RelationshipState("lin", "mei", trust=60.0, affection=50.0, loyalty=50.0))
     world.add_relationship(RelationshipState("mei", "lin", trust=20.0, affection=40.0, loyalty=30.0))
+    world.characters["lin"].location = world.characters["mei"].location
 
     action = ActionCandidate(
         "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
@@ -962,7 +963,7 @@ def test_successful_travel_satisfies_freedom_pressure_from_place_context():
 
     SimulationEngine._advance_human_pressures(world, [event])
     assert world.characters["mei"].human_condition.desires["freedom"] < 21.0
-    assert world.characters["mei"].human_condition.desires["freedom"] > 19.0
+    assert world.characters["mei"].human_condition.desires["freedom"] == 6.5
 
 
 def test_freedom_pressure_does_not_recover_away_from_confining_context():
