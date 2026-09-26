@@ -200,7 +200,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     # Rest is a genuine low-pressure affordance. It is deliberately absent when
     # unresolved pressure is high, so it cannot be used as a filler to hide a
     # missing causal action.
-    pressure = character.human_condition.pressure()
+    pressure = character.human_condition.pressure(character.location)
     if pressure == 0.0:
         rest_score = 0.20
         pool.append(ActionCandidate(
