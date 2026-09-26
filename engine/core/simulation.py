@@ -87,6 +87,22 @@ class SimulationEngine:
                 character_id,
                 event,
             )
+            # A participant remembers where the other participants were seen.
+            # This is actor-local knowledge, not a read of their current state.
+            for other_id in event.participants:
+                if other_id == character_id or other_id not in state.characters:
+                    continue
+                learned.append(
+                    self.memory_kernel.learn_fact(
+                        state.memory_state,
+                        character_id,
+                        f"location_seen:{other_id}:{event.location}",
+                        tick=event.tick,
+                        source="direct_experience",
+                        source_event_id=event.id,
+                        confidence=1.0,
+                    )
+                )
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
