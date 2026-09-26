@@ -30,9 +30,10 @@ class HumanCondition:
         modifier = self.location_desire_modifiers.get(location, {}).get(desire, 0.0)
         return max(0.0, min(100.0, base + modifier))
 
-    def pressure(self) -> float:
-        """Return a bounded measure of unresolved human pressure."""
-        values = list(self.desires.values()) + list(self.losses.values()) + list(self.fears.values())
+    def pressure(self, location: str = "") -> float:
+        """Return unresolved pressure, including context-sensitive desires."""
+        values = [self.effective_desire(name, location) for name in self.desires]
+        values += list(self.losses.values()) + list(self.fears.values())
         if not values:
             return 0.0
         return max(0.0, min(1.0, sum(values) / len(values) / 100.0))
