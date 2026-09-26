@@ -85,11 +85,25 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         relationship_motive = max(reconciliation_motive, belonging * 0.50, emotional_pressure)
         goal_motive = 100.0 * goal.priority if goal and _goal_supports_action(character, "contact_person") else 0.0
         contact_pressure = max(max(0.0, min(100.0, relationship_motive)), goal_motive)
-        last_contact_succeeded = bool(recent_contacts and recent_contacts[0].action_result is not None and recent_contacts[0].action_result.status == "success")
-        severe_pressure = contact_pressure >= 80.0
-        recent_success_cooldown = bool(recent_contacts) and last_contact_succeeded and not severe_pressure
-        if contact_pressure >= 0.2 and not recent_success_cooldown:
-            pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-contact", actor_id=character.id, action_type="contact_person", targets=[target_id], motivation="address an important relationship", preconditions=["target is at the same location"], expected_outcomes=["relationship may change"], confidence=1.0, difficulty=0.0, score=0.15, metadata={"world_validated": True}))
+        # A successful contact should satisfy part of the current social pressure.
+        # Do not impose a time-based cooldown: the relationship state itself must
+        # determine whether another contact is meaningful.
+        if contact_pressure >= 20.0:
+            pool.append(
+                ActionCandidate(
+                    id=f"tick-{state.tick}-{character.id}-contact",
+                    actor_id=character.id,
+                    action_type="contact_person",
+                    targets=[target_id],
+                    motivation="address an important relationship",
+                    preconditions=["target is at the same location"],
+                    expected_outcomes=["relationship may change"],
+                    confidence=1.0,
+                    difficulty=0.0,
+                    score=0.15,
+                    metadata={"world_validated": True},
+                )
+            )
 
     targets = _relationship_targets(state, character)
     distressed = [target_id for target_id in targets if state.characters[target_id].location == character.location and state.characters[target_id].emotions.get("sorrow", 0.0) + state.characters[target_id].emotions.get("fear", 0.0) + state.characters[target_id].human_condition.fatigue / 2.0 > 8.0]
@@ -132,7 +146,32 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             cautious_penalty = 0.15 * confinement if cautious else 0.0
             return 0.50 * (1.0 - confinement) + 0.25 * novelty + 0.15 * max(0.0, 1.0 - fear) + adventurous_bonus - cautious_penalty
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
-        pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id, action_type="travel", targets=[destination], motivation=f"explore beyond the familiar: {destination}", preconditions=["destination is a place the actor can reach"], expected_outcomes=["experience a different place"], confidence=1.0, difficulty=0.5, score=0.0, metadata={"travel_reason": "freedom_exploration", "destination_affordance": destination_score(destination), "destination_confinement": character.human_condition.confinement_at(destination), "travel_pressure": travel_pressure, "world_validated": True}))
+        # Travel is a continuous affordance. Pressure and decision utility
+        # determine whether it is chosen; generation does not hide it behind
+        # an arbitrary threshold.
+        pool.append(
+            ActionCandidate(
+                id=f"tick-{state.tick}-{character.id}-travel",
+                actor_id=character.id,
+                action_type="travel",
+                targets=[destination],
+                motivation=f"explore beyond the familiar: {destination}",
+                preconditions=["destination is a place the actor can reach"],
+                expected_outcomes=["experience a different place"],
+                confidence=1.0,
+                difficulty=0.5,
+                # Destination affordance selects where to go; it must not create
+                # motivation to travel in the first place.
+                score=0.0,
+                metadata={
+                    "travel_reason": "freedom_exploration",
+                    "destination_affordance": destination_score(destination),
+                    "destination_confinement": character.human_condition.confinement_at(destination),
+                    "travel_pressure": travel_pressure,
+                    "world_validated": True,
+                },
+            )
+        )
 
     relationship_pressure = max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0))
     if relationship_pressure > 0.0 and len(state.locations) > 1:
@@ -147,7 +186,35 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             destination = remembered if remembered in alternatives else (alternatives[0] if alternatives else None)
             if destination is None:
                 continue
-            pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-search-{target_id}", actor_id=character.id, action_type="travel", targets=[destination], motivation=(f"search for {target.name} after losing contact" if remembered is None else f"search for {target.name}; last remembered location was {remembered}"), preconditions=[f"search is based on {target.name}'s remembered or uncertain location"], expected_outcomes=["may reunite with the person", "may discover they are elsewhere"], confidence=0.45 if remembered is None else 0.65, difficulty=0.5, score=0.20, metadata={"search_target": target_id, "search_basis": "remembered_location" if remembered else "uncertain_location", "search_destination": destination, "event_action_type": "search_person", "world_validated": True}))
+            # Search remains a travel action in the world, but carries an explicit
+            # semantic event type so decision and history layers can distinguish it.
+            pool.append(
+                ActionCandidate(
+                    id=f"tick-{state.tick}-{character.id}-search-{target_id}",
+                    actor_id=character.id,
+                    action_type="travel",
+                    targets=[destination],
+                    motivation=(
+                        f"search for {target.name} after losing contact"
+                        if remembered is None
+                        else f"search for {target.name}; last remembered location was {remembered}"
+                    ),
+                    preconditions=[
+                        f"search is based on {target.name}'s remembered or uncertain location"
+                    ],
+                    expected_outcomes=["may reunite with the person", "may discover they are elsewhere"],
+                    confidence=0.45 if remembered is None else 0.65,
+                    difficulty=0.5,
+                    score=0.20,
+                    metadata={
+                        "search_target": target_id,
+                        "search_basis": "remembered_location" if remembered else "uncertain_location",
+                        "search_destination": destination,
+                        "event_action_type": "search_person",
+                        "world_validated": True,
+                    },
+                )
+            )
             break
 
     fatigue = max(0.0, min(100.0, character.human_condition.fatigue))
@@ -159,6 +226,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
 
 def choose_action(pool: list[ActionCandidate]) -> ActionCandidate | None:
+    """Choose from the pool; ties preserve deterministic input ordering."""
     if not pool:
         return None
     return max(pool, key=lambda action: action.score)
