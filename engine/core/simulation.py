@@ -868,10 +868,10 @@ class ActionResolver:
             if action.required_ability
             else 0.5
         )
-        if canonical_action_type(action.action_type) == "travel" and action.metadata.get("world_validated"):
-            # Generated travel candidates already passed the world-level
-            # reachability model. Since the current world has no modeled
-            # obstacle system, do not invent an unexplained random failure.
+        if action.metadata.get("world_validated"):
+            # Generated actions already passed the world-level preconditions.
+            # The current world has no modeled stochastic obstacle or social
+            # failure system, so do not invent random failure after selection.
             return 1.0
 
         base = 0.5 + 0.35 * (ability - action.difficulty)
