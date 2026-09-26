@@ -12,7 +12,7 @@ def test_staged_goal_advances_before_final_completion():
             id="a",
             name="A",
             location="town",
-            goals=Goal if False else [
+            goals=[
                 Goal(
                     "g1",
                     "help a friend",
