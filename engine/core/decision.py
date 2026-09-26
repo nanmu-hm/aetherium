@@ -80,7 +80,16 @@ class DecisionKernel:
         for target_id in action.targets:
             rel = state.get_relationship(character.id, target_id)
             if rel is not None:
-                scores.append((rel.loyalty + rel.affection + rel.respect - rel.resentment - rel.fear) / 300.0)
+                scores.append(
+                    (
+                        rel.trust
+                        + rel.loyalty
+                        + rel.affection
+                        + rel.respect
+                        - rel.resentment
+                        - rel.fear
+                    ) / 500.0
+                )
         return sum(scores) / len(scores) if scores else 0.0
 
     @staticmethod
