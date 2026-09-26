@@ -110,7 +110,8 @@ class DecisionKernel:
     @staticmethod
     def _identity_alignment(character: CharacterState, action: ActionCandidate) -> float:
         affordances = {"travel": ("independent", "capable"), "contact_person": ("loyal", "reliable"), "search_person": ("loyal", "reliable"), "help_person": ("compassionate", "reliable")}
-        dimensions = affordances.get(canonical_action_type(action.action_type), ())
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
+        dimensions = affordances.get(action_type, ())
         if not dimensions:
             return 0.0
         return sum(max(-1.0, min(1.0, character.identity_beliefs.get(name, 0.0))) for name in dimensions) / len(dimensions)
@@ -161,12 +162,12 @@ class DecisionKernel:
         values = self._value_alignment(character, action)
         emotion = self._emotion_alignment(character, action)
         relationship = self._relationship_alignment(state, character, action)
-        if canonical_action_type(action.action_type) == "contact_person":
+        if canonical_action_type(action.action_type) == "contact_person" and not action.metadata.get("search_target"):
             relationship *= max(0.10, min(1.0, max(character.human_condition.desires.get("reconciliation", 0.0), character.human_condition.desires.get("belonging", 0.0), character.emotions.get("longing", 0.0), character.emotions.get("resentment", 0.0), character.emotions.get("love", 0.0)) / 100.0))
         memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values() if d.owner_id == character.id and d.status == "active"), default=0.0)
         human_condition_urgency = self._human_condition_urgency(character, action)
         urgency = max(memory_urgency, human_condition_urgency)
-        action_type = canonical_action_type(action.action_type)
+        action_type = "search_person" if action.metadata.get("search_target") else canonical_action_type(action.action_type)
         motive_gap = 0.0
         if action_type == "travel":
             travel_pressure = human_condition_urgency
