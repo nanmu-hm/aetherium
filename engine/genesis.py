@@ -61,7 +61,7 @@ def build_genesis_world() -> WorldState:
                 attachments={"friendship": 70},
                 desires={"freedom": 80},
                 fears={"confinement": 60},
-                location_desire_modifiers={"river_town": {"freedom": 0.0}, "old_road": {"freedom": -70.0}},
+                location_desire_modifiers={"river_town": {"freedom": 0.0}, "old_road": {"freedom": -80.0}},
                 virtues={"courage": 80},
             ),
         )
