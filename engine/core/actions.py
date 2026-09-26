@@ -110,18 +110,15 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
         reconciliation = character.human_condition.desires.get("reconciliation", 0.0)
         belonging = character.human_condition.desires.get("belonging", 0.0)
+        relationship = state.get_relationship(character.id, target_id)
         tension = max(
             0.0,
             min(
                 100.0,
                 max(
                     100.0 - trust,
-                    state.get_relationship(character.id, target_id).resentment
-                    if state.get_relationship(character.id, target_id) is not None
-                    else 0.0,
-                    state.get_relationship(character.id, target_id).fear
-                    if state.get_relationship(character.id, target_id) is not None
-                    else 0.0,
+                    relationship.resentment if relationship is not None else 0.0,
+                    relationship.fear if relationship is not None else 0.0,
                 ),
             ),
         )
@@ -131,12 +128,18 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             character.emotions.get("resentment", 0.0),
             character.emotions.get("love", 0.0),
         )
+        # Reconciliation is deliberately nonlinear: a small amount of residual
+        # distrust should not keep a settled relationship in an endless contact
+        # loop, while substantial unresolved tension still creates pressure.
+        reconciliation_motive = reconciliation * (tension / 100.0) ** 2
         relationship_motive = max(
-            reconciliation * (tension / 100.0),
+            reconciliation_motive,
             belonging * 0.50,
             emotional_pressure,
         )
-        contact_pressure = max(0.0, min(100.0, relationship_motive))
+        goal_motive = 100.0 * goal.priority if goal and _goal_supports_action(character, "contact_person") else 0.0
+        contact_pressure = max(0.0, min(100.0, relationship_motive, 100.0))
+        contact_pressure = max(contact_pressure, goal_motive)
 
         last_contact_succeeded = bool(
             recent_contacts
@@ -199,12 +202,11 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     adventurous = has_trait(character, "adventurous", "curious", "restless", "explorer")
     cautious = has_trait(character, "cautious", "fearful")
 
-    # Travel is an affordance, not a default action. A destination can exist
-    # without creating a motive to go there. Curiosity/adventure can sustain a
-    # low but non-zero exploratory pressure; otherwise the character must have
-    # an actual freedom/curiosity pressure before travel enters the pool.
-    can_explore = travel_pressure >= 8.0 or (adventurous and curiosity_pressure >= 3.0)
-    if len(state.locations) > 1 and can_explore:
+    # Travel remains an affordance even when pressure is currently low. The
+    # decision kernel may then reject it as unmotivated; removing it here would
+    # erase the character's available option and make later pressure changes
+    # invisible to the action layer.
+    if len(state.locations) > 1:
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
             if memory.owner_id == character.id and memory.location in visit_counts:
@@ -225,9 +227,6 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 if len(recent_travel_locations) >= 3:
                     break
 
-        # Do not immediately undo the previous successful journey when another
-        # destination exists. Returning can still happen later when the actor
-        # develops a new reason to return.
         if recent_travel_locations:
             last_destination = recent_travel_locations[0]
             non_reversal = [location for location in alternatives if location != last_destination]
@@ -260,6 +259,13 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
         destination_affordance = destination_score(destination)
+        # Keep the affordance visible but make the absence of a motive explicit
+        # to bounded-rational choice. Positive pressure can overcome this prior.
+        travel_prior = -0.35 + 0.50 * (travel_pressure / 100.0)
+        if adventurous:
+            travel_prior += 0.05
+        if cautious:
+            travel_prior -= 0.05
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
             action_type="travel", targets=[destination],
@@ -267,7 +273,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
             confidence=1.0, difficulty=0.5,
-            score=0.0,
+            score=travel_prior,
             metadata={
                 "travel_reason": "freedom_exploration",
                 "destination_affordance": destination_affordance,
