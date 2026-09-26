@@ -779,3 +779,84 @@ def test_known_past_action_can_still_create_repetition_pressure():
 
     assert known.utility < baseline.utility
     assert "recently repeated action" in known.reasons
+
+
+
+def test_contact_does_not_complete_help_goal():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].description = "help a friend"
+    action = ActionCandidate(
+        "contact", "lin", "contact_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert world.characters["lin"].goals[0].status == "active"
+    assert events[0].action_type == "contact_person"
+    assert not any(item.target_type == "goal" for item in events[0].consequences)
+
+
+def test_event_exposes_structured_action_type():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "travel", "lin", "travel", targets=["town"], confidence=1.0, difficulty=0.1
+    )
+
+    events = SimulationEngine(seed=1).resolve(world, [action])
+
+    assert events[0].action_type == "travel"
+
+
+def test_repetition_penalty_uses_structured_action_type():
+    from engine.core.models import ActionCandidate, ActionResult, Event
+    from engine.core.decision import DecisionKernel
+
+    world = build_demo_world()
+    world.characters["lin"].goals[0].status = "achieved"
+    action = ActionCandidate(
+        "retry-contact", "lin", "contact_person", targets=["mei"], confidence=0.8, difficulty=0.4
+    )
+    world.event_log.extend(
+        [
+            Event(
+                id="contact-1", tick=1, timestamp="0001-01-02T00:00:00", location="town",
+                participants=["lin", "mei"], causes=["tick-1-lin-contact"], facts=["contact"],
+                action_type="contact_person", action_result=ActionResult("success"),
+            ),
+            Event(
+                id="contact-2", tick=2, timestamp="0001-01-03T00:00:00", location="town",
+                participants=["lin", "mei"], causes=["tick-2-lin-contact"], facts=["contact"],
+                action_type="contact_person", action_result=ActionResult("success"),
+            ),
+        ]
+    )
+
+    evaluation = DecisionKernel(seed=1).evaluate(world, action)
+
+    assert "recently repeated action" in evaluation.reasons
+
+
+def test_successful_travel_gets_short_cooldown_in_two_location_world():
+    from engine.core.actions import generate_action_pool
+    from engine.core.models import ActionResult, Event
+
+    world = build_demo_world()
+    world.characters["mei"].goals[0].status = "achieved"
+    world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.event_log.append(
+        Event(
+            id="travel-1", tick=0, timestamp="0001-01-01T00:00:00", location="town",
+            participants=["mei"], causes=["tick-0-mei-travel"], facts=["travel"],
+            action_type="travel", action_result=ActionResult("success"),
+        )
+    )
+    world.tick = 1
+
+    pool = generate_action_pool(world, "mei")
+
+    assert not any(action.action_type == "travel" for action in pool)
