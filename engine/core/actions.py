@@ -150,9 +150,13 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         targets = _relationship_targets(state, character)
         distressed = [
             target_id for target_id in targets
-            if state.characters[target_id].emotions.get("sorrow", 0.0)
-            + state.characters[target_id].emotions.get("fear", 0.0)
-            + state.characters[target_id].human_condition.fatigue / 2.0 > 8.0
+            if state.characters[target_id].location == character.location
+            and (
+                state.characters[target_id].emotions.get("sorrow", 0.0)
+                + state.characters[target_id].emotions.get("fear", 0.0)
+                + state.characters[target_id].human_condition.fatigue / 2.0
+                > 8.0
+            )
         ]
         if distressed and (
             _has_value(character, "loyalty")
@@ -172,23 +176,20 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 id=f"tick-{state.tick}-{character.id}-help", actor_id=character.id,
                 action_type="help_person", targets=[target_id],
                 motivation=f"help {state.characters[target_id].name} because their condition looks difficult",
+                preconditions=["target is at the same location"],
                 confidence=0.7, difficulty=0.35, score=0.20,
             ))
 
     freedom_pressure = _contextual_desire(character, "freedom")
     curiosity_pressure = _contextual_desire(character, "curiosity")
     exploration_pressure = max(freedom_pressure, curiosity_pressure)
-    if (
-        len(state.locations) > 1
-        and (
-            (_has_value(character, "freedom") and freedom_pressure > 0.0)
-            or curiosity_pressure > 0.0
-            or has_trait(character, "adventurous", "curious", "restless")
-        )
+    if len(state.locations) > 1 and (
+        (_has_value(character, "freedom") and freedom_pressure >= 15.0)
+        or curiosity_pressure >= 35.0
     ):
-        # Freedom pressure creates an exploration choice. Prefer places the actor
-        # has experienced less often; this makes destination choice depend on the
-        # actor's own history rather than lexical ordering of world locations.
+        # Traits influence pressure growth; they do not themselves create a
+        # permanent travel candidate. Prefer genuinely new places first so
+        # curiosity can be satisfied by discovery.
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
             if memory.owner_id == character.id and memory.location in visit_counts:
