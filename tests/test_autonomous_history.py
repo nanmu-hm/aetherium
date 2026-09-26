@@ -55,7 +55,7 @@ def test_freedom_destination_uses_actor_history_not_lexical_first_place():
             name="A",
             location="town",
             values=["freedom"],
-            human_condition=HumanCondition(desires={"freedom": 1.0}),
+            human_condition=HumanCondition(desires={"freedom": 30.0}),
         )
     )
     kernel = MemoryKernel()
@@ -107,7 +107,7 @@ def test_search_pressure_is_continuous_and_failed_search_changes_future_destinat
     assert next_search.targets == ["harbor"]
 
 
-def test_low_pressure_rest_is_distinct_from_no_candidate_idle():
+def test_low_pressure_does_not_invent_a_recovery_action():
     world = WorldState(world_id="rest", locations={"town"})
     world.add_character(
         CharacterState(
@@ -119,18 +119,10 @@ def test_low_pressure_rest_is_distinct_from_no_candidate_idle():
         )
     )
     pool = generate_action_pool(world, "a")
-    assert any(item.action_type == "rest" for item in pool)
-
-    event = SimulationEngine(seed=1).resolve(
-        world,
-        [next(item for item in pool if item.action_type == "rest")],
-    )[0]
-    assert event.action_type == "rest"
-    assert event.action_result.status == "success"
-    assert "rests at town" in event.facts[0]
+    assert not any(item.action_type == "rest" for item in pool)
 
 
-def test_continuous_pressure_generates_travel_below_old_threshold():
+def test_low_freedom_pressure_does_not_generate_travel_before_threshold():
     world = WorldState(world_id="continuous", locations={"town", "road"})
     world.add_character(
         CharacterState(
@@ -142,4 +134,4 @@ def test_continuous_pressure_generates_travel_below_old_threshold():
         )
     )
     pool = generate_action_pool(world, "a")
-    assert any(item.action_type == "travel" for item in pool)
+    assert not any(item.action_type == "travel" for item in pool)
