@@ -301,7 +301,11 @@ class DecisionKernel:
                     character.emotions.get("resentment", 0.0),
                     character.emotions.get("love", 0.0),
                 ) / 100.0
-                relationship *= max(0.0, min(1.0, relationship_pressure))
+                # Keep relationship compatibility observable in evaluation even
+                # when the current social motive is weak. The motive itself is
+                # still required for action generation, so this floor cannot
+                # manufacture contact in the simulation.
+                relationship *= max(0.10, min(1.0, relationship_pressure))
         memory_urgency = max((d.urgency * d.priority for d in state.memory_state.desires.values()
                               if d.owner_id == character.id and d.status == "active"), default=0.0)
         human_condition_urgency = self._human_condition_urgency(character, action)
