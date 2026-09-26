@@ -49,6 +49,8 @@ class PreconditionEngine:
                 reasons.append("help target does not exist")
             elif target.status != "active":
                 reasons.append("help target is not active")
+            elif target.location != actor.location:
+                reasons.append("help target is not at the same location")
 
         if action.action_type == "travel" and action.targets:
             destination = action.targets[0]
