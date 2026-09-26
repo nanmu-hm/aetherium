@@ -7,7 +7,7 @@ import random
 import zlib
 
 from .models import ActionCandidate, CharacterState, WorldState
-from .action_types import canonical_action_type
+from .action_types import canonical_action_type, event_action_type
 from ..memory.kernel import MemoryKernel
 
 
