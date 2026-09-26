@@ -106,8 +106,56 @@ class SimulationEngine:
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
+    @staticmethod
+    def _goal_condition_satisfied(
+        state: WorldState,
+        actor,
+        goal,
+        action: ActionCandidate,
+        outcome: ActionResult,
+    ) -> bool:
+        """Evaluate a staged goal against current world/character state."""
+        if not goal.stage_conditions or goal.current_stage >= len(goal.stage_conditions):
+            return goal_matches_action(goal.current_description, action.action_type) and outcome.status == "success"
+
+        condition = goal.stage_conditions[goal.current_stage]
+        condition_type = condition.get("type")
+
+        if condition_type == "location_not":
+            return actor.location != condition.get("location")
+
+        if condition_type == "target_same_location":
+            target_id = condition.get("target_id")
+            target = state.characters.get(target_id)
+            return target is not None and target.location == actor.location
+
+        if condition_type == "successful_contact":
+            target_id = condition.get("target_id")
+            return (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "contact_person"
+                and target_id in action.targets
+            )
+
+        if condition_type == "successful_help":
+            target_id = condition.get("target_id")
+            return (
+                outcome.status == "success"
+                and canonical_action_type(action.action_type) == "help_person"
+                and target_id in action.targets
+            )
+
+        if condition_type == "location_not_and_action":
+            return (
+                actor.location != condition.get("location")
+                and canonical_action_type(action.action_type) in set(condition.get("action_types", ()))
+            )
+
+        return False
+
     def _apply_goal_progress(
         self,
+        state: WorldState,
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
@@ -121,7 +169,7 @@ class SimulationEngine:
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not goal_matches_action(goal.current_description, action.action_type):
+        if goal is None or not self._goal_condition_satisfied(state, actor, goal, action, outcome):
             return None
 
         if goal.stages and goal.current_stage < len(goal.stages):
@@ -134,7 +182,7 @@ class SimulationEngine:
                     "current_stage",
                     old_stage,
                     goal.current_stage,
-                    f"goal stage advanced by {action.action_type}",
+                    "goal stage advanced by a world-state condition",
                 )
             )
             if goal.current_stage < len(goal.stages):
@@ -153,7 +201,7 @@ class SimulationEngine:
                 "status",
                 old_status,
                 goal.status,
-                f"goal fulfilled by {action.action_type}",
+                "goal fulfilled by a world-state condition",
             )
         )
         return f"{actor.name} achieves the goal: {goal.description}."
@@ -531,10 +579,11 @@ class SimulationEngine:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
                 elif action.action_type == "rest":
-                    if outcome.status == "success":
-                        facts.append(f"{actor.name} rests at {actor.location}.")
-                    else:
-                        facts.append(f"{actor.name} tries to rest at {actor.location}, but fails.")
+                    # Rest is a non-contestable biological/social action in this
+                    # model: if it is available, it succeeds rather than rolling
+                    # against an arbitrary success probability.
+                    outcome = ActionResult("success", "rest completed", 1.0)
+                    facts.append(f"{actor.name} rests at {actor.location}.")
                 else:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
@@ -545,7 +594,7 @@ class SimulationEngine:
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
-            goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
+            goal_fact = self._apply_goal_progress(state, actor, action, outcome, consequences)
             if goal_fact:
                 facts.append(goal_fact)
 
@@ -594,7 +643,12 @@ class SimulationEngine:
                 continue
 
             for desire_name, value in list(desires.items()):
-                desires[desire_name] = min(100.0, value + 3.0)
+                growth = 3.0
+                if desire_name == "freedom":
+                    associations = character.human_condition.location_pressures.get(character.location, {})
+                    confinement = max(0.0, min(1.0, associations.get("confinement", 0.0)))
+                    growth *= confinement
+                desires[desire_name] = min(100.0, value + growth)
 
             for event in events:
                 if not event.participants or event.participants[0] not in acted:
@@ -615,10 +669,13 @@ class SimulationEngine:
                     if desire_name not in desires:
                         continue
                     if action_type == "travel" and desire_name == "freedom":
-                        # Travel resolves a proportion of the pressure it was
-                        # responding to; it is not a fixed cooldown clock.
+                        # Freedom is satisfied according to the actor's
+                        # experienced confinement at the place they left.
                         old_value = desires[desire_name]
-                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
+                        old_location = event.consequences[0].old_value if event.consequences else character.location
+                        associations = character.human_condition.location_pressures.get(old_location, {})
+                        confinement = max(0.0, min(1.0, associations.get("confinement", 0.0)))
+                        desires[desire_name] = max(0.0, old_value * (1.0 - confinement))
                     else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
