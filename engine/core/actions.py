@@ -182,47 +182,68 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
 
     freedom_pressure = _contextual_desire(character, "freedom")
     curiosity_pressure = _contextual_desire(character, "curiosity")
-    exploration_pressure = max(freedom_pressure, curiosity_pressure)
-    if len(state.locations) > 1 and (
-        (_has_value(character, "freedom") and freedom_pressure >= 15.0)
-        or curiosity_pressure >= 35.0
-    ):
-        # Traits influence pressure growth; they do not themselves create a
-        # permanent travel candidate. Prefer genuinely new places first so
-        # curiosity can be satisfied by discovery.
+    if len(state.locations) > 1:
+        # Travel is a continuous affordance. Pressure and decision utility
+        # determine whether it is chosen; generation does not hide it behind
+        # an arbitrary threshold.
         visit_counts = {location: 0 for location in state.locations}
         for memory in state.memory_state.memories.values():
             if memory.owner_id == character.id and memory.location in visit_counts:
                 visit_counts[memory.location] += 1
+
         alternatives = [location for location in state.locations if location != character.location]
-        recent_travel_destination = None
+        recent_departure = None
         for event in reversed(state.event_log):
             if (
                 event.participants
                 and event.participants[0] == character.id
                 and event_action_type(event) == "travel"
+                and event.action_result is not None
+                and event.action_result.status == "success"
             ):
-                recent_travel_destination = event.location
-                break
-        # Exploration should prefer a genuinely different place. If another
-        # destination exists, do not immediately walk back to the place just
-        # left; returning becomes available again when the world offers no
-        # other unexplored alternative.
-        fresh_alternatives = [
-            location for location in alternatives
-            if location != recent_travel_destination
-        ]
-        if fresh_alternatives:
-            alternatives = fresh_alternatives
-        destination = min(alternatives, key=lambda location: (visit_counts[location], location))
+                for consequence in event.consequences:
+                    if consequence.target_type == "character" and consequence.field == "location":
+                        recent_departure = consequence.old_value
+                        break
+                if recent_departure is not None:
+                    break
+
+        # New places satisfy curiosity more strongly. Once everything is
+        # familiar, destination meaning matters: confinement and fear reduce
+        # the attraction of a place for this particular character.
+        fresh = [location for location in alternatives if visit_counts[location] == 0]
+        if fresh:
+            alternatives = fresh
+        if recent_departure is not None:
+            non_returning = [location for location in alternatives if location != recent_departure]
+            if non_returning:
+                alternatives = non_returning
+
+        def destination_score(location: str) -> float:
+            confinement = character.human_condition.confinement_at(location)
+            fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
+            familiarity = min(1.0, visit_counts[location] / 3.0)
+            return (
+                0.55 * (1.0 - confinement)
+                + 0.25 * (1.0 - familiarity)
+                + 0.20 * max(0.0, 1.0 - fear)
+            )
+
+        destination = max(alternatives, key=lambda location: (destination_score(location), location))
+        destination_affordance = destination_score(destination)
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
             action_type="travel", targets=[destination],
             motivation=f"explore beyond the familiar: {destination}",
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
-            confidence=0.55, score=0.10,
-            metadata={"travel_reason": "freedom_exploration"},
+            confidence=1.0, difficulty=0.5,
+            score=destination_affordance,
+            metadata={
+                "travel_reason": "freedom_exploration",
+                "destination_affordance": destination_affordance,
+                "destination_confinement": character.human_condition.confinement_at(destination),
+            },
         ))
 
     # Relationship pressure can create a search journey even for a character
