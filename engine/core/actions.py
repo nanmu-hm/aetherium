@@ -54,9 +54,7 @@ def _contextual_desire(character: CharacterState, desire_name: str) -> float:
     base = max(0.0, min(100.0, character.human_condition.desires.get(desire_name, 0.0)))
     associations = character.human_condition.location_pressures.get(character.location, {})
     if desire_name == "freedom":
-        association = associations.get("confinement", associations.get("freedom", 1.0))
-        association = max(0.0, min(1.0, association))
-        return base * association
+        return base * character.human_condition.confinement_at(character.location)
     return base
 
 
