@@ -192,7 +192,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 visit_counts[memory.location] += 1
 
         alternatives = [location for location in state.locations if location != character.location]
-        recent_departure = None
+        recent_travel_locations: list[str] = []
         for event in reversed(state.event_log):
             if (
                 event.participants
@@ -200,30 +200,33 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 and event_action_type(event) == "travel"
                 and event.action_result is not None
                 and event.action_result.status == "success"
+                and event.location in state.locations
             ):
-                for consequence in event.consequences:
-                    if consequence.target_type == "character" and consequence.field == "location":
-                        recent_departure = consequence.old_value
-                        break
-                if recent_departure is not None:
+                recent_travel_locations.append(event.location)
+                if len(recent_travel_locations) >= 3:
                     break
 
         # New places satisfy curiosity more strongly. Once everything is
         # familiar, destination meaning matters: confinement and fear reduce
-        # the attraction of a place for this particular character.
+        # the attraction of a place for this particular character. Recent
+        # experience also increases effective familiarity: this is a memory-
+        # grounded novelty effect, not a hard travel cooldown.
         fresh = [location for location in alternatives if visit_counts[location] == 0]
         if fresh:
             alternatives = fresh
         def destination_score(location: str) -> float:
             confinement = character.human_condition.confinement_at(location)
             fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
-            familiarity = min(1.0, visit_counts[location] / 3.0)
-            recent_departure_penalty = 0.30 if location == recent_departure else 0.0
+            recent_experience = sum(
+                0.5 ** index
+                for index, recent_location in enumerate(recent_travel_locations)
+                if recent_location == location
+            )
+            familiarity = min(1.0, visit_counts[location] / 3.0 + recent_experience / 2.0)
             return (
                 0.55 * (1.0 - confinement)
                 + 0.25 * (1.0 - familiarity)
                 + 0.20 * max(0.0, 1.0 - fear)
-                - recent_departure_penalty
             )
 
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
