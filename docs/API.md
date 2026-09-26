@@ -1,6 +1,6 @@
 # Aetherium Product API
 
-Phase 9 begins with a backend product layer. The API exposes simulation and observation systems without creating a second authoritative world-state path.
+The Phase 9 product layer exposes simulation, observation, persistence browsing, agent rooms, and narrative drafting without creating a second authoritative world-state path.
 
 ## Start the server
 
@@ -9,13 +9,9 @@ After installing the project:
     python3 -m pip install -e .
     python3 -m uvicorn engine.api:app --reload
 
-The interactive OpenAPI page is available at /docs.
-
-The visual world dashboard is available at /dashboard/.
+Open the visual workbench at /dashboard/ and the interactive API reference at /docs.
 
 ## Authority boundary
-
-The API follows this direction:
 
     HTTP
       |
@@ -23,32 +19,19 @@ The API follows this direction:
       |
       +-- Simulation API -> SimulationEngine -> WorldState
       |
-      +-- Agent API ------> DirectorOrchestrator -> detached AgentContext
+      +-- Branch Browser -> read-only WorldRepository
       |
-      +-- Narrative API --> NarrativeObserver / Writer / Approval
+      +-- Agent Room -----> DirectorOrchestrator -> detached AgentContext
       |
-      +-- Dashboard ------> read-only view model
+      +-- Novel Editor ---> Writer / Draft / Human Approval / Narrative Canon
+      |
+      +-- Dashboard ------> read-only view models
 
-Agents do not receive direct access to the authoritative WorldState. They receive detached snapshots. Narrative observation and writing do not mutate the simulation state.
-
-## Dashboard
-
-The first product UI is intentionally dependency-light:
-
-- World metrics
-- Event timeline
-- Character cards
-- SVG relationship graph
-- Emergent narrative threads
-- Story discoveries
-- One-tick simulation control
-- Safe autonomous 10-tick control
-
-The browser does not contain a second simulation engine. It calls the same API that other clients use.
+Agents receive detached snapshots. Narrative observation and writing do not mutate authoritative world state. The Branch Browser does not expose arbitrary branch mutation.
 
 ## Endpoint groups
 
-### World
+### World and Dashboard
 
 - GET /api/world
 - GET /api/world/summary
@@ -56,23 +39,36 @@ The browser does not contain a second simulation engine. It calls the same API t
 - GET /api/world/relationships
 - GET /api/world/events?limit=50
 - GET /api/dashboard
+- GET /dashboard/
 
 ### Simulation
 
-- POST /api/simulation/step — advance the world through SimulationEngine.step().
-- POST /api/simulation/run — execute the safe autonomous controller.
+- POST /api/simulation/step
+- POST /api/simulation/run
 
-### Agents
+### Branch Browser
+
+- GET /api/branches
+- GET /api/branches/{branch_id}
+- GET /api/branches/{branch_id}/checkpoints
+
+Branch mutation remains behind the existing persistence/intervention mechanisms rather than being exposed as arbitrary UI writes.
+
+### Agent Rooms
 
 - GET /api/agents
+- GET /api/agent-rooms
 - POST /api/agents/{agent_id}/inspect
 - POST /api/agents/{agent_id}/chat
 
-### Narrative
+The workbench keeps conversation local to the current browser session; each request is evaluated against a fresh detached world snapshot.
+
+### Narrative and Novel Editor
 
 - GET /api/narrative
 - GET /api/narrative/scenes
 - GET /api/narrative/discoveries
+- GET /api/narrative/drafts
 - POST /api/narrative/drafts
 - GET /api/narrative/drafts/{draft_id}
 - GET /api/narrative/drafts/{draft_id}/versions
@@ -81,6 +77,4 @@ The browser does not contain a second simulation engine. It calls the same API t
 - POST /api/narrative/drafts/{draft_id}/reject
 - GET /api/narrative/canon
 
-## Intentional limitation
-
-This first product UI is observational and operational. It does not expose arbitrary world editing or model-provider secrets. Branch mutation remains behind the existing intervention rules.
+The editor preserves scene, participant, branch, tick, and source-event provenance while permitting prose/title revision before approval.

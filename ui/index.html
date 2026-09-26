@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Aetherium World Dashboard</title>
+  <title>Aetherium World Workbench</title>
   <link rel="stylesheet" href="/dashboard/style.css">
 </head>
 <body>
   <header class="topbar">
     <div>
       <div class="eyebrow">AETHERIUM</div>
-      <h1>World Dashboard</h1>
+      <h1>World Workbench</h1>
       <p id="subtitle">Loading world state…</p>
     </div>
     <div class="controls">
@@ -73,6 +73,71 @@
         </div>
       </div>
       <div id="discoveries" class="discovery-list"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">PERSISTENCE</div>
+          <h2>Branch Browser</h2>
+        </div>
+      </div>
+      <div id="branches" class="branch-list"></div>
+      <div id="branch-detail" class="detail-card empty">Select a branch.</div>
+    </section>
+
+    <section class="panel">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">AGENTS</div>
+          <h2>Agent Room</h2>
+        </div>
+      </div>
+      <div class="room-toolbar">
+        <select id="agent-select" aria-label="Agent"></select>
+        <button id="agent-inspect" class="secondary">Inspect</button>
+      </div>
+      <div id="agent-messages" class="room-messages"></div>
+      <div class="room-input">
+        <textarea id="agent-message" rows="3" placeholder="Talk to the selected agent…"></textarea>
+        <button id="agent-send">Send</button>
+      </div>
+    </section>
+
+    <section class="panel wide">
+      <div class="section-heading">
+        <div>
+          <div class="eyebrow">NOVEL</div>
+          <h2>Novel Editor</h2>
+        </div>
+        <span id="draft-status" class="badge">no draft selected</span>
+      </div>
+
+      <div class="editor-toolbar">
+        <select id="scene-select" aria-label="Narrative scene"></select>
+        <button id="create-draft">Create draft</button>
+        <select id="draft-select" aria-label="Narrative draft"></select>
+      </div>
+
+      <div class="editor-grid">
+        <div>
+          <label class="field-label" for="draft-title">Title</label>
+          <input id="draft-title" type="text" placeholder="Scene title">
+          <label class="field-label" for="draft-prose">Prose</label>
+          <textarea id="draft-prose" rows="15" placeholder="Select a draft…"></textarea>
+          <div class="editor-actions">
+            <button id="save-draft">Save revision</button>
+            <button id="approve-draft">Approve to canon</button>
+            <button id="reject-draft" class="danger">Reject</button>
+          </div>
+        </div>
+        <aside class="provenance">
+          <div class="field-label">Provenance</div>
+          <div id="draft-provenance" class="detail-card empty">No draft selected.</div>
+          <div class="field-label">Approved Canon</div>
+          <div id="canon-list" class="canon-list"></div>
+        </aside>
+      </div>
     </section>
   </main>
 

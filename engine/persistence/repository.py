@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import json
 from pathlib import Path
 
 from ..core.models import WorldState
@@ -56,15 +57,44 @@ class WorldRepository:
             created_by=created_by,
         )
         (self.branches / f"{branch_id}.json").write_text(
-            __import__("json").dumps(record.__dict__, ensure_ascii=False, indent=2, sort_keys=True),
+            json.dumps(record.__dict__, ensure_ascii=False, indent=2, sort_keys=True),
             encoding="utf-8",
         )
         return record
 
     def load_branch(self, branch_id: str) -> BranchRecord:
-        import json
         path = self.branches / f"{branch_id}.json"
         return BranchRecord(**json.loads(path.read_text(encoding="utf-8")))
+
+    def list_branches(self) -> list[BranchRecord]:
+        records: list[BranchRecord] = []
+        for path in sorted(self.branches.glob("*.json")):
+            try:
+                records.append(BranchRecord(**json.loads(path.read_text(encoding="utf-8"))))
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+        return records
+
+    def list_checkpoints(self, branch_id: str | None = None) -> list[Checkpoint]:
+        checkpoints: list[Checkpoint] = []
+        for path in sorted(self.snapshots.glob("*.json")):
+            try:
+                state = load_world_json(path)
+            except (OSError, TypeError, ValueError, json.JSONDecodeError):
+                continue
+            resolved_branch = state.active_branch
+            if branch_id is not None and resolved_branch != branch_id:
+                continue
+            checkpoints.append(
+                Checkpoint(
+                    id=path.stem,
+                    branch_id=resolved_branch,
+                    tick=state.tick,
+                    timestamp=state.timestamp,
+                    snapshot_file=str(path),
+                )
+            )
+        return sorted(checkpoints, key=lambda item: (item.branch_id, item.tick, item.id))
 
     def fork(self, state: WorldState, branch_id: str, reason: str, created_by: str = "user") -> WorldState:
         record = self.create_branch(state, state.active_branch, branch_id, reason, created_by)
@@ -74,9 +104,15 @@ class WorldRepository:
 
     def load_checkpoint_record(self, record: BranchRecord) -> Checkpoint:
         checkpoint_path = self.snapshots / f"{record.checkpoint_id}.json"
-        from .models import Checkpoint
         world = load_world_json(checkpoint_path)
-        return Checkpoint(record.checkpoint_id, record.id, world.tick, world.timestamp, str(checkpoint_path), record.reason)
+        return Checkpoint(
+            record.checkpoint_id,
+            record.id,
+            world.tick,
+            world.timestamp,
+            str(checkpoint_path),
+            record.reason,
+        )
 
     def rollback(self, checkpoint: Checkpoint) -> WorldState:
         state = load_world_json(checkpoint.snapshot_file)
@@ -84,7 +120,6 @@ class WorldRepository:
         return state
 
     def snapshot_hash(self, state: WorldState) -> str:
-        import json
         payload = json.dumps(
             save_payload(state),
             ensure_ascii=False,

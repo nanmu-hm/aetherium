@@ -88,7 +88,7 @@
 - [x] Timeline
 - [x] Character graph
 - [x] Narrative threads
-- [ ] Branch browser
-- [ ] Agent rooms
-- [ ] Novel editor
-- [ ] World / story / prose inspection and provenance
+- [x] Branch browser
+- [x] Agent rooms
+- [x] Novel editor
+- [x] World / story / prose inspection and provenance

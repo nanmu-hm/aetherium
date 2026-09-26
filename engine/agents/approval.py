@@ -52,6 +52,9 @@ class NarrativeDraftStore:
             if key[0] == draft_id
         ]
 
+    def latest(self) -> list[NarrativeDraft]:
+        return [self.get(draft_id) for draft_id in sorted(self._latest)]
+
     def _put(self, draft: NarrativeDraft) -> NarrativeDraft:
         key = (draft.id, draft.version)
         self._drafts[key] = draft

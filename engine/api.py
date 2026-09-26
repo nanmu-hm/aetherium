@@ -93,6 +93,7 @@ class AetheriumApplication:
     director: DirectorOrchestrator
     approval: HumanApprovalService
     autonomous: AutonomousRunController
+    repository: WorldRepository | None = None
     narrative_state: Any | None = None
 
     @classmethod
@@ -135,6 +136,7 @@ class AetheriumApplication:
             director=director,
             approval=approval,
             autonomous=autonomous,
+            repository=repository,
         )
         application.refresh_narrative([])
         return application
@@ -300,6 +302,80 @@ def create_app(application: AetheriumApplication | None = None) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         return _jsonable(report)
+
+    @api.get("/api/branches")
+    def list_branches() -> list[dict[str, Any]]:
+        current = {
+            "id": application.state.active_branch,
+            "parent_branch_id": None,
+            "fork_tick": application.state.tick,
+            "checkpoint_id": f"{application.state.active_branch}-tick-{application.state.tick}",
+            "reason": "Current in-memory branch.",
+            "created_by": "system",
+            "status": "current",
+        }
+        records = [current]
+        if application.repository is not None:
+            for record in application.repository.list_branches():
+                if record.id == application.state.active_branch:
+                    continue
+                records.append(_jsonable(record))
+        return records
+
+    @api.get("/api/branches/{branch_id}")
+    def get_branch(branch_id: str) -> dict[str, Any]:
+        if branch_id == application.state.active_branch:
+            return {
+                "id": branch_id,
+                "status": "current",
+                "tick": application.state.tick,
+                "timestamp": application.state.timestamp,
+                "snapshot_hash": (
+                    application.repository.snapshot_hash(application.state)
+                    if application.repository is not None
+                    else None
+                ),
+            }
+        if application.repository is None:
+            raise HTTPException(status_code=404, detail="Branch repository is not configured.")
+        try:
+            record = application.repository.load_branch(branch_id)
+        except (FileNotFoundError, OSError, TypeError, ValueError) as exc:
+            raise HTTPException(status_code=404, detail="Branch not found.") from exc
+        checkpoint = application.repository.load_checkpoint_record(record)
+        state = application.repository.load_checkpoint(checkpoint)
+        return {
+            "record": _jsonable(record),
+            "checkpoint": _jsonable(checkpoint),
+            "tick": state.tick,
+            "timestamp": state.timestamp,
+            "snapshot_hash": application.repository.snapshot_hash(state),
+        }
+
+    @api.get("/api/branches/{branch_id}/checkpoints")
+    def get_branch_checkpoints(branch_id: str) -> list[dict[str, Any]]:
+        if application.repository is None:
+            raise HTTPException(status_code=404, detail="Branch repository is not configured.")
+        return _jsonable(application.repository.list_checkpoints(branch_id))
+
+    @api.get("/api/narrative/drafts")
+    def list_narrative_drafts(status: str | None = None) -> list[dict[str, Any]]:
+        drafts = application.approval.store.latest()
+        if status is not None:
+            drafts = [draft for draft in drafts if draft.status.value == status]
+        return _jsonable(drafts)
+
+    @api.get("/api/agent-rooms")
+    def list_agent_rooms() -> list[dict[str, Any]]:
+        return [
+            {
+                "agent_id": agent.contract.agent_id,
+                "role": agent.contract.role,
+                "description": agent.contract.description,
+                "chat_enabled": agent.contract.chat_enabled,
+            }
+            for agent in application.director.registry.agents.values()
+        ]
 
     @api.get("/api/agents")
     def list_agents() -> list[dict[str, Any]]:

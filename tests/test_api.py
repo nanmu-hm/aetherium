@@ -210,3 +210,43 @@ def test_dashboard_assets_are_served_as_browser_files(tmp_path):
 
     assert style.status_code == 200
     assert ".character-list" in style.text
+
+
+def test_branch_browser_lists_current_and_saved_branches(tmp_path):
+    from engine.api import AetheriumApplication
+
+    application = AetheriumApplication.create(seed=42, data_dir=tmp_path / "world")
+    assert application.repository is not None
+    application.repository.create_branch(
+        application.state,
+        application.state.active_branch,
+        "branch-test",
+        reason="test branch",
+        created_by="tester",
+    )
+    client = TestClient(create_app(application))
+
+    branches = client.get("/api/branches")
+    assert branches.status_code == 200
+    ids = {item["id"] for item in branches.json()}
+    assert {"main", "branch-test"} <= ids
+
+    detail = client.get("/api/branches/branch-test")
+    assert detail.status_code == 200
+    assert detail.json()["record"]["reason"] == "test branch"
+
+
+def test_agent_rooms_and_draft_list_are_exposed(tmp_path):
+    client = build_client(tmp_path)
+
+    rooms = client.get("/api/agent-rooms")
+    assert rooms.status_code == 200
+    assert any(item["agent_id"] == "writer" for item in rooms.json())
+
+    client.post("/api/simulation/step", json={"ticks": 1})
+    scene_id = client.get("/api/narrative/scenes").json()[0]["id"]
+    draft = client.post("/api/narrative/drafts", json={"scene_id": scene_id}).json()
+
+    drafts = client.get("/api/narrative/drafts")
+    assert drafts.status_code == 200
+    assert any(item["id"] == draft["id"] for item in drafts.json())
