@@ -103,7 +103,7 @@ class DecisionKernel:
         repeated = sum(
             1
             for event in recent
-            if event.causes and action.action_type in event.causes[0]
+            if event_action_type(event) == canonical_action_type(action.action_type)
         )
         return min(1.0, repeated / 3.0)
 
