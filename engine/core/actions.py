@@ -38,7 +38,25 @@ def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
     if goal is None:
         return False
 
+    if goal.stage_conditions and goal.current_stage < len(goal.stage_conditions):
+        condition = goal.stage_conditions[goal.current_stage]
+        supported = condition.get("action_types")
+        if supported is not None:
+            return action_type in supported
+        return False
+
     return goal_matches_action(goal.current_description, action_type)
+
+
+def _contextual_desire(character: CharacterState, desire_name: str) -> float:
+    """Return a desire as experienced in the actor's current place."""
+    base = max(0.0, min(100.0, character.human_condition.desires.get(desire_name, 0.0)))
+    associations = character.human_condition.location_pressures.get(character.location, {})
+    if desire_name == "freedom":
+        association = associations.get("confinement", associations.get("freedom", 0.0))
+        association = max(0.0, min(1.0, association))
+        return base * association
+    return base
 
 
 def _remembered_location(state: WorldState, character: CharacterState, target_id: str) -> str | None:
@@ -67,7 +85,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     pool: list[ActionCandidate] = []
     goal = max((g for g in character.goals if g.status == "active"), key=lambda item: item.priority, default=None)
 
-    if goal:
+    if goal and not goal.stage_conditions:
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id,
             action_type="pursue_goal", motivation=goal.current_description,
@@ -129,7 +147,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             motivation="help someone they feel loyal to", confidence=0.7, score=0.6,
         ))
 
-    freedom_pressure = character.human_condition.desires.get("freedom", 0.0)
+    freedom_pressure = _contextual_desire(character, "freedom")
     if _has_value(character, "freedom") and freedom_pressure > 0.0 and len(state.locations) > 1:
         # Freedom pressure creates an exploration choice. Prefer places the actor
         # has experienced less often; this makes destination choice depend on the
@@ -207,13 +225,12 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             ))
             break
 
-    # Rest is a genuine low-pressure affordance. It is deliberately absent when
-    # unresolved pressure is high, so it cannot be used as a filler to hide a
-    # missing causal action.
+    # Rest is always a legal low-cost affordance. Its utility comes from the
+    # actor's current pressure, so it competes naturally with other motives
+    # instead of being gated by a hard threshold.
     pressure = character.human_condition.pressure()
-    if pressure < 0.35:
-        rest_score = 0.20 + (0.35 - pressure)
-        pool.append(ActionCandidate(
+    rest_score = max(0.0, 0.05 + (1.0 - pressure) * 0.50)
+    pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-rest",
             actor_id=character.id,
             action_type="rest",
