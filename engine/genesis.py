@@ -40,8 +40,8 @@ def build_genesis_world() -> WorldState:
                     "old_road": {"confinement": 0.0},
                 },
                 virtues={"loyalty": 90, "compassion": 75},
-            decision_noise=0.05,
             ),
+            decision_noise=0.05,
         )
     )
     world.add_character(
