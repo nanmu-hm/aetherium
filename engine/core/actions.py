@@ -113,25 +113,10 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         ))
 
     freedom_pressure = character.human_condition.desires.get("freedom", 0.0)
-    recent_travel = next(
-        (
-            event for event in reversed(state.event_log)
-            if event.participants
-            and event.participants[0] == character.id
-            and event_action_type(event) == "travel"
-        ),
-        None,
-    )
-    # A two-location world cannot express meaningful destination choice yet.
-    # After a successful trip, give the character time to experience the new
-    # place before immediately bouncing back and forth.
-    travel_cooldown = (
-        recent_travel is not None
-        and recent_travel.action_result is not None
-        and recent_travel.action_result.status == "success"
-        and state.tick - recent_travel.tick < 2
-    )
-    if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1 and not travel_cooldown:
+    # Travel is driven by an unresolved freedom pressure. Do not suppress
+    # travel after a success with an arbitrary cooldown: a successful trip must
+    # change the underlying pressure so the next decision has a different reason.
+    if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1:
         destination = sorted(location for location in state.locations if location != character.location)[0]
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
