@@ -845,11 +845,12 @@ def test_repetition_penalty_uses_structured_action_type():
     assert "recently repeated action" in evaluation.reasons
 
 
-def test_successful_travel_gets_short_cooldown_in_two_location_world():
+def test_travel_is_not_suppressed_by_a_cooldown_when_pressure_is_real():
     from engine.core.actions import generate_action_pool
     from engine.core.models import ActionResult, Event
 
     world = build_demo_world()
+    world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
     world.event_log.append(
@@ -860,10 +861,11 @@ def test_successful_travel_gets_short_cooldown_in_two_location_world():
         )
     )
     world.tick = 1
+    world.characters["mei"].human_condition.desires["freedom"] = 55.0
 
     pool = generate_action_pool(world, "mei")
 
-    assert not any(action.action_type == "travel" for action in pool)
+    assert any(action.action_type == "travel" for action in pool)
 
 
 def test_goal_alignment_uses_exact_words_not_substrings():
@@ -904,3 +906,24 @@ def test_repetition_penalty_covers_help_and_pursue_goal():
         evaluation = DecisionKernel(seed=1).evaluate(world, action)
 
         assert "recently repeated action" in evaluation.reasons
+
+
+def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown():
+    from engine.core.models import ActionCandidate
+
+    world = build_demo_world()
+    world.locations.add("road")
+    world.characters["mei"].goals[0].status = "achieved"
+    world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    action = ActionCandidate(
+        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
+    )
+
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+    assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
+
+    SimulationEngine._advance_human_pressures(world, [event])
+    assert world.characters["mei"].human_condition.desires["freedom"] == 41.5

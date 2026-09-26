@@ -38,6 +38,15 @@ class SimulationEngine:
         self.action_resolver = ActionResolver(self.random)
         self.precondition_engine = PreconditionEngine()
 
+    def _restore_rng_state(self, state: WorldState) -> None:
+        if state.simulation_seed is None:
+            state.simulation_seed = self.decision_kernel.seed
+        else:
+            # Checkpoint state is authoritative even if the new engine uses another seed.
+            self.decision_kernel.seed = state.simulation_seed
+        if state.rng_state is not None:
+            self.random.setstate(state.rng_state)
+
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
         """Generate and select one plausible action per active character."""
         selected: list[ActionCandidate] = []
@@ -78,6 +87,22 @@ class SimulationEngine:
                 character_id,
                 event,
             )
+            # A participant remembers where the other participants were seen.
+            # This is actor-local knowledge, not a read of their current state.
+            for other_id in event.participants:
+                if other_id == character_id or other_id not in state.characters:
+                    continue
+                learned.append(
+                    self.memory_kernel.learn_fact(
+                        state.memory_state,
+                        character_id,
+                        f"location_seen:{other_id}:{event.location}",
+                        tick=event.tick,
+                        source="direct_experience",
+                        source_event_id=event.id,
+                        confidence=1.0,
+                    )
+                )
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
@@ -533,12 +558,19 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 35.0},
+                    "travel": {"freedom": 0.5},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
-                    if desire_name in desires:
+                    if desire_name not in desires:
+                        continue
+                    if action_type == "travel" and desire_name == "freedom":
+                        # Travel resolves a proportion of the pressure it was
+                        # responding to; it is not a fixed cooldown clock.
+                        old_value = desires[desire_name]
+                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
+                    else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
 
     def _advance_clock(self, state: WorldState) -> None:
@@ -546,6 +578,7 @@ class SimulationEngine:
         state.timestamp = (current + self.tick_duration).isoformat()
 
     def step(self, state: WorldState) -> SimulationResult:
+        self._restore_rng_state(state)
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
         self.memory_kernel.decay(state.memory_state, state.tick)
@@ -555,6 +588,8 @@ class SimulationEngine:
         current_tick = state.tick
         self._advance_clock(state)
         state.tick += 1
+        state.rng_state = self.random.getstate()
+        state.simulation_seed = self.decision_kernel.seed
         return SimulationResult(current_tick, actions, events, errors)
 
 
