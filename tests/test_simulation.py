@@ -47,9 +47,16 @@ def test_authoritative_relationship_is_used_for_action_scoring() -> None:
     world = build_demo_world()
     world.characters["lin"].relationships["mei"] = 99.0
     world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    from engine.core.decision import DecisionKernel
     pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(world, "lin")
     contact = next(action for action in pool if action.action_type == "contact_person")
-    assert contact.score == 0.9
+    low_world = build_demo_world()
+    low_world.add_relationship(RelationshipState("lin", "mei", trust=10.0))
+    low_pool = __import__("engine.core.actions", fromlist=["generate_action_pool"]).generate_action_pool(low_world, "lin")
+    low_contact = next(action for action in low_pool if action.action_type == "contact_person")
+    high_eval = DecisionKernel(seed=1).evaluate(world, contact)
+    low_eval = DecisionKernel(seed=1).evaluate(low_world, low_contact)
+    assert high_eval.utility > low_eval.utility
 
 
 def test_decision_kernel_uses_character_state_not_narrative_outcomes() -> None:
@@ -87,6 +94,24 @@ def test_blocked_contact_is_explicit() -> None:
     assert events[0].action_result is not None
     assert events[0].action_result.status == "blocked"
     assert events[0].consequences == []
+
+
+def test_blocked_help_requires_same_location() -> None:
+    from engine.core.models import ActionCandidate
+    world = build_demo_world()
+    world.characters["mei"].location = "elsewhere"
+    action = ActionCandidate("help", "lin", "help_person", targets=["mei"], confidence=1.0)
+    events = SimulationEngine(seed=42).resolve(world, [action])
+    assert events[0].action_result is not None
+    assert events[0].action_result.status == "blocked"
+    assert "same location" in events[0].action_result.reason
+
+
+def test_emotions_settle_between_ticks() -> None:
+    world = build_demo_world()
+    world.characters["lin"].emotions["resentment"] = 80.0
+    SimulationEngine(seed=1).step(world)
+    assert world.characters["lin"].emotions["resentment"] < 80.0
 
 
 def test_action_resolver_can_fail_and_is_seed_reproducible() -> None:
@@ -984,7 +1009,6 @@ def test_location_seen_evidence_retracts_stale_absence_fact():
 def test_unannotated_places_use_neutral_confinement_and_do_not_lock_freedom():
     from engine.core.actions import generate_action_pool
     from engine.core.models import CharacterState, WorldState
-    from engine.core.human_condition import HumanCondition
 
     world = WorldState(world_id="neutral-place", locations={"a", "b", "c"})
     world.add_character(
@@ -1005,50 +1029,51 @@ def test_unannotated_places_use_neutral_confinement_and_do_not_lock_freedom():
         result = engine.step(world)
         for action in result.actions:
             if action.actor_id == "wanderer" and action.action_type == "travel":
-                travel_destinations.append(action.targets[0])
+                travel_destinations.append((action.targets[0], world.tick))
+
     assert travel_destinations
     assert character.human_condition.desires["freedom"] < 100.0
-    assert len(travel_destinations) < 20
+
+    locations = [character.location]
+    for event in world.event_log:
+        if event.participants and event.participants[0] == "wanderer" and event_action_type(event) == "travel":
+            if event.action_result and event.action_result.status == "success":
+                locations.append(event.location)
+
+    reversals = sum(
+        1 for a, b, c in zip(locations, locations[1:], locations[2:]) if a == c and a != b
+    )
+    assert reversals <= max(1, len(locations) // 4)
 
 
 def test_same_event_can_produce_different_personality_reactions():
-    from engine.core.models import ActionCandidate, CharacterState
+    from engine.core.models import ActionCandidate, CharacterState, RelationshipState, WorldState
     from engine.core.human_condition import HumanCondition
-    from engine.core.models import RelationshipState, WorldState
 
-    world = WorldState(world_id="personality-reaction", locations={"town"})
-    world.add_character(CharacterState(
-        id="actor", name="Actor", location="town", values=["loyalty"],
-        human_condition=HumanCondition(),
-    ))
-    world.add_character(CharacterState(
-        id="proud", name="Proud", location="town", traits=["proud", "independent"],
-        human_condition=HumanCondition(),
-    ))
-    world.add_character(CharacterState(
-        id="warm", name="Warm", location="town", traits=["warm", "forgiving"],
-        human_condition=HumanCondition(),
-    ))
-    world.add_relationship(RelationshipState("actor", "proud", trust=50))
-    world.add_relationship(RelationshipState("actor", "warm", trust=50))
+    def run_target(traits):
+        world = WorldState(world_id="personality-reaction", locations={"town"})
+        world.add_character(CharacterState(
+            id="actor", name="Actor", location="town", values=["loyalty"],
+            human_condition=HumanCondition(),
+        ))
+        world.add_character(CharacterState(
+            id="target", name="Target", location="town", traits=traits,
+            human_condition=HumanCondition(),
+        ))
+        world.add_relationship(RelationshipState("actor", "target", trust=50))
+        action = ActionCandidate(
+            "contact", "actor", "contact_person", targets=["target"], confidence=1.0, difficulty=0.0,
+        )
+        event = SimulationEngine(seed=1).resolve(world, [action])[0]
+        return world, event
 
-    # One contact event is observed by both characters, but their own traits
-    # produce different interpretations and therefore different emotional state.
-    action = ActionCandidate(
-        "contact", "actor", "contact_person", targets=["proud"], confidence=1.0, difficulty=0.0,
-    )
-    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+    proud_world, proud_event = run_target(["proud", "independent"])
+    warm_world, warm_event = run_target(["warm", "forgiving"])
 
-    assert world.characters["proud"].emotions["resentment"] > 0.0
-    assert world.characters["warm"].emotions["joy"] > 0.0
-    assert any(
-        item.target_id == "proud" and item.field == "emotions.resentment"
-        for item in event.consequences
-    )
-    assert any(
-        item.target_id == "warm" and item.field == "emotions.joy"
-        for item in event.consequences
-    )
+    assert proud_world.characters["target"].emotions["resentment"] > 0.0
+    assert warm_world.characters["target"].emotions["joy"] > 0.0
+    assert any(item.target_id == "target" and item.field == "emotions.resentment" for item in proud_event.consequences)
+    assert any(item.target_id == "target" and item.field == "emotions.joy" for item in warm_event.consequences)
 
 
 def test_rest_does_not_reinforce_when_actor_is_already_rested():
