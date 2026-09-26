@@ -727,6 +727,36 @@ class SimulationEngine:
                             )
                         )
 
+                    old_sorrow = target.emotions.get("sorrow", 0.0)
+                    sorrow_recovery = min(10.0, old_sorrow)
+                    target.emotions["sorrow"] = old_sorrow - sorrow_recovery
+                    if sorrow_recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "emotions.sorrow",
+                                old_sorrow,
+                                target.emotions["sorrow"],
+                                "successful help addresses the target's sorrow",
+                            )
+                        )
+
+                    old_fear = target.emotions.get("fear", 0.0)
+                    fear_recovery = min(10.0, old_fear)
+                    target.emotions["fear"] = old_fear - fear_recovery
+                    if fear_recovery > 0.0:
+                        consequences.append(
+                            Consequence(
+                                "character",
+                                target.id,
+                                "emotions.fear",
+                                old_fear,
+                                target.emotions["fear"],
+                                "successful help addresses the target's fear",
+                            )
+                        )
+
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
@@ -778,6 +808,14 @@ class SimulationEngine:
                 character.emotions[emotion_name] = max(0.0, value - amount)
 
     @staticmethod
+    def _relationship_targets_for_pressure(state: WorldState, character_id: str) -> list[str]:
+        return [
+            relationship.target_id
+            for relationship in state.relationships.values()
+            if relationship.source_id == character_id and relationship.target_id in state.characters
+        ]
+
+    @staticmethod
     def _advance_human_pressures(state: WorldState, events: list[Event]) -> None:
         acted = {
             event.participants[0]
@@ -797,6 +835,31 @@ class SimulationEngine:
                 if desire_name == "freedom":
                     confinement = character.human_condition.confinement_at(character.location)
                     growth *= confinement
+                elif desire_name == "reconciliation":
+                    # Reconciliation pressure grows with the relationship gap.
+                    # A settled relationship should not manufacture a permanent
+                    # desire to reconnect, while unresolved tension may naturally
+                    # rebuild the pressure after a successful contact.
+                    targets = _relationship_targets_for_pressure(state, character.id)
+                    tensions = []
+                    for target_id in targets:
+                        relationship = state.get_relationship(character.id, target_id)
+                        if relationship is None:
+                            continue
+                        tensions.append(
+                            max(
+                                0.0,
+                                min(
+                                    1.0,
+                                    max(
+                                        100.0 - relationship.trust,
+                                        relationship.resentment,
+                                        relationship.fear,
+                                    ) / 100.0,
+                                ),
+                            )
+                        )
+                    growth *= max(tensions, default=1.0)
                 elif desire_name == "curiosity":
                     if has_trait(character, "adventurous", "curious", "restless"):
                         growth *= 1.35
