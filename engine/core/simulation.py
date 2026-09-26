@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 import random
 
 from .actions import generate_action_pool
-from .action_types import canonical_action_type, event_action_type, goal_matches_action
+from .action_types import canonical_action_type, event_action_type
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
@@ -106,37 +106,100 @@ class SimulationEngine:
             character.knowledge.update(item.proposition for item in learned)
         self.memory_kernel.record_relationship_history(state.memory_state, event)
 
+    @staticmethod
+    def _goal_condition_met(state: WorldState, actor, goal, action: ActionCandidate, outcome: ActionResult) -> bool:
+        """Evaluate goal progress from observed world state and concrete outcomes."""
+        if outcome.status != "success":
+            return False
+        if not goal.stage_conditions or goal.current_stage >= len(goal.stage_conditions):
+            return False
+
+        condition = goal.stage_conditions[goal.current_stage]
+        kind = condition.get("type")
+
+        if kind == "not_at_location":
+            return actor.location != condition.get("location")
+
+        if kind == "at_same_location":
+            target_id = condition.get("target_id")
+            target = state.characters.get(target_id)
+            return target is not None and actor.location == target.location
+
+        if kind == "desire_at_most":
+            desire = str(condition.get("desire", ""))
+            limit = float(condition.get("value", 0.0))
+            return actor.human_condition.effective_desire(desire, actor.location) <= limit
+
+        if kind == "successful_action":
+            expected = canonical_action_type(str(condition.get("action_type", "")))
+            return canonical_action_type(action.action_type) == expected
+
+        return False
+
     def _apply_goal_progress(
         self,
+        state: WorldState,
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
         consequences: list[Consequence],
     ) -> str | None:
-        if outcome.status != "success":
-            return None
-
         goal = max(
             (item for item in actor.goals if item.status == "active"),
             key=lambda item: item.priority,
             default=None,
         )
-        if goal is None or not goal_matches_action(goal.description, action.action_type):
+        if goal is None:
             return None
 
-        old_status = goal.status
-        goal.status = "achieved"
-        consequences.append(
-            Consequence(
-                "goal",
-                goal.id,
-                "status",
-                old_status,
-                goal.status,
-                f"goal fulfilled by {action.action_type}",
+        advanced: list[str] = []
+        # A single concrete world-state change may legitimately satisfy more
+        # than one stage. We only advance while each successive condition is
+        # independently true; no action keyword is treated as evidence.
+        while goal.current_stage < len(goal.stages):
+            if not self._goal_condition_met(state, actor, goal, action, outcome):
+                break
+
+            old_stage = goal.current_stage
+            goal.current_stage += 1
+            consequences.append(
+                Consequence(
+                    "goal",
+                    goal.id,
+                    "current_stage",
+                    old_stage,
+                    goal.current_stage,
+                    "goal stage condition became true",
+                )
             )
+            advanced.append(
+                f"stage {goal.current_stage}/{len(goal.stages)}"
+            )
+
+            if goal.current_stage >= len(goal.stages):
+                old_status = goal.status
+                goal.status = "achieved"
+                consequences.append(
+                    Consequence(
+                        "goal",
+                        goal.id,
+                        "status",
+                        old_status,
+                        goal.status,
+                        "goal completion condition became true",
+                    )
+                )
+                advanced.append("completed")
+                break
+
+        if not advanced:
+            return None
+        if goal.status == "achieved":
+            return f"{actor.name} achieves the goal: {goal.description}."
+        return (
+            f"{actor.name} advances the goal '{goal.description}' "
+            f"to {goal.current_description}."
         )
-        return f"{actor.name} achieves the goal: {goal.description}."
 
     @staticmethod
     def _apply_emotional_consequences(
@@ -379,6 +442,7 @@ class SimulationEngine:
             actor = state.characters[action.actor_id]
             consequences: list[Consequence] = []
             facts: list[str] = []
+            participants = [actor.id, *action.targets]
 
             precondition = self.precondition_engine.check(state, action)
             if not precondition.satisfied:
@@ -399,7 +463,50 @@ class SimulationEngine:
                                 "character", actor.id, "location", old, destination, "travel"
                             )
                         )
-                        facts.append(f"{actor.name} travels from {old} to {destination}.")
+                        reason = action.metadata.get("travel_reason")
+                        if reason == "freedom_exploration":
+                            pressure = float(action.metadata.get("freedom_pressure", 0.0))
+                            facts.append(
+                                f"{actor.name} travels from {old} to {destination} "
+                                f"because contextual freedom pressure is {pressure:.1f}."
+                            )
+                        elif reason == "relationship_search":
+                            facts.append(
+                                f"{actor.name} travels from {old} to {destination} while searching for someone."
+                            )
+                        else:
+                            facts.append(f"{actor.name} travels from {old} to {destination}.")
+
+                        search_target_id = action.metadata.get("search_target")
+                        if search_target_id and search_target_id in state.characters:
+                            target = state.characters[search_target_id]
+                            if target.location == destination:
+                                participants.append(search_target_id)
+                                self.memory_kernel.learn_fact(
+                                    state.memory_state,
+                                    actor.id,
+                                    f"location_seen:{search_target_id}:{destination}",
+                                    tick=state.tick,
+                                    source="direct_experience",
+                                    confidence=1.0,
+                                )
+                                facts.append(
+                                    f"{actor.name} finds {target.name} at {destination}."
+                                )
+                            else:
+                                absent_fact = self.memory_kernel.learn_fact(
+                                    state.memory_state,
+                                    actor.id,
+                                    f"location_absent:{search_target_id}:{destination}",
+                                    tick=state.tick,
+                                    source="direct_experience",
+                                    confidence=1.0,
+                                )
+                                actor.knowledge.add(absent_fact.proposition)
+                                facts.append(
+                                    f"{actor.name} searches for {target.name} at {destination}, "
+                                    f"but {target.name} is not there."
+                                )
                     else:
                         facts.append(
                             f"{actor.name} attempts to travel to {destination}, but fails."
@@ -486,6 +593,11 @@ class SimulationEngine:
                     else:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
+                elif action.action_type == "rest":
+                    if outcome.status == "success":
+                        facts.append(f"{actor.name} rests at {actor.location}.")
+                    else:
+                        facts.append(f"{actor.name} tries to rest at {actor.location}, but fails.")
                 else:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
@@ -496,7 +608,7 @@ class SimulationEngine:
             self._update_identity_beliefs(actor, action, outcome, consequences)
             self._apply_failure_consequences(state, actor, action, outcome, consequences)
 
-            goal_fact = self._apply_goal_progress(actor, action, outcome, consequences)
+            goal_fact = self._apply_goal_progress(state, actor, action, outcome, consequences)
             if goal_fact:
                 facts.append(goal_fact)
 
@@ -506,7 +618,7 @@ class SimulationEngine:
                     tick=state.tick,
                     timestamp=state.timestamp,
                     location=actor.location,
-                    participants=[actor.id, *action.targets],
+                    participants=participants,
                     causes=[action.id],
                     facts=facts,
                     action_type=canonical_action_type(action.action_type),
@@ -545,7 +657,12 @@ class SimulationEngine:
                 continue
 
             for desire_name, value in list(desires.items()):
-                desires[desire_name] = min(100.0, value + 3.0)
+                modifiers = character.human_condition.location_desire_modifiers
+                if desire_name in modifiers.get(character.location, {}):
+                    delta = modifiers[character.location][desire_name]
+                    desires[desire_name] = max(0.0, min(100.0, value + delta))
+                elif desire_name != "freedom":
+                    desires[desire_name] = min(100.0, value + 3.0)
 
             for event in events:
                 if not event.participants or event.participants[0] not in acted:
@@ -558,20 +675,14 @@ class SimulationEngine:
 
                 action_type = event_action_type(event)
                 satisfaction = {
-                    "travel": {"freedom": 0.5},
                     "contact_person": {"reconciliation": 20.0, "belonging": 10.0},
                     "help_person": {"responsibility": 20.0},
                 }
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
                     if desire_name not in desires:
                         continue
-                    if action_type == "travel" and desire_name == "freedom":
-                        # Travel resolves a proportion of the pressure it was
-                        # responding to; it is not a fixed cooldown clock.
-                        old_value = desires[desire_name]
-                        desires[desire_name] = max(0.0, old_value * (1.0 - amount))
-                    else:
-                        desires[desire_name] = max(0.0, desires[desire_name] - amount)
+                    old_value = desires[desire_name]
+                    desires[desire_name] = max(0.0, old_value - amount)
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)

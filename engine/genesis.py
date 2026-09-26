@@ -20,7 +20,18 @@ def build_genesis_world() -> WorldState:
             name="Yan",
             location="river_town",
             values=["loyalty", "responsibility"],
-            goals=[Goal("yan-1", "help an old friend", priority=0.75)],
+            goals=[Goal(
+                "yan-1",
+                "help an old friend",
+                priority=0.75,
+                stages=["find the old friend", "offer help", "help the old friend"],
+                stage_conditions=[
+                    {"type": "at_same_location", "target_id": "rui"},
+                    {"type": "successful_action", "action_type": "contact_person"},
+                    {"type": "successful_action", "action_type": "help_person"},
+                ],
+                preferred_actions=["travel", "contact_person", "help_person"],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 85},
                 desires={"reconciliation": 70},
@@ -35,11 +46,22 @@ def build_genesis_world() -> WorldState:
             name="Rui",
             location="river_town",
             values=["freedom"],
-            goals=[Goal("rui-1", "leave town", priority=0.65)],
+            goals=[Goal(
+                "rui-1",
+                "leave town",
+                priority=0.65,
+                stages=["leave town", "continue toward freedom"],
+                stage_conditions=[
+                    {"type": "not_at_location", "location": "river_town"},
+                    {"type": "desire_at_most", "desire": "freedom", "value": 30},
+                ],
+                preferred_actions=["travel"],
+            )],
             human_condition=HumanCondition(
                 attachments={"friendship": 70},
                 desires={"freedom": 80},
                 fears={"confinement": 60},
+                location_desire_modifiers={"river_town": {"freedom": 0.0}, "old_road": {"freedom": -80.0}},
                 virtues={"courage": 80},
             ),
         )

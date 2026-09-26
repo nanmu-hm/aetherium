@@ -15,6 +15,28 @@ class Goal:
     description: str
     priority: float = 1.0
     status: str = "active"
+    # Optional staged plan. The top-level description remains the durable goal;
+    # stages turn it into persistent, inspectable progress rather than a one-shot flag.
+    stages: list[str] = field(default_factory=list)
+    current_stage: int = 0
+    # Optional world-state conditions. Progress is earned only when the current
+    # condition is true; action type alone never completes a goal.
+    stage_conditions: list[dict[str, Any]] = field(default_factory=list)
+    # Action types that are plausible means of pursuing this goal. This only
+    # shapes the candidate pool; it is not evidence that the goal progressed.
+    preferred_actions: list[str] = field(default_factory=list)
+
+    @property
+    def current_description(self) -> str:
+        if self.stages and self.current_stage < len(self.stages):
+            return self.stages[self.current_stage]
+        return self.description
+
+    @property
+    def progress(self) -> float:
+        if not self.stages:
+            return 1.0 if self.status == "achieved" else 0.0
+        return min(1.0, self.current_stage / len(self.stages))
 
 
 @dataclass
@@ -89,6 +111,9 @@ class ActionCandidate:
     expected_outcomes: list[str] = field(default_factory=list)
     risks: list[str] = field(default_factory=list)
     confidence: float = 0.5
+    # Structured intent/provenance used by resolution; it is actor-generated,
+    # not hidden world state.
+    metadata: dict[str, Any] = field(default_factory=dict)
     difficulty: float = 0.5
     required_ability: str = ""
     score: float = 0.0

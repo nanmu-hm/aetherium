@@ -16,6 +16,10 @@ def test_same_location_contact_changes_relationship() -> None:
     world.characters["mei"].relationships["lin"] = 50.0
     world.characters["lin"].goals[0].priority = 0.2
     world.characters["mei"].goals[0].priority = 0.2
+    world.characters["lin"].goals[0].stages = ["find a missing friend"]
+    world.characters["lin"].goals[0].stage_conditions = [
+        {"type": "at_same_location", "target_id": "mei"}
+    ]
     world.add_relationship(RelationshipState("lin", "mei", trust=40.0))
     result = SimulationEngine(seed=1).step(world)
     contact = next(event for event in result.events if event.causes[0].endswith("contact"))
@@ -111,17 +115,33 @@ def test_precondition_blocks_without_roll() -> None:
     assert "does not exist" in result.reasons[0]
 
 
-def test_successful_goal_action_marks_goal_achieved():
+def test_successful_goal_action_advances_or_completes_goal():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.characters["lin"].goals[0].description = "help a friend"
+    world.characters["lin"].goals[0].stages = ["help the friend", "speak with the friend"]
+    world.characters["lin"].goals[0].stage_conditions = [
+        {"type": "successful_action", "action_type": "help_person"},
+        {"type": "successful_action", "action_type": "contact_person"},
+    ]
     action = ActionCandidate(
         "help", "lin", "help_person", targets=["mei"], confidence=1.0, difficulty=0.1
     )
     events = SimulationEngine(seed=1).resolve(world, [action])
-    assert world.characters["lin"].goals[0].status == "achieved"
-    assert any(item.target_type == "goal" for item in events[0].consequences)
+    goal = world.characters["lin"].goals[0]
+    assert goal.status == "active"
+    assert goal.current_stage == 1
+    assert goal.progress == 0.5
+    assert any(item.target_type == "goal" and item.field == "current_stage" for item in events[0].consequences)
+
+    contact = ActionCandidate(
+        "contact", "lin", "contact_person", targets=["mei"], confidence=1.0, difficulty=0.1
+    )
+    second = SimulationEngine(seed=1).resolve(world, [contact])[0]
+    assert goal.status == "achieved"
+    assert goal.progress == 1.0
+    assert any(item.field == "status" and item.new_value == "achieved" for item in second.consequences)
 
 
 def test_achieved_goal_no_longer_generates_matching_help_action():
@@ -853,6 +873,7 @@ def test_travel_is_not_suppressed_by_a_cooldown_when_pressure_is_real():
     world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.characters["mei"].human_condition.location_desire_modifiers = {"road": {"freedom": -80.0}}
     world.event_log.append(
         Event(
             id="travel-1", tick=0, timestamp="0001-01-01T00:00:00", location="town",
@@ -908,13 +929,14 @@ def test_repetition_penalty_covers_help_and_pursue_goal():
         assert "recently repeated action" in evaluation.reasons
 
 
-def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown():
+def test_successful_travel_changes_contextual_freedom_pressure_instead_of_using_cooldown():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.characters["mei"].human_condition.location_desire_modifiers = {"road": {"freedom": -80.0}}
     action = ActionCandidate(
         "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
     )
@@ -926,4 +948,5 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
 
     SimulationEngine._advance_human_pressures(world, [event])
-    assert world.characters["mei"].human_condition.desires["freedom"] == 41.5
+    assert world.characters["mei"].human_condition.desires["freedom"] == 0.0
+    assert world.characters["mei"].human_condition.effective_desire("freedom", "road") == 0.0

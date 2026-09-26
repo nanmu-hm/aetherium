@@ -21,10 +21,19 @@ class HumanCondition:
     vices: dict[str, float] = field(default_factory=dict)
     life_stage: str = "adult"
     mortality_pressure: float = 0.0
+    # Context-sensitive desire modifiers. A positive value means the current
+    # location increases the named pressure; negative means it relieves it.
+    location_desire_modifiers: dict[str, dict[str, float]] = field(default_factory=dict)
 
-    def pressure(self) -> float:
-        """Return a bounded measure of unresolved human pressure."""
-        values = list(self.desires.values()) + list(self.losses.values()) + list(self.fears.values())
+    def effective_desire(self, desire: str, location: str = "") -> float:
+        base = self.desires.get(desire, 0.0)
+        modifier = self.location_desire_modifiers.get(location, {}).get(desire, 0.0)
+        return max(0.0, min(100.0, base + modifier))
+
+    def pressure(self, location: str = "") -> float:
+        """Return unresolved pressure, including context-sensitive desires."""
+        values = [self.effective_desire(name, location) for name in self.desires]
+        values += list(self.losses.values()) + list(self.fears.values())
         if not values:
             return 0.0
         return max(0.0, min(1.0, sum(values) / len(values) / 100.0))

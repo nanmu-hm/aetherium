@@ -39,7 +39,7 @@ def test_genesis_allows_goal_and_value_driven_action_change():
         for event in world.event_log
         if event.causes
     }
-    assert "contact_person" in action_types
+    assert "help_person" in action_types
     assert "travel" in action_types
 
 
@@ -54,20 +54,53 @@ def test_genesis_records_completed_goal_consequences():
     )
 
 
-def test_genesis_has_recovery_between_repeated_travel_actions():
+def test_genesis_travel_has_a_character_grounded_reason():
     world = run_genesis(ticks=12, seed=7)
-    travel_ticks = [
-        event.tick
+    travel_events = [
+        event
         for event in world.event_log
-        if event.causes and event.causes[0].endswith("travel")
+        if event_action_type(event) == "travel"
         and event.action_result is not None
         and event.action_result.status == "success"
     ]
-    assert travel_ticks
-    assert all(
-        second > first + 1
-        for first, second in zip(travel_ticks, travel_ticks[1:])
-    )
+    assert travel_events
+
+    rui_travel = [
+        event for event in travel_events if event.participants[0] == "rui"
+    ]
+    assert rui_travel
+    assert all("contextual freedom pressure is" in event.facts[0] for event in rui_travel)
+
+    for previous, current in zip(rui_travel, rui_travel[1:]):
+        previous_destination = next(
+            item.new_value
+            for item in previous.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        current_destination = next(
+            item.new_value
+            for item in current.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        previous_origin = next(
+            item.old_value
+            for item in previous.consequences
+            if item.target_type == "character"
+            and item.target_id == "rui"
+            and item.field == "location"
+        )
+        assert not (
+            current.tick == previous.tick + 1
+            and current_destination == previous_origin
+        )
+
+    rui_goal = world.characters["rui"].goals[0]
+    assert rui_goal.status == "achieved"
+    assert world.characters["rui"].location == "old_road"
 
 
 def test_genesis_clock_advances_with_simulation_ticks():
