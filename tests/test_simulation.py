@@ -912,15 +912,17 @@ def test_repetition_penalty_covers_help_and_pursue_goal():
         assert "recently repeated action" in evaluation.reasons
 
 
-def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown():
+def test_successful_travel_satisfies_freedom_pressure_from_place_context():
     from engine.core.models import ActionCandidate
 
     world = build_demo_world()
     world.locations.add("road")
     world.characters["mei"].goals[0].status = "achieved"
     world.characters["mei"].human_condition.desires["freedom"] = 80.0
+    world.characters["mei"].human_condition.location_pressures["town"] = {"confinement": 0.75}
     action = ActionCandidate(
-        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1
+        "travel", "mei", "travel", targets=["road"], confidence=1.0, difficulty=0.1,
+        metadata={"travel_reason": "freedom_exploration"},
     )
 
     event = SimulationEngine(seed=1).resolve(world, [action])[0]
@@ -930,4 +932,50 @@ def test_successful_travel_satisfies_freedom_pressure_instead_of_using_cooldown(
     assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
 
     SimulationEngine._advance_human_pressures(world, [event])
-    assert world.characters["mei"].human_condition.desires["freedom"] == 41.5
+    assert world.characters["mei"].human_condition.desires["freedom"] == 20.0
+
+
+def test_freedom_pressure_does_not_recover_away_from_confining_context():
+    from engine.core.models import CharacterState, WorldState
+
+    world = WorldState(world_id="freedom-context", locations={"town", "road"})
+    world.add_character(
+        CharacterState(
+            id="r",
+            name="R",
+            location="road",
+            values=["freedom"],
+            human_condition=HumanCondition(
+                desires={"freedom": 20.0},
+                location_pressures={"road": {"confinement": 0.0}},
+            ),
+        )
+    )
+    SimulationEngine._advance_human_pressures(world, [])
+    assert world.characters["r"].human_condition.desires["freedom"] == 20.0
+
+
+def test_rest_is_always_available_but_deterministically_succeeds():
+    from engine.core.actions import generate_action_pool
+
+    world = build_demo_world()
+    world.characters["lin"].human_condition.desires["stress"] = 0.0
+    pool = generate_action_pool(world, "lin")
+    assert any(action.action_type == "rest" for action in pool)
+
+    action = next(item for item in pool if item.action_type == "rest")
+    event = SimulationEngine(seed=1).resolve(world, [action])[0]
+    assert event.action_result is not None
+    assert event.action_result.status == "success"
+
+
+def test_location_seen_evidence_retracts_stale_absence_fact():
+    from engine.memory.kernel import MemoryKernel
+
+    world = build_demo_world()
+    kernel = MemoryKernel()
+    kernel.learn_fact(world.memory_state, "lin", "location_absent:mei:road", tick=1)
+    assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is not None
+
+    kernel.learn_fact(world.memory_state, "lin", "location_seen:mei:road", tick=2)
+    assert world.memory_state.get_knowledge("lin", "location_absent:mei:road") is None
