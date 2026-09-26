@@ -42,7 +42,7 @@ def test_staged_goal_advances_before_final_completion():
     second = SimulationEngine(seed=1).resolve(
         world,
         [ActionCandidate(
-            "help-2", "a", "help_person", targets=["b"], confidence=1.0, difficulty=0.1
+            "contact-2", "a", "contact_person", targets=["b"], confidence=1.0, difficulty=0.1
         )],
     )[0]
     assert second.action_result.status == "success"
