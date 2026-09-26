@@ -318,23 +318,80 @@ class SimulationEngine:
             )
 
     @staticmethod
+    def _apply_fatigue(
+        actor,
+        action: ActionCandidate,
+        outcome: ActionResult,
+        consequences: list[Consequence],
+    ) -> None:
+        """Turn lived activity into a small physical recovery cost."""
+        if outcome.status not in {"success", "failure"}:
+            return
+
+        action_type = canonical_action_type(action.action_type)
+        old_value = max(0.0, min(100.0, actor.human_condition.fatigue))
+        if action_type == "rest":
+            new_value = max(0.0, old_value - min(30.0, 10.0 + old_value * 0.25))
+        else:
+            exertion = {
+                "travel": 8.0,
+                "contact_person": 3.0,
+                "help_person": 5.0,
+            }.get(action_type, 2.0)
+            if outcome.status == "failure":
+                exertion *= 1.25
+            new_value = min(100.0, old_value + exertion)
+
+        if new_value == old_value:
+            return
+
+        actor.human_condition.fatigue = new_value
+        consequences.append(
+            Consequence(
+                "character",
+                actor.id,
+                "human_condition.fatigue",
+                old_value,
+                new_value,
+                f"physical cost/recovery from {action_type}",
+            )
+        )
+
+    @staticmethod
     def _update_procedural_habit(
         actor,
         action: ActionCandidate,
         outcome: ActionResult,
         consequences: list[Consequence],
     ) -> None:
-        """Learn a small action preference from an experienced outcome."""
+        """Learn from whether an action produced a meaningful experienced result.
+
+        Success alone is not reinforcement. A blocked action is ignored, a failed
+        attempt teaches avoidance, and a successful action is reinforced only when
+        it produced a concrete world/character consequence. Rest therefore does not
+        self-reinforce when the actor was already rested.
+        """
         if outcome.status not in {"success", "failure"}:
             return
 
         action_type = canonical_action_type(action.action_type)
         old_value = actor.habits.get(action_type, 0.0)
-        if outcome.status == "success":
-            new_value = old_value + 0.10 * (1.0 - old_value)
-        else:
-            new_value = old_value - 0.10 * (old_value + 1.0)
 
+        if outcome.status == "failure":
+            learning_signal = -1.0
+        else:
+            meaningful = any(
+                consequence.old_value != consequence.new_value
+                and consequence.field != f"habits.{action_type}"
+                and consequence.target_type in {"character", "relationship", "goal"}
+                for consequence in consequences
+            )
+            learning_signal = 1.0 if meaningful else 0.0
+
+        if learning_signal == 0.0:
+            return
+
+        new_value = old_value + 0.10 * (learning_signal - old_value)
         new_value = max(-1.0, min(1.0, new_value))
         actor.habits[action_type] = new_value
         consequences.append(
@@ -344,7 +401,7 @@ class SimulationEngine:
                 f"habits.{action_type}",
                 old_value,
                 new_value,
-                f"procedural learning from {outcome.status}",
+                f"procedural learning from experienced value {learning_signal:.1f}",
             )
         )
 
@@ -579,9 +636,8 @@ class SimulationEngine:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
                 elif action.action_type == "rest":
-                    # Rest is a non-contestable biological/social action in this
-                    # model: if it is available, it succeeds rather than rolling
-                    # against an arbitrary success probability.
+                    # Rest is deterministic when attempted, but its value is
+                    # determined by the actor's actual recovery state.
                     outcome = ActionResult("success", "rest completed", 1.0)
                     facts.append(f"{actor.name} rests at {actor.location}.")
                 else:
@@ -589,6 +645,7 @@ class SimulationEngine:
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
                     )
 
+            self._apply_fatigue(actor, action, outcome, consequences)
             self._apply_emotional_consequences(state, actor, action, outcome, consequences)
             self._update_procedural_habit(actor, action, outcome, consequences)
             self._update_identity_beliefs(actor, action, outcome, consequences)
