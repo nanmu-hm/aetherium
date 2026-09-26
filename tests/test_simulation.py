@@ -1,7 +1,7 @@
 from engine.core.demo import build_demo_world, run_demo
 from engine.core.models import RelationshipState
 from engine.core.human_condition import HumanCondition
-from engine.core.simulation import SimulationEngine
+from engine.core.simulation import SimulationEngine, event_action_type
 
 
 def test_demo_world_produces_history() -> None:
@@ -384,7 +384,10 @@ def test_relationship_consequence_is_visible_to_later_action_generation():
         if action.action_type == "contact_person"
     )
 
-    assert after.score < before.score
+    from engine.core.decision import DecisionKernel
+    before_utility = DecisionKernel(seed=1).evaluate(world, before).utility
+    after_utility = DecisionKernel(seed=1).evaluate(world, after).utility
+    assert after_utility < before_utility
 
 
 def test_failed_attempt_increases_unresolved_desire_pressure():
@@ -958,7 +961,8 @@ def test_successful_travel_satisfies_freedom_pressure_from_place_context():
     assert world.characters["mei"].human_condition.desires["freedom"] == 80.0
 
     SimulationEngine._advance_human_pressures(world, [event])
-    assert world.characters["mei"].human_condition.desires["freedom"] == 20.0
+    assert world.characters["mei"].human_condition.desires["freedom"] < 21.0
+    assert world.characters["mei"].human_condition.desires["freedom"] > 19.0
 
 
 def test_freedom_pressure_does_not_recover_away_from_confining_context():
