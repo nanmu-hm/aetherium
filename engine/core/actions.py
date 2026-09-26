@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import re
+
 from .models import ActionCandidate, CharacterState, WorldState
+
+
+def _goal_words(description: str) -> set[str]:
+    return set(re.findall(r"[a-z]+", description.lower()))
 
 
 def _has_value(character: CharacterState, value: str) -> bool:
@@ -37,13 +43,13 @@ def _goal_supports_action(character: CharacterState, action_type: str) -> bool:
     if goal is None:
         return False
 
-    text = goal.description.lower()
+    words = _goal_words(goal.description)
     keywords = {
-        "help_person": ("help", "protect", "support", "save"),
-        "contact_person": ("find", "reconcile", "talk", "meet", "contact", "friend"),
-        "travel": ("leave", "escape", "go", "move", "freedom", "depart"),
+        "help_person": {"help", "protect", "support", "save"},
+        "contact_person": {"find", "reconcile", "talk", "meet", "contact"},
+        "travel": {"leave", "escape", "go", "move", "freedom", "depart"},
     }
-    return any(word in text for word in keywords.get(action_type, ()))
+    return bool(words & keywords.get(action_type, set()))
 
 
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
@@ -73,7 +79,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         recent_contacts: list = []
         for event in reversed(state.event_log):
             if event.participants and event.participants[0] == character.id:
-                if event.causes and event.causes[0].endswith("-contact"):
+                if event.action_type == "contact_person":
                     recent_contacts.append(event)
                     if len(recent_contacts) >= 2:
                         break
@@ -118,7 +124,25 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         ))
 
     freedom_pressure = character.human_condition.desires.get("freedom", 0.0)
-    if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1:
+    recent_travel = next(
+        (
+            event for event in reversed(state.event_log)
+            if event.participants
+            and event.participants[0] == character.id
+            and event.action_type == "travel"
+        ),
+        None,
+    )
+    # A two-location world cannot express meaningful destination choice yet.
+    # After a successful trip, give the character time to experience the new
+    # place before immediately bouncing back and forth.
+    travel_cooldown = (
+        recent_travel is not None
+        and recent_travel.action_result is not None
+        and recent_travel.action_result.status == "success"
+        and state.tick - recent_travel.tick < 2
+    )
+    if _has_value(character, "freedom") and freedom_pressure >= 50.0 and len(state.locations) > 1 and not travel_cooldown:
         destination = sorted(location for location in state.locations if location != character.location)[0]
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
