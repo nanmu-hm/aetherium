@@ -19,6 +19,36 @@ def has_trait(character: CharacterState, *names: str) -> bool:
     return any(name.lower().replace("-", "_") in tags for name in names)
 
 
+
+def emotion_decay(character: CharacterState, emotion_name: str, value: float) -> float:
+    """Return how much of an emotion settles during one simulation tick."""
+    base_rates = {
+        "anger": 0.08,
+        "resentment": 0.07,
+        "fear": 0.09,
+        "sorrow": 0.06,
+        "joy": 0.10,
+        "hope": 0.08,
+        "longing": 0.05,
+        "love": 0.025,
+        "regret": 0.06,
+        "curiosity": 0.10,
+        "respect": 0.04,
+        "concern": 0.08,
+        "stress": 0.08,
+    }
+    rate = base_rates.get(emotion_name, 0.06)
+    if emotion_name == "resentment" and has_trait(character, "forgiving"):
+        rate += 0.05
+    if emotion_name == "anger" and has_trait(character, "hot_tempered", "impulsive"):
+        rate -= 0.03
+    if emotion_name == "fear" and has_trait(character, "cautious", "fearful"):
+        rate -= 0.02
+    if emotion_name == "longing" and has_trait(character, "loyal", "devoted"):
+        rate -= 0.015
+    rate = max(0.01, min(0.25, rate))
+    return max(0.0, value * rate)
+
 def social_reaction(
     character: CharacterState,
     action: ActionCandidate,
