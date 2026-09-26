@@ -39,6 +39,11 @@ class SimulationEngine:
         self.precondition_engine = PreconditionEngine()
 
     def _restore_rng_state(self, state: WorldState) -> None:
+        if state.simulation_seed is None:
+            state.simulation_seed = self.decision_kernel.seed
+        else:
+            # Checkpoint state is authoritative even if the new engine uses another seed.
+            self.decision_kernel.seed = state.simulation_seed
         if state.rng_state is not None:
             self.random.setstate(state.rng_state)
 
@@ -561,6 +566,7 @@ class SimulationEngine:
         self._advance_clock(state)
         state.tick += 1
         state.rng_state = self.random.getstate()
+        state.simulation_seed = self.decision_kernel.seed
         return SimulationResult(current_tick, actions, events, errors)
 
 
