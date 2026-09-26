@@ -218,10 +218,12 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             confinement = character.human_condition.confinement_at(location)
             fear = character.human_condition.fears.get("confinement", 0.0) * confinement / 100.0
             familiarity = min(1.0, visit_counts[location] / 3.0)
+            recent_departure_penalty = 0.30 if location == recent_departure else 0.0
             return (
                 0.55 * (1.0 - confinement)
                 + 0.25 * (1.0 - familiarity)
                 + 0.20 * max(0.0, 1.0 - fear)
+                - recent_departure_penalty
             )
 
         destination = max(alternatives, key=lambda location: (destination_score(location), location))
