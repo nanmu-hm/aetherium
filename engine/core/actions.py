@@ -160,11 +160,21 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
                 continue
 
             remembered = _remembered_location(state, character, target_id)
+            facts = state.memory_state.knowledge.get(character.id, {}).values()
             absent_prefix = f"location_absent:{target_id}:"
+            seen_prefix = f"location_seen:{target_id}:"
+            seen_ticks = {
+                fact.proposition[len(seen_prefix):]: fact.last_confirmed_tick
+                for fact in facts
+                if fact.proposition.startswith(seen_prefix)
+            }
             absent = {
                 fact.proposition[len(absent_prefix):]
-                for fact in state.memory_state.knowledge.get(character.id, {}).values()
+                for fact in facts
                 if fact.proposition.startswith(absent_prefix)
+                and fact.last_confirmed_tick >= seen_ticks.get(
+                    fact.proposition[len(absent_prefix):], -1
+                )
             }
             alternatives = sorted(
                 location
