@@ -431,7 +431,7 @@ class SimulationEngine:
                                     f"{actor.name} finds {target.name} at {destination}."
                                 )
                             else:
-                                self.memory_kernel.learn_fact(
+                                absent_fact = self.memory_kernel.learn_fact(
                                     state.memory_state,
                                     actor.id,
                                     f"location_absent:{search_target_id}:{destination}",
@@ -439,6 +439,7 @@ class SimulationEngine:
                                     source="direct_experience",
                                     confidence=1.0,
                                 )
+                                actor.knowledge.add(absent_fact.proposition)
                                 facts.append(
                                     f"{actor.name} searches for {target.name} at {destination}, "
                                     f"but {target.name} is not there."
