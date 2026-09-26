@@ -18,6 +18,10 @@ class Goal:
     # Optional staged plan. The top-level description remains the durable goal;
     # stages turn it into persistent, inspectable progress rather than a one-shot flag.
     stages: list[str] = field(default_factory=list)
+    # Optional world-state predicates for staged goals. Each predicate is a
+    # plain serializable mapping so snapshots remain backward-compatible.
+    # When present, simulation uses these predicates instead of action keywords.
+    stage_conditions: list[dict[str, Any]] = field(default_factory=list)
     current_stage: int = 0
 
     @property
