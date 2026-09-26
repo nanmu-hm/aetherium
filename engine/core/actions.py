@@ -179,7 +179,16 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             ))
 
     freedom_pressure = _contextual_desire(character, "freedom")
-    if _has_value(character, "freedom") and freedom_pressure > 0.0 and len(state.locations) > 1:
+    curiosity_pressure = _contextual_desire(character, "curiosity")
+    exploration_pressure = max(freedom_pressure, curiosity_pressure)
+    if (
+        len(state.locations) > 1
+        and (
+            (_has_value(character, "freedom") and freedom_pressure > 0.0)
+            or curiosity_pressure > 0.0
+            or has_trait(character, "adventurous", "curious", "restless")
+        )
+    ):
         # Freedom pressure creates an exploration choice. Prefer places the actor
         # has experienced less often; this makes destination choice depend on the
         # actor's own history rather than lexical ordering of world locations.
@@ -192,7 +201,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-travel", actor_id=character.id,
             action_type="travel", targets=[destination],
-            motivation=f"seek freedom by going somewhere less familiar: {destination}",
+            motivation=f"explore beyond the familiar: {destination}",
             preconditions=["destination is a place the actor can reach"],
             expected_outcomes=["experience a different place"],
             confidence=0.55, score=0.10,
