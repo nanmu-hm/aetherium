@@ -53,7 +53,7 @@ def _contextual_desire(character: CharacterState, desire_name: str) -> float:
     base = max(0.0, min(100.0, character.human_condition.desires.get(desire_name, 0.0)))
     associations = character.human_condition.location_pressures.get(character.location, {})
     if desire_name == "freedom":
-        association = associations.get("confinement", associations.get("freedom", 0.0))
+        association = associations.get("confinement", associations.get("freedom", 1.0))
         association = max(0.0, min(1.0, association))
         return base * association
     return base
@@ -229,7 +229,10 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     # actor's current pressure, so it competes naturally with other motives
     # instead of being gated by a hard threshold.
     pressure = character.human_condition.pressure()
-    rest_score = max(0.0, 0.05 + (1.0 - pressure) * 0.50)
+    fatigue = max(0.0, min(100.0, character.human_condition.fatigue))
+    # Rest has value when the body actually needs recovery. Low pressure alone
+    # is not enough to make an otherwise healthy character rest repeatedly.
+    rest_score = min(1.0, 0.05 + 0.70 * (fatigue / 100.0) + 0.05 * (1.0 - pressure))
     pool.append(ActionCandidate(
             id=f"tick-{state.tick}-{character.id}-rest",
             actor_id=character.id,
@@ -240,7 +243,7 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             confidence=0.95,
             difficulty=0.05,
             score=rest_score,
-            metadata={"rest_reason": "low_pressure"},
+            metadata={"rest_reason": "fatigue_recovery"},
         ))
 
     return pool
