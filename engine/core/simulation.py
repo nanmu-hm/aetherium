@@ -8,6 +8,7 @@ import random
 
 from .actions import generate_action_pool
 from .action_types import canonical_action_type, event_action_type, goal_matches_action
+from .appraisal import apply_arbitration, arbitrate, build_appraisals
 from .decision import DecisionKernel
 from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
 from .preconditions import PreconditionEngine
@@ -29,6 +30,7 @@ class SimulationEngine:
         seed: int = 0,
         memory_kernel: MemoryKernel | None = None,
         tick_duration_hours: int = 24,
+        use_arbitration: bool = False,
     ) -> None:
         if tick_duration_hours <= 0:
             raise ValueError("tick_duration_hours must be positive")
@@ -38,6 +40,10 @@ class SimulationEngine:
         self.decision_kernel = DecisionKernel(seed=seed)
         self.action_resolver = ActionResolver(self.random)
         self.precondition_engine = PreconditionEngine()
+        # Off by default: existing callers/tests keep the exact pre-arbitration
+        # behavior bit-for-bit; only explicitly opted-in engines get the
+        # appraisal/arbitration layer wired in.
+        self.use_arbitration = use_arbitration
 
     def _restore_rng_state(self, state: WorldState) -> None:
         if state.simulation_seed is None:
@@ -53,6 +59,11 @@ class SimulationEngine:
         selected: list[ActionCandidate] = []
         for character in state.characters.values():
             pool = generate_action_pool(state, character.id)
+            if self.use_arbitration and pool:
+                appraisals = build_appraisals(self.decision_kernel, state, character, pool)
+                evaluations = [self.decision_kernel.evaluate(state, c) for c in pool]
+                arbitration = arbitrate(appraisals, pool, evaluations)
+                pool = apply_arbitration(pool, arbitration, evaluations)
             action, _ = self.decision_kernel.choose(state, pool, allow_quiet=True)
             if action is not None:
                 selected.append(action)

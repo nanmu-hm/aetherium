@@ -134,6 +134,66 @@ class Consequence:
     reason: str = ""
 
 
+@dataclass(frozen=True)
+class EvidenceRecord:
+    """A concrete historical-causal grounding for a motivation's appraisal.
+
+    Replaces coarse reason-tag-count with an auditable chain: this record
+    points at a specific past event and explains why that event's state
+    change is still (or no longer) live evidence for the current appraisal.
+    """
+
+    past_event_id: str
+    # (focal_field, focal_subject, focal_target) — mirrors Consequence's
+    # (field, old_value, new_value) shape.
+    state_delta: tuple[str, str, str]
+    motivation_source: str
+    subject_id: str
+    target_id: str
+    event_age: int
+    current_relevance: float
+    interpretation: str
+    causal_link: str = ""
+
+
+@dataclass(frozen=True)
+class AppraisalRecord:
+    """What a candidate means to this actor, per motivation source.
+
+    Attached to each candidate in the pool before the kernel sees it.
+    `interpretation` reuses the kernel's own DecisionEvaluation.reasons
+    tags (fetched read-only via evaluate()), not a parallel tag system.
+    """
+
+    candidate_id: str
+    motivation_source: str
+    salience: float
+    interpretation: tuple[str, ...]
+    evidence: tuple[EvidenceRecord, ...] = ()
+
+
+@dataclass(frozen=True)
+class ArbitrationResult:
+    """Semantic verdict from the arbitration layer for one actor, one tick.
+
+    RESOLVE: the named candidate's evidence distinguishes it; it survives
+    the pool-narrowing step and the kernel executes it through its normal
+    path.
+    ABSTAIN: no live, distinguishable causal reason for either side; the
+    pool is narrowed to EMPTY, reaching choose()'s existing empty-pool
+    None path — no new kernel output type.
+    INERT: no cross-motivation conflict in this pool; the kernel handles
+    the tick exactly as it does today, unchanged.
+
+    This type carries NO float field: it is structurally impossible to
+    plug an ArbitrationResult into a utility sum.
+    """
+
+    kind: str  # "resolve" | "abstain" | "inert"
+    candidate_id: str = ""
+    evidence: tuple[EvidenceRecord, ...] = ()
+
+
 @dataclass
 class Event:
     id: str
