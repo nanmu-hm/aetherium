@@ -53,6 +53,37 @@ def _remembered_location(state: WorldState, character: CharacterState, target_id
     return latest.proposition[len(prefix):]
 
 
+def _contact_just_expressed_emotion(state: WorldState, character: CharacterState) -> bool:
+    """Return True iff the most-recent emotion-raising consequence for
+    `character` came from a successful contact_person event at the
+    immediately-prior tick (event.tick == state.tick - 1).
+
+    This is the 1-tick event-scoped consumption authorized in AD/AE: a
+    contact that just raised the actor's own emotion does not re-open the
+    contact gate on the *same* motivation in the immediately-prior tick.
+    It is NOT a cooldown, NOT a permanent latch over earlier ticks, and
+    it is NOT lifted by any later event inside this predicate — the
+    window is exactly one tick (the immediately-prior one).
+    """
+    if state.tick == 0:
+        return False
+    prior_tick = state.tick - 1
+    for event in state.event_log:
+        if event.tick != prior_tick:
+            continue
+        if not event.participants or event.participants[0] != character.id:
+            continue
+        if event.action_result is None or event.action_result.status != "success":
+            continue
+        if event_action_type(event) != "contact_person":
+            continue
+        for c in event.consequences:
+            if c.target_id == character.id and c.field.startswith("emotions.") \
+                    and c.new_value > c.old_value:
+                return True
+    return False
+
+
 def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCandidate]:
     character = state.characters[character_id]
     if character.status != "active":
@@ -81,6 +112,11 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         relationship = state.get_relationship(character.id, target_id)
         tension = max(0.0, min(100.0, max(100.0 - trust, relationship.resentment if relationship else 0.0, relationship.fear if relationship else 0.0)))
         emotional_pressure = max(character.emotions.get("anger", 0.0), character.emotions.get("longing", 0.0), character.emotions.get("resentment", 0.0), character.emotions.get("love", 0.0))
+        if _contact_just_expressed_emotion(state, character):
+            # AE 1-tick semantic repair: the contact that just raised this
+            # actor's own emotion does not re-qualify it as an independent
+            # reason for another contact in the immediately-prior tick.
+            emotional_pressure = 0.0
         reconciliation_motive = reconciliation * (tension / 100.0) ** 2
         relationship_motive = max(reconciliation_motive, belonging * 0.50, emotional_pressure)
         goal_motive = 100.0 * goal.priority if goal and _goal_supports_action(character, "contact_person") else 0.0

@@ -9,6 +9,7 @@ from ..core.models import (
     ActionResult,
     CharacterState,
     Consequence,
+    DesireCarrier,
     Event,
     FactionState,
     Goal,
@@ -76,6 +77,10 @@ def _character(data: dict[str, Any]) -> CharacterState:
     data = dict(data)
     data["goals"] = [_goal(item) for item in data.get("goals", [])]
     data["human_condition"] = _human_condition(data.get("human_condition", {}))
+    data["desire_carriers"] = {
+        key: DesireCarrier(**item)
+        for key, item in data.get("desire_carriers", {}).items()
+    }
     return CharacterState(**data)
 
 

@@ -10,7 +10,13 @@ from .actions import generate_action_pool
 from .action_types import canonical_action_type, event_action_type, goal_matches_action
 from .appraisal import apply_arbitration, arbitrate, build_appraisals
 from .decision import DecisionKernel
-from .models import ActionCandidate, ActionResult, Consequence, Event, WorldState
+from .desire_interpretation import (
+    DESIRE_GENESIS,
+    FAILURE_PRESSURE_MAP,
+    interpret_desire_event,
+    record_satisfaction_evidence,
+)
+from .models import ActionCandidate, ActionResult, Consequence, DesireCarrier, Event, WorldState
 from .preconditions import PreconditionEngine
 from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
@@ -483,12 +489,7 @@ class SimulationEngine:
         if outcome.status != "failure":
             return
 
-        pressure_map = {
-            "travel": (("freedom", 8.0),),
-            "contact_person": (("reconciliation", 8.0), ("belonging", 4.0)),
-            "help_person": (("responsibility", 8.0),),
-        }
-        for desire_name, amount in pressure_map.get(canonical_action_type(action.action_type), ()):
+        for desire_name, amount in FAILURE_PRESSURE_MAP.get(canonical_action_type(action.action_type), ()):
             if desire_name not in actor.human_condition.desires:
                 continue
             old_value = actor.human_condition.desires[desire_name]
@@ -904,6 +905,7 @@ class SimulationEngine:
                 for desire_name, amount in satisfaction.get(action_type, {}).items():
                     if desire_name not in desires:
                         continue
+                    value_before = desires[desire_name]
                     if action_type == "contact_person" and desire_name == "reconciliation":
                         relationship = (
                             state.get_relationship(character.id, event.participants[1])
@@ -926,6 +928,11 @@ class SimulationEngine:
                             desires[desire_name] = max(
                                 0.0, desires[desire_name] - satisfaction
                             )
+                        # A satisfaction change must leave causal evidence;
+                        # it is never a silent float mutation (Experiment AA).
+                        record_satisfaction_evidence(
+                            state, character, event, desire_name, value_before
+                        )
                         continue
 
                     if action_type == "travel" and desire_name == "freedom":
@@ -959,6 +966,63 @@ class SimulationEngine:
                         desires[desire_name] = max(0.0, desires[desire_name] - satisfaction)
                     else:
                         desires[desire_name] = max(0.0, desires[desire_name] - amount)
+                    record_satisfaction_evidence(
+                        state, character, event, desire_name, value_before
+                    )
+
+    def _apply_desire_interpretation(self, state: WorldState, event: Event) -> None:
+        """Sole birth/update owner for desire carriers (Experiment AA).
+
+        Runs at event application, after growth and satisfaction have
+        settled for the tick - the exact ordering the AA shadow validated,
+        so a newborn pressure is not consumed by the same tick's
+        satisfaction pass. Candidate generation, evaluate, choose, and
+        arbitration only ever read the desires float map; they never create
+        a carrier.
+        """
+        if not event.participants:
+            return
+        subject = state.characters.get(event.participants[0])
+        if subject is None:
+            return
+        for interp in interpret_desire_event(event, state):
+            carrier = subject.desire_carriers.get(interp.desire)
+            if interp.desire not in subject.human_condition.desires:
+                # Absent semantic carrier -> BIRTH at the authored amount.
+                subject.human_condition.desires[interp.desire] = interp.amount
+                subject.desire_carriers[interp.desire] = DesireCarrier(
+                    carrier_id=f"{subject.id}:DESIRE:{interp.desire}",
+                    subject_id=subject.id,
+                    desire=interp.desire,
+                    source=event.id,
+                    created_at=event.tick,
+                    strength=interp.amount,
+                    evidence=[event.id],
+                    lifecycle="ACTIVE",
+                    tie=interp.tie,
+                )
+                continue
+            # Existing same-semantic carrier -> UPDATE, never a rebirth.
+            if carrier is None:
+                # Pre-existing (genesis) desire first observed by the writer:
+                # provenance uses the GENESIS sentinel, never a forged id.
+                carrier = DesireCarrier(
+                    carrier_id=f"{subject.id}:DESIRE:{interp.desire}",
+                    subject_id=subject.id,
+                    desire=interp.desire,
+                    source=DESIRE_GENESIS,
+                    created_at=DESIRE_GENESIS,
+                    strength=subject.human_condition.desires.get(interp.desire, 0.0),
+                    evidence=[],
+                    lifecycle="ACTIVE",
+                    tie=interp.tie,
+                )
+                subject.desire_carriers[interp.desire] = carrier
+            if not carrier.evidence or carrier.evidence[-1] != event.id:
+                carrier.evidence.append(event.id)
+            value = subject.human_condition.desires.get(interp.desire, 0.0)
+            carrier.strength = value
+            carrier.lifecycle = "SATISFIED" if value == 0.0 else "ACTIVE"
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)
@@ -984,6 +1048,11 @@ class SimulationEngine:
             character.human_condition.fatigue = old_fatigue - recovery
 
         self._advance_human_pressures(state, events)
+        # Desire interpretation is the last event-application writer of the
+        # tick: executed events may birth or update desire carriers here and
+        # nowhere else (Experiment AA).
+        for event in events:
+            self._apply_desire_interpretation(state, event)
         errors = self.validate(state)
         current_tick = state.tick
         self._advance_clock(state)

@@ -68,6 +68,12 @@ class CharacterState:
     abilities: dict[str, float] = field(default_factory=dict)
     constraints: list[str] = field(default_factory=list)
     status: str = "active"
+    # Provenance registry for desire carriers. The float map in
+    # human_condition.desires stays the hot path every reader consumes;
+    # this parallel registry records birth / update / satisfaction so no
+    # desire change is ever silent (Experiment AA). Keyed by desire name,
+    # carrier_id mirrors "{subject}:DESIRE:{name}".
+    desire_carriers: dict[str, DesireCarrier] = field(default_factory=dict)
 
 
 @dataclass
@@ -132,6 +138,34 @@ class Consequence:
     old_value: Any
     new_value: Any
     reason: str = ""
+
+
+@dataclass
+class DesireCarrier:
+    """Provenance record for one character's desire (Experiment AA).
+
+    human_condition.desires stays the single hot path for every reader;
+    this parallel registry exists so birth / update / satisfaction leave
+    causal evidence instead of mutating a float silently. Pre-history
+    (desires that exist before the world clock) carries the explicit
+    GENESIS sentinel in source/created_at — never a forged runtime event id.
+    """
+
+    carrier_id: str
+    subject_id: str
+    desire: str
+    family: str = "DESIRE"
+    source: str = "GENESIS"
+    created_at: int | str = "GENESIS"
+    # Strength at the last recorded writer touch (birth amount, then the
+    # float value on every update / satisfaction). Passive growth between
+    # touches is maintenance-silent by design (AA-6).
+    strength: float = 0.0
+    # Append-only event ids that are the evidence for this carrier.
+    evidence: list[str] = field(default_factory=list)
+    lifecycle: str = "ACTIVE"
+    # Discrete evidence tie observed at birth (value:/trait:/relationship:).
+    tie: str = ""
 
 
 @dataclass(frozen=True)
