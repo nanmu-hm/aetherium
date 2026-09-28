@@ -1022,7 +1022,29 @@ class SimulationEngine:
                 carrier.evidence.append(event.id)
             value = subject.human_condition.desires.get(interp.desire, 0.0)
             carrier.strength = value
-            carrier.lifecycle = "SATISFIED" if value == 0.0 else "ACTIVE"
+            # AF: a satisfaction Consequence on this event marks the
+            # carrier CONSUMED, with event provenance. The passive
+            # +3/tick maintenance may keep moving the float, but it can
+            # no longer re-open this motivation: only a new
+            # evidence-gated interpretation (the else branch) clears the
+            # stamps. Never by tick count or elapsed time.
+            consumed = any(
+                c.target_type == "character"
+                and c.target_id == subject.id
+                and c.field == f"human_condition.desires.{interp.desire}"
+                and c.new_value < c.old_value
+                for c in event.consequences
+            )
+            if consumed:
+                carrier.lifecycle = "CONSUMED"
+                carrier.consumed_at = event.tick
+                carrier.consumed_evidence = event.id
+            else:
+                # New causal evidence has reactivated the carrier; the
+                # prior consumption stamp no longer represents state.
+                carrier.lifecycle = "SATISFIED" if value == 0.0 else "ACTIVE"
+                carrier.consumed_at = None
+                carrier.consumed_evidence = ""
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)

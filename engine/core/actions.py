@@ -117,6 +117,15 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
             # actor's own emotion does not re-qualify it as an independent
             # reason for another contact in the immediately-prior tick.
             emotional_pressure = 0.0
+        # AF: candidate generation is a lifecycle-READER. A consumed
+        # desire carrier cannot re-open contact eligibility through its
+        # passively regrown float; only a new evidence-gated
+        # interpretation (the lifecycle writer) clears consumption. The
+        # gate term is suppressed here, exactly like the AE emotion
+        # zeroing above - no cooldown, no tick counter, no timer.
+        belonging_carrier = character.desire_carriers.get("belonging")
+        if belonging_carrier is not None and belonging_carrier.lifecycle == "CONSUMED":
+            belonging = 0.0
         reconciliation_motive = reconciliation * (tension / 100.0) ** 2
         relationship_motive = max(reconciliation_motive, belonging * 0.50, emotional_pressure)
         goal_motive = 100.0 * goal.priority if goal and _goal_supports_action(character, "contact_person") else 0.0

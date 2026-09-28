@@ -166,6 +166,13 @@ class DesireCarrier:
     lifecycle: str = "ACTIVE"
     # Discrete evidence tie observed at birth (value:/trait:/relationship:).
     tie: str = ""
+    # AF: consumption provenance. A successful satisfaction event marks the
+    # carrier CONSUMED (event tick + event id), never by tick count or
+    # elapsed time. Only a new evidence-gated belonging-domain consequence
+    # clears these stamps and returns the carrier to ACTIVE; passive
+    # maintenance regrowth of the float does not.
+    consumed_at: int | None = None
+    consumed_evidence: str = ""
 
 
 @dataclass(frozen=True)
