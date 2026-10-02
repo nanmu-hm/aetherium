@@ -20,6 +20,7 @@ from .models import ActionCandidate, ActionResult, Consequence, DesireCarrier, E
 from .preconditions import PreconditionEngine
 from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
+from ..memory.models import Desire
 
 
 @dataclass
@@ -1017,6 +1018,29 @@ class SimulationEngine:
                     evidence=[event.id],
                     lifecycle="ACTIVE",
                     tie=interp.tie,
+                )
+                # D-scope: mirror the birth into Store-1 with structured
+                # provenance (source_event_id = the ④-admitted event id; the
+                # codec round-trips it and the admission gate resolves it
+                # against the restored event_log — never via `reason`).
+                # Genesis pre-history rows carry "" — this branch is the
+                # sole runtime birth writer, so a non-empty source_event_id
+                # here is always event-sourced.
+                store1_id = f"{subject.id}:store1:{interp.desire}:{event.id}"
+                state.memory_state.add_desire(
+                    Desire(
+                        id=store1_id,
+                        owner_id=subject.id,
+                        description=interp.desire,
+                        priority=0.5,
+                        # urgency is the 0-1 memory-side scale that
+                        # decision.py:167 multiplies by priority; interp.amount
+                        # is the 0-100 hot-path scale, so normalize it here.
+                        urgency=float(interp.amount) / 100.0,
+                        opportunity_window_start=event.tick,
+                        opportunity_window_end=event.tick + 10,
+                        source_event_id=event.id,
+                    )
                 )
                 continue
             # Existing same-semantic carrier -> UPDATE, never a rebirth.
