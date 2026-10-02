@@ -92,6 +92,11 @@ class Desire:
     urgency: float = 0.0
     status: str = "active"
     reason: str = ""
+    # D-scope structured provenance: the exact event id that BIRTHed this
+    # row. Empty string = genesis/pre-history (no runtime event). Never
+    # read from `reason` (frozen rule: reason carries no provenance).
+    # Old codec saves (without this key) decode to "" via the default.
+    source_event_id: str = ""
 
 
 @dataclass
