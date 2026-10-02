@@ -979,7 +979,24 @@ class SimulationEngine:
         satisfaction pass. Candidate generation, evaluate, choose, and
         arbitration only ever read the desires float map; they never create
         a carrier.
+
+        ④ Provenance admission gate (owner 5953427136② + 5954187068/5954226079,
+        Arena 5953467832): before a carrier is created (birth) or touched by
+        an event-sourced update, the source event id must resolve to a real
+        Event in the current runtime `state.event_log` via exact,
+        case-sensitive membership. No prefix/substring/case-fold, no
+        reason fallback. The ordering guarantee is that `resolve()` has
+        already appended `event` to `state.event_log` before this writer
+        runs (simulation.py:797-798 append → step() tail → this call), so a
+        legal event is always in the log and a legal birth is never
+        falsely rejected. Unknown or malformed event ids are rejected here
+        (case ④ / ④a), not silently admitted.
         """
+        eid = getattr(event, "id", None)
+        if not isinstance(eid, str) or not eid:
+            return  # malformed/absent carrier provenance: nothing to admit
+        if not any(getattr(e, "id", None) == eid for e in state.event_log):
+            return  # ④/④a fail-closed: unknown event id is not admitted
         if not event.participants:
             return
         subject = state.characters.get(event.participants[0])
