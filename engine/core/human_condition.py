@@ -19,8 +19,24 @@ class HumanCondition:
     fears: dict[str, float] = field(default_factory=dict)
     virtues: dict[str, float] = field(default_factory=dict)
     vices: dict[str, float] = field(default_factory=dict)
+    # Actor-local associations between places and human pressures. These are
+    # world/person state, not plot commands: a place can amplify or quiet a
+    # pressure differently for different characters.
+    location_pressures: dict[str, dict[str, float]] = field(default_factory=dict)
     life_stage: str = "adult"
     mortality_pressure: float = 0.0
+    # Physical recovery state. 0 means rested; 100 means severely fatigued.
+    fatigue: float = 0.0
+
+    def confinement_at(self, location: str) -> float:
+        """Return experienced confinement at a place, with a neutral default.
+
+        The same rule is used by action generation and pressure evolution so an
+        unannotated world does not accidentally create hidden ping-pong behavior.
+        """
+        associations = self.location_pressures.get(location, {})
+        value = associations.get("confinement", 0.5)
+        return max(0.0, min(1.0, value))
 
     def pressure(self) -> float:
         """Return a bounded measure of unresolved human pressure."""

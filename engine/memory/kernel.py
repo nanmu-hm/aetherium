@@ -80,6 +80,15 @@ class MemoryKernel:
         transmission_depth: int = 0,
     ) -> KnowledgeFact:
         """Record what one character knows without changing world truth."""
+        # New direct location evidence supersedes an earlier "absent" claim
+        # for the same actor/target/place. Knowledge remains actor-local and
+        # evidence-backed; it is not rewritten into world truth.
+        if proposition.startswith("location_seen:"):
+            _, target_id, location = proposition.split(":", 2)
+            state.knowledge.get(owner_id, {}).pop(
+                f"location_absent:{target_id}:{location}",
+                None,
+            )
         existing = state.get_knowledge(owner_id, proposition)
         bounded_confidence = max(0.0, min(1.0, confidence))
         if existing is None:

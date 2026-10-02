@@ -49,8 +49,10 @@ class PreconditionEngine:
                 reasons.append("help target does not exist")
             elif target.status != "active":
                 reasons.append("help target is not active")
+            elif target.location != actor.location:
+                reasons.append("help target is not at the same location")
 
-        if action.action_type == "travel" and action.targets:
+        if action.action_type in {"travel", "search_person"} and action.targets:
             destination = action.targets[0]
             if destination not in state.locations:
                 reasons.append("destination does not exist")
@@ -80,8 +82,6 @@ class PreconditionEngine:
                 possession_name = parts[1].strip() if len(parts) > 1 else ""
                 required_count = int(parts[2]) if len(parts) > 2 and parts[2].strip().isdigit() else 1
                 if actor.possessions.get(possession_name, 0) < required_count:
-                    reasons.append(
-                        f"declared precondition failed: possession required: {possession_name} x{required_count}"
-                    )
+                    reasons.append(f"declared precondition failed: possession required: {possession_name} x{required_count}")
 
         return PreconditionResult(not reasons, tuple(dict.fromkeys(reasons)))

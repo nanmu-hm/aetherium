@@ -15,6 +15,26 @@ class Goal:
     description: str
     priority: float = 1.0
     status: str = "active"
+    # Optional staged plan. The top-level description remains the durable goal;
+    # stages turn it into persistent, inspectable progress rather than a one-shot flag.
+    stages: list[str] = field(default_factory=list)
+    # Optional world-state predicates for staged goals. Each predicate is a
+    # plain serializable mapping so snapshots remain backward-compatible.
+    # When present, simulation uses these predicates instead of action keywords.
+    stage_conditions: list[dict[str, Any]] = field(default_factory=list)
+    current_stage: int = 0
+
+    @property
+    def current_description(self) -> str:
+        if self.stages and self.current_stage < len(self.stages):
+            return self.stages[self.current_stage]
+        return self.description
+
+    @property
+    def progress(self) -> float:
+        if not self.stages:
+            return 1.0 if self.status == "achieved" else 0.0
+        return min(1.0, self.current_stage / len(self.stages))
 
 
 @dataclass
@@ -48,6 +68,12 @@ class CharacterState:
     abilities: dict[str, float] = field(default_factory=dict)
     constraints: list[str] = field(default_factory=list)
     status: str = "active"
+    # Provenance registry for desire carriers. The float map in
+    # human_condition.desires stays the hot path every reader consumes;
+    # this parallel registry records birth / update / satisfaction so no
+    # desire change is ever silent (Experiment AA). Keyed by desire name,
+    # carrier_id mirrors "{subject}:DESIRE:{name}".
+    desire_carriers: dict[str, DesireCarrier] = field(default_factory=dict)
 
 
 @dataclass
@@ -89,6 +115,9 @@ class ActionCandidate:
     expected_outcomes: list[str] = field(default_factory=list)
     risks: list[str] = field(default_factory=list)
     confidence: float = 0.5
+    # Structured intent/provenance used by resolution; it is actor-generated,
+    # not hidden world state.
+    metadata: dict[str, Any] = field(default_factory=dict)
     difficulty: float = 0.5
     required_ability: str = ""
     score: float = 0.0
@@ -109,6 +138,101 @@ class Consequence:
     old_value: Any
     new_value: Any
     reason: str = ""
+
+
+@dataclass
+class DesireCarrier:
+    """Provenance record for one character's desire (Experiment AA).
+
+    human_condition.desires stays the single hot path for every reader;
+    this parallel registry exists so birth / update / satisfaction leave
+    causal evidence instead of mutating a float silently. Pre-history
+    (desires that exist before the world clock) carries the explicit
+    GENESIS sentinel in source/created_at — never a forged runtime event id.
+    """
+
+    carrier_id: str
+    subject_id: str
+    desire: str
+    family: str = "DESIRE"
+    source: str = "GENESIS"
+    created_at: int | str = "GENESIS"
+    # Strength at the last recorded writer touch (birth amount, then the
+    # float value on every update / satisfaction). Passive growth between
+    # touches is maintenance-silent by design (AA-6).
+    strength: float = 0.0
+    # Append-only event ids that are the evidence for this carrier.
+    evidence: list[str] = field(default_factory=list)
+    lifecycle: str = "ACTIVE"
+    # Discrete evidence tie observed at birth (value:/trait:/relationship:).
+    tie: str = ""
+    # AF: consumption provenance. A successful satisfaction event marks the
+    # carrier CONSUMED (event tick + event id), never by tick count or
+    # elapsed time. Only a new evidence-gated belonging-domain consequence
+    # clears these stamps and returns the carrier to ACTIVE; passive
+    # maintenance regrowth of the float does not.
+    consumed_at: int | None = None
+    consumed_evidence: str = ""
+
+
+@dataclass(frozen=True)
+class EvidenceRecord:
+    """A concrete historical-causal grounding for a motivation's appraisal.
+
+    Replaces coarse reason-tag-count with an auditable chain: this record
+    points at a specific past event and explains why that event's state
+    change is still (or no longer) live evidence for the current appraisal.
+    """
+
+    past_event_id: str
+    # (focal_field, focal_subject, focal_target) — mirrors Consequence's
+    # (field, old_value, new_value) shape.
+    state_delta: tuple[str, str, str]
+    motivation_source: str
+    subject_id: str
+    target_id: str
+    event_age: int
+    current_relevance: float
+    interpretation: str
+    causal_link: str = ""
+
+
+@dataclass(frozen=True)
+class AppraisalRecord:
+    """What a candidate means to this actor, per motivation source.
+
+    Attached to each candidate in the pool before the kernel sees it.
+    `interpretation` reuses the kernel's own DecisionEvaluation.reasons
+    tags (fetched read-only via evaluate()), not a parallel tag system.
+    """
+
+    candidate_id: str
+    motivation_source: str
+    salience: float
+    interpretation: tuple[str, ...]
+    evidence: tuple[EvidenceRecord, ...] = ()
+
+
+@dataclass(frozen=True)
+class ArbitrationResult:
+    """Semantic verdict from the arbitration layer for one actor, one tick.
+
+    RESOLVE: the named candidate's evidence distinguishes it; it survives
+    the pool-narrowing step and the kernel executes it through its normal
+    path.
+    ABSTAIN: no live, distinguishable causal reason for either side; the
+    pool is narrowed to EMPTY, reaching choose()'s existing empty-pool
+    None path — no new kernel output type.
+    INERT: no cross-motivation conflict in this pool; the kernel handles
+    the tick exactly as it does today, unchanged.
+
+    This type carries NO float field: it is structurally impossible to
+    plug an ArbitrationResult into a utility sum.
+    """
+
+    kind: str  # "resolve" | "abstain" | "inert"
+    candidate_id: str = ""
+    evidence: tuple[EvidenceRecord, ...] = ()
 
 
 @dataclass
