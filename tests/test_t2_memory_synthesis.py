@@ -475,3 +475,91 @@ def test_n4_e3_mei_real_fixture_ordinary_evidence_never_achieves():
     # Birth provenance / identity survive untouched.
     assert row.tie == "relationship:yan->rui"
     assert row.source_event_id == "event-0-yan-contact_person"
+
+
+# ---------------------------------------------------------------------------
+# N4 follow-up — rule-3 status write coverage (Arena 5967250167 §四).
+#
+# Arena independently reproduced the gap the executor reported honestly:
+# mutating the rule-3 ordinary-branch status write (the `missed/achieved`
+# -> "active" line) to "achieved" left 20/20 green. That is a REAL
+# frozen-semantics coverage hole: owner 5958274533 rule 3 says ordinary
+# new evidence "只能更新/重激活 evidence，不得单独触发 ACHIEVED", and v3
+# T2-2 says MISSED -> ACTIVE' (same-identity in-place reactivation).
+#
+# Route choice (MISSED, not ACHIEVED): a rule-3 mutation cannot be isolated
+# on the ACHIEVED route, because that route depends on the ACHIEVED writer —
+# removing it would fail this fixture on its precondition (F1's axis) instead
+# of on rule-3 semantics. Window expiry uses the ordinary advance_desires
+# path, keeping the three fixtures orthogonal.
+#
+# Four-state matrix (Arena, read-only scratch, head db0a5ac + this fixture):
+#   real code                          -> 21 passed
+#   rule-3 write mutated to "achieved" -> RED here only ('achieved' != 'active')
+#   P-B collapse (confirming := True)  -> PASS here (caught by the E3 fixture)
+#   ACHIEVED writer removed            -> PASS here (caught by the F1 fixture)
+# Pure-test change; production untouched.
+# ---------------------------------------------------------------------------
+# Drop-in fixture for the uncovered rule-3 write (Arena, N4 follow-up).
+#
+# HOW TO USE: append this file's content to tests/test_t2_memory_synthesis.py
+# (it reuses that module's helpers `_genesis_run` / `_stable_key`).
+#
+# Covers: ORDINARY evidence arriving on a MISSED row must REACTIVATE it to
+# ACTIVE' (frozen v3 T2-2 / owner 5958274533 rule 3: ordinary evidence may only
+# refresh/reactivate, never ACHIEVE).
+#
+# Why MISSED (not ACHIEVED): a mutation of the rule-3 status write cannot be
+# isolated on the ACHIEVED route, because that route itself depends on the
+# ACHIEVED writer (removing it makes any achieved-state fixture fail on its
+# precondition, not on the rule-3 semantics). Expiring the window instead uses
+# the ordinary advance_desires path and keeps the fixture orthogonal to the
+# other two mutations.
+#
+# Discriminating power (Arena, read-only scratch, head db0a5ac; fixture appended):
+#   real code                            -> 21 passed  (row missed -> ordinary event -> active)
+#   rule-3 write mutated to "achieved"   -> RED  ('achieved' != 'active')  [targeted]
+#   P-B collapse (confirming := True)    -> PASS (different axis; caught by the E3 fixture)
+#   ACHIEVED writer removed              -> PASS (different axis; caught by the F1 fixture)
+# Pure-test change; the scope decision belongs to owner/ChatGPT.
+
+def test_n4_followup_ordinary_evidence_on_missed_row_reactivates():
+    """Ordinary evidence on a MISSED row -> ACTIVE' (rule 3), never ACHIEVED."""
+    from engine.core.models import CharacterState, RelationshipState
+
+    world, eng = _genesis_run()
+    key = _stable_key("yan", "belonging")
+
+    # Drive the row to MISSED through the ordinary window-expiry path.
+    missed = False
+    for _ in range(80):
+        row = world.memory_state.desires.get(key)
+        if row is not None and row.status == "missed":
+            missed = True
+            break
+        if row is not None and row.status == "active":
+            row.opportunity_window_end = world.tick - 1
+        eng.step(world)
+    assert missed, "fixture precondition: row must reach MISSED via window expiry"
+
+    # Inject the second counterpart NOW: ordinary evidence arrives on a MISSED row.
+    yan_loc = world.characters["yan"].location
+    world.add_character(CharacterState(id="mei", name="mei", location=yan_loc))
+    world.add_relationship(RelationshipState(source_id="yan", target_id="mei", trust=10.0))
+    world.add_relationship(RelationshipState(source_id="mei", target_id="yan", trust=50.0))
+
+    seen = None
+    for _ in range(40):
+        res = eng.step(world)
+        for e in res.events:
+            if "yan" in e.participants and "mei" in e.participants:
+                seen = e
+                break
+        if seen is not None:
+            break
+    assert seen is not None, "no yan<->mei event"
+
+    row = world.memory_state.desires[key]
+    assert row.latest_evidence_event_id == seen.id
+    assert row.status != "achieved", f"ordinary evidence must NEVER achieve (got {row.status})"
+    assert row.status == "active", f"ordinary evidence must REACTIVATE to ACTIVE' (got {row.status})"
