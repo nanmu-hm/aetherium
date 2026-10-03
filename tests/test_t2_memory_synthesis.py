@@ -341,3 +341,108 @@ def test_f3_positive_order_independence():
     )
     key = _stable_key("yan", "belonging")
     assert cur_a[key].latest_evidence_event_id == cur_b[key].latest_evidence_event_id == "event-105-yan-contact_person"
+
+
+# ---------------------------------------------------------------------------
+# N4 — owner 5965877314 (落入本轮): REAL engine-driven fixtures.
+# Arena 5965826622: the head b4da351 E3 tests were tautological (construct a
+# row -> assert the value just constructed); commenting out the ACHIEVED
+# writer left 18/18 green. N4 fixes the evidential power:
+#   (i)  >=1 F1 test that DRIVES the real transition (removing the
+#        ACHIEVED writer must turn it red),
+#   (ii) E3 real fixture: a second counterpart (mei) + relationship, run
+#        through the engine so ORDINARY evidence flows, asserting the row
+#        is NOT ACHIEVED by it (frozen negative control).
+# No commenting-out / branch-deletion trickery: every assertion below is
+# observed AFTER real engine steps on a real world.
+# ---------------------------------------------------------------------------
+def _genesis_run(seed: int = 7):
+    world = build_genesis_world()
+    world.timestamp = "0001-01-01T00:00:00"
+    return world, SimulationEngine(seed=seed, use_arbitration=False)
+
+
+def test_n4_f1_engine_driven_active_achieved_reactivated():
+    """N4-F1: the E2 transition trace is DRIVEN by the engine pipeline.
+
+    Frozen early trace (Arena 5965015878 §二, seed 7):
+      t0 birth -> ACTIVE; t1 P-B confirming -> ACHIEVED; t5 ordinary -> ACTIVE'
+    Mutation sensitivity (Arena N4 probe): commenting out the E2
+    'row.status = "achieved"' writer makes the t1 assertion RED.
+    """
+    world, eng = _genesis_run()
+    key = _stable_key("yan", "belonging")
+    eng.step(world)  # tick 0: birth via event-0-yan-contact_person
+    row = world.memory_state.desires[key]
+    assert row.status == "active"
+    assert row.source_event_id == "event-0-yan-contact_person"
+    assert row.tie == "relationship:yan->rui"
+    eng.step(world)  # tick 1: P-B confirming evidence (same-tie re-interpretation)
+    row = world.memory_state.desires[key]
+    assert row.status == "achieved", (
+        "N4/F1: ACTIVE -> ACHIEVED must be driven by the E2 rule-1 writer "
+        "on P-B confirming evidence (removing that writer turns this red)"
+    )
+    for _ in range(4):  # ticks 2..5
+        eng.step(world)
+    row = world.memory_state.desires[key]
+    assert row.status == "active", (
+        "N4/F1: ACHIEVED -> ACTIVE' reactivation must be driven by the E2 "
+        "ordinary/reactivation branch at t5 of the frozen trace"
+    )
+
+
+def test_n4_e3_mei_real_fixture_ordinary_evidence_never_achieves():
+    """N4-E3: second counterpart 'mei' as a REAL fixture through the engine.
+
+    owner 5958274533 E3 / 5965877314: 'mei' must be a real character +
+    relationship whose contact produces ORDINARY evidence (different tie
+    than the birth tie 'yan->rui'); the ordinary branch refreshes /
+    reactivates but NEVER writes ACHIEVED (frozen negative control).
+    Unlike the tautological E3 tests of head b4da351, this fixture is
+    added to a live world and the transition is observed after real
+    engine steps.
+    """
+    from engine.core.models import CharacterState, RelationshipState
+
+    world, eng = _genesis_run()
+    key = _stable_key("yan", "belonging")
+    eng.step(world)  # tick 0: birth
+    eng.step(world)  # tick 1: P-B confirming -> ACHIEVED
+    assert world.memory_state.desires[key].status == "achieved"
+
+    # Second counterpart at the actor's current location. Low trust so the
+    # ordinary pipeline's target selection (min trust among co-located)
+    # picks her next — no forcing, no special path.
+    yan_loc = world.characters["yan"].location
+    world.add_character(CharacterState(id="mei", name="mei", location=yan_loc))
+    world.add_relationship(RelationshipState(source_id="yan", target_id="mei", trust=10.0))
+    world.add_relationship(RelationshipState(source_id="mei", target_id="yan", trust=50.0))
+
+    # Advance until a yan<->mei event is observed (bounded; the fixture is
+    # validated to fire on the very next tick for seed 7).
+    seen = None
+    for _ in range(40):
+        res = eng.step(world)
+        for e in res.events:
+            if "yan" in e.participants and "mei" in e.participants:
+                seen = e
+                break
+        if seen is not None:
+            break
+    assert seen is not None, "N4/E3: fixture must produce a yan<->mei event"
+
+    row = world.memory_state.desires[key]
+    assert row.latest_evidence_event_id == seen.id, (
+        "N4/E3: the mei event must have flowed through the E2 ordinary "
+        "branch as post-birth evidence"
+    )
+    # Ordinary evidence (tie 'yan->mei' differs from the stored birth tie
+    # 'yan->rui') can reactivation-refresh but can NEVER achieve.
+    assert row.status != "achieved", (
+        "N4/E3: ordinary evidence from a second counterpart must never "
+        "produce ACHIEVED (frozen v3 negative control)"
+    )
+    # Birth provenance / identity survive untouched.
+    assert row.tie == "relationship:yan->rui"
+    assert row.source_event_id == "event-0-yan-contact_person"
