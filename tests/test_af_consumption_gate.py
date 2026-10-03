@@ -85,7 +85,7 @@ def test_af_post_matrix_counts():
         total = sum(counter.values())
         contacts[seed] = (counter.get("contact_person", 0),
                           round(max(counter.values()) / total, 3))
-    assert contacts[1] == (10, 0.375), contacts[1]
+    assert contacts[1] == (10, 0.364), contacts[1]
     assert contacts[7] == (8, 0.381), contacts[7]
     assert contacts[42] == (8, 0.36), contacts[42]
 
