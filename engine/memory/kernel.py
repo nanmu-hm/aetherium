@@ -271,12 +271,12 @@ class MemoryKernel:
         for desire in state.desires.values():
             if desire.status != "active":
                 continue
-            # T2 P-B: a row carrying post-birth evidence (latest_evidence_event_id
-            # set) is "evidence-alive"; the opportunity-window fallback must not
-            # re-miss it (state-based on evidence presence, no tick timer). Only
-            # rows with no post-birth evidence auto-miss on window close.
-            if desire.latest_evidence_event_id:
-                continue
+            # F2 (owner 5964978048): the "evidence-alive" exemption is REVOKED.
+            # The frozen v3 union has no such clause — ACTIVE→MISSED is the
+            # window-expiry rule, full stop, regardless of whether
+            # latest_evidence_event_id is set. The row re-opens only via E2
+            # window extension (confirming or ordinary evidence reactivates
+            # it in place and moves the window to event.tick + 10).
             if desire.opportunity_window_end is not None and current_tick > desire.opportunity_window_end:
                 desire.status = "missed"
                 desire.reason = "opportunity window closed before the desire was fulfilled"

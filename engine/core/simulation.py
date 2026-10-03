@@ -1051,6 +1051,11 @@ class SimulationEngine:
                         # T2: latest evidence = "" until a post-birth
                         # transition writes it (never inferred from reason).
                         latest_evidence_event_id="",
+                        # P-B birth provenance: the _tie of the admitting
+                        # interpretation, captured at birth. Carried for
+                        # provenance; the P-B confirming predicate is
+                        # computed at E2 time from carrier.evidence[].
+                        tie=interp.tie,
                     )
                 )
                 continue
@@ -1097,23 +1102,65 @@ class SimulationEngine:
                 carrier.lifecycle = "SATISFIED" if value == 0.0 else "ACTIVE"
                 carrier.consumed_at = None
                 carrier.consumed_evidence = ""
-            # T2 E2: post-birth evidence update — mirror the carrier's latest
-            # evidence event into the Store-1 row. This is the ONLY writer of
-            # latest_evidence_event_id after birth. CONSUMED alone does NOT
-            # change the row status (v3 union rule): ACHIEVED may only be set
-            # by P-B confirmation; the row stays "active" through consumption
-            # until a new P-B-confirmed event re-activates or confirms it.
+            # T2 E2 (frozen v3 ordered rule table, owner 5958274533): the sole
+            # post-birth status writer. Priority when two rules collide on the
+            # same event: (1) P-B confirming predicate holds -> ACHIEVED;
+            # (2) row already ACHIEVED + new admitted reactivation -> ACTIVE';
+            # (3) ordinary evidence -> refresh/reactivate only, never ACHIEVED;
+            # (4) CONSUMED alone never triggers ACHIEVED.
+            #
+            # P-B confirming predicate (frozen T2-1, owner 5957981558 §3):
+            #   ∃ e ∈ carrier.evidence[] such that re-interpreting e against
+            #   the current state yields the SAME desire with a non-empty
+            #   _tie == this interpretation's non-empty _tie.
+            #   ("A prior piece of evidence confirmed the same relationship
+            #   payload" — not bound to the birth tie.)
+            #
+            # The birth event is evidence[0]; for a *first* post-birth event
+            # the evidence list has only that one entry, so P-B is vacuously
+            # true when interp.tie is non-empty and equals the birth tie —
+            # this is exactly the "the memory record was confirmed by
+            # subsequent evidence" frozen semantics, written once, state-based.
             row_id = f"{subject.id}:store1:{interp.desire}"
             row = state.memory_state.desires.get(row_id)
             if row is not None:
                 row.latest_evidence_event_id = event.id
-                # T2 P-B reactivation: a newly admitted post-birth evidence
-                # event revives a 'missed' row back to 'active'. 'achieved'
-                # is terminal (set only by P-B confirmation, never here) and a
-                # still-'active' row is untouched. State-based on evidence
-                # presence — no tick counter / timer (owner frozen rule).
-                if row.status == "missed":
-                    row.status = "active"
+                row.urgency = min(1.0, float(value) / 100.0)
+                # P-B confirming: re-interpret each e in carrier.evidence[]
+                # (excluding the just-appended event.id itself, which is
+                # already `interp`) and check for a matching non-empty tie.
+                confirming = False
+                for eid in carrier.evidence:
+                    if eid == event.id:
+                        continue
+                    # Re-interpret the prior evidence event in the CURRENT state.
+                    # Only contact / relationship events carry _tie; other
+                    # event types yield an empty tie.
+                    past_event = next((e for e in state.event_log if e.id == eid), None)
+                    if past_event is None:
+                        continue
+                    for past_interp in interpret_desire_event(past_event, state):
+                        if past_interp.desire == interp.desire and past_interp.tie and past_interp.tie == interp.tie:
+                            confirming = True
+                            break
+                    if confirming:
+                        break
+                if confirming and not consumed:
+                    # rule 1: ACTIVE -> ACHIEVED on confirming evidence.
+                    # rule 2: ACHIEVED (or MISSED) -> ACTIVE' in place.
+                    if row.status == "active":
+                        row.status = "achieved"
+                    elif row.status in ("achieved", "missed"):
+                        row.status = "active"
+                    row.opportunity_window_start = event.tick
+                    row.opportunity_window_end = event.tick + 10
+                else:
+                    # rule 3 (ordinary evidence) + rule 4 (consumed never
+                    # achieves): refresh & reactivate in place, no ACHIEVED.
+                    if row.status in ("missed", "achieved") and not consumed:
+                        row.status = "active"
+                    row.opportunity_window_start = event.tick
+                    row.opportunity_window_end = event.tick + 10
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)

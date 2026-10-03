@@ -130,36 +130,58 @@ def _evidence_tick(event_id: str) -> int:
 
     Canonicalization needs a total order of evidence recency; string order of
     event ids is NOT tick order (``event-105`` < ``event-20`` lexically), so
-    the embedded tick is parsed explicitly. Unparseable ids rank lowest.
+    the embedded tick is parsed explicitly. Unparseable ids raise (F3
+    fail-closed: no synthetic tie-break, no guessing).
     """
     parts = event_id.split("-")
     if len(parts) >= 2 and parts[0] == "event" and parts[1].isdigit():
         return int(parts[1])
-    return -1
+    raise ValueError(f"unparseable evidence event id: {event_id!r}")
 
 
-def _canonicalize_desires(raw_desires: dict[str, dict[str, Any]]) -> tuple[dict[str, Desire], dict[str, list[DesireHistory]]]:
+class DesireCanonicalizationError(ValueError):
+    """F3 fail-closed: a desire identity's evidence order is not provable
+    from the restored event_log (same provenance, same-tick-different-id,
+    unparseable id, unresolvable id, or all-empty multi-row group).
+    NEVER fall back to dict insertion order, rid lexicographic order, or
+    any synthetic tie-break (owner 5964978048 F3)."""
+
+
+def _canonicalize_desires(
+    raw_desires: dict[str, dict[str, Any]],
+    event_log_ids: set[str] | None = None,
+) -> tuple[dict[str, Desire], dict[str, list[DesireHistory]]]:
     """Collapse old multi-row ``desires`` payloads to one current row per identity.
 
     Identity = ``(owner_id, description)``, stored under the STABLE key
     ``"{owner}:store1:{desc}"``. A new-style payload already holds one row per
-    identity (the stable key). An old-style payload may hold several rows for
-    the same identity (one per per-event suffix); exactly the most-recent-
-    evidence row survives as the current row, and the displaced rows migrate
-    into the independent ``desire_history`` container (provenance only).
-    Every surviving row is re-keyed to the stable key so ``desires`` is always
-    in canonical form after load.
+    identity (the stable key) and passes through untouched. An old-style
+    payload may hold several rows for the same identity; the survivor is
+    chosen ONLY by provable evidence recency:
+
+    - rows are ordered by the tick of their effective evidence event
+      (``latest_evidence_event_id``, falling back to ``source_event_id``);
+    - every non-empty evidence id used for ordering must be parseable AND,
+      when ``event_log_ids`` is supplied, must be present in the restored
+      event log (provenance resolvability);
+    - an ALL-EMPTY single-row group is compatible (pre-history row, frozen
+      rule: empty source_event_id needs no event-log resolution);
+    - any ambiguity — same effective evidence, same tick with different
+      event ids, unparseable id, or multi-row all-empty group — raises
+      ``DesireCanonicalizationError``. NO dict insertion order, NO rid
+      lexicographic, NO synthetic tie-break (F3 fail-closed, owner
+      5964978048 / 5958307998 §4 ordering-ambiguity clause).
+
+    Displaced older rows migrate into the independent ``desire_history``
+    container (provenance only).
     """
     from collections import defaultdict
 
     groups: dict[str, list[str]] = defaultdict(list)
-    identity_of: dict[str, str] = {}
     for row_id in raw_desires:
         owner = raw_desires[row_id].get("owner_id", "")
         desc = raw_desires[row_id].get("description", "")
-        key = f"{owner}:store1:{desc}"
-        identity_of[row_id] = key
-        groups[key].append(row_id)
+        groups[f"{owner}:store1:{desc}"].append(row_id)
 
     current: dict[str, Desire] = {}
     displaced: dict[str, list[DesireHistory]] = defaultdict(list)
@@ -167,13 +189,69 @@ def _canonicalize_desires(raw_desires: dict[str, dict[str, Any]]) -> tuple[dict[
         owner = raw_desires[row_ids[0]].get("owner_id", "")
         desc = raw_desires[row_ids[0]].get("description", "")
 
-        def _recency(rid: str) -> tuple[int, str]:
+        def _evidence_of(rid: str) -> str:
             d = raw_desires[rid]
-            evidence = d.get("latest_evidence_event_id", "") or d.get("source_event_id", "")
-            return (_evidence_tick(evidence), rid)
+            return d.get("latest_evidence_event_id", "") or d.get("source_event_id", "")
 
-        ranked = sorted(row_ids, key=_recency, reverse=True)
-        winner, older = ranked[0], ranked[1:]
+        def _ticks(rid: str) -> int:
+            ev = _evidence_of(rid)
+            if not ev:
+                return 0  # all-empty rows rank lowest, provably (no ordering claim)
+            tick = _evidence_tick(ev)  # raises on unparseable ids (F3)
+            if event_log_ids is not None and ev not in event_log_ids:
+                raise DesireCanonicalizationError(
+                    f"identity {key!r}: evidence event {ev!r} not present in the "
+                    f"restored event_log; order is not provable (F3 fail-closed)"
+                )
+            return tick
+
+        ticks = {rid: _ticks(rid) for rid in row_ids}
+        # Split rows into evidence-bearing and all-empty. The all-empty
+        # subset is a compatibility pass: any one of them may be current
+        # (frozen rule: pre-history rows need no event-log resolution),
+        # but ONLY when they are the entire group; a group mixing empty
+        # and non-empty rows orders purely by tick (0 < any event tick).
+        known = [rid for rid in row_ids if ticks[rid] > 0]
+        if not known:
+            # all-empty provenance: no evidence order to prove; keep the
+            # (single, stable-keyed) row as-is, no displacement.
+            if len(row_ids) > 1:
+                raise DesireCanonicalizationError(
+                    f"identity {key!r}: multiple rows carry empty provenance; no "
+                    f"order is provable (F3 fail-closed)"
+                )
+            data = dict(raw_desires[row_ids[0]])
+            data["id"] = key
+            current[key] = _desire(data)
+            continue
+        # F3: the current row must be uniquely provable. ANY two evidence
+        # rows sharing an evidence tick are an ordering ambiguity (same
+        # tick, different event ids — same-provenance is a sub-case) and
+        # raises; no dict insertion order, no rid lexicographic, no
+        # synthetic tie-break.
+        if len(known) > 1:
+            tick_owner: dict[int, str] = {}
+            for rid in known:
+                t = ticks[rid]
+                if t in tick_owner:
+                    other = tick_owner[t]
+                    ev_a, ev_b = _evidence_of(rid), _evidence_of(other)
+                    if ev_a == ev_b:
+                        raise DesireCanonicalizationError(
+                            f"identity {key!r}: rows {other!r} and {rid!r} share the "
+                            f"same provenance ({ev_a!r}); order is not provable "
+                            f"(F3 fail-closed)"
+                        )
+                    raise DesireCanonicalizationError(
+                        f"identity {key!r}: rows {other!r} ({ev_b!r}) and {rid!r} "
+                        f"({ev_a!r}) have the same evidence tick {t}; order is "
+                        f"not provable (F3 fail-closed)"
+                    )
+                tick_owner[t] = rid
+        winner = max(known, key=lambda rid: ticks[rid])
+        t_top = ticks[winner]
+        # All rows strictly older than the winner (by tick) are displaced.
+        older = [rid for rid in row_ids if rid != winner and ticks[rid] < t_top]
         data = dict(raw_desires[winner])
         data["id"] = key
         current[key] = _desire(data)
@@ -204,9 +282,9 @@ def _memory_revision(data: dict[str, Any]) -> MemoryRevision:
     return MemoryRevision(**data)
 
 
-def _memory_state(data: dict[str, Any]) -> MemoryState:
+def _memory_state(data: dict[str, Any], event_log_ids: set[str] | None = None) -> MemoryState:
     raw_desires = data.get("desires", {})
-    desires, canonical_history = _canonicalize_desires(raw_desires)
+    desires, canonical_history = _canonicalize_desires(raw_desires, event_log_ids)
     # Load-time canonicalization merges any explicitly-saved desire_history with
     # the rows displaced from the old-style `desires` payload. Provenance only.
     saved_history = {
@@ -252,7 +330,12 @@ def world_from_dict(payload: dict[str, Any]) -> WorldState:
         key: _faction(value) for key, value in raw.get("factions", {}).items()
     }
     raw["event_log"] = [_event(item) for item in raw.get("event_log", [])]
-    raw["memory_state"] = _memory_state(raw.get("memory_state", {}))
+    # F3 provenance resolvability: the canonicalizer may only order desire
+    # rows by evidence ids that actually exist in the restored event_log.
+    # An id that cannot be resolved there is a compatibility failure, not a
+    # guess — pass the restored id set through (owner 5964978048 / F3).
+    event_log_ids = {event.id for event in raw["event_log"]}
+    raw["memory_state"] = _memory_state(raw.get("memory_state", {}), event_log_ids)
     return WorldState(**raw)
 
 

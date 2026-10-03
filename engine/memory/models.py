@@ -103,6 +103,11 @@ class Desire:
     # status transition / reactivation. Empty = no post-birth evidence yet.
     # Separate from source_event_id: that one is the immutable birth event.
     latest_evidence_event_id: str = ""
+    # P-B birth provenance (frozen v3 T2-1): the _tie captured at birth from
+    # the admitting interpretation. Carried for provenance only; the P-B
+    # confirming predicate is computed at E2 time from carrier.evidence[]
+    # re-interpretation, not from this field.
+    tie: str = ""
 
 
 @dataclass
