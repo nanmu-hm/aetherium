@@ -1145,9 +1145,14 @@ class SimulationEngine:
                             break
                     if confirming:
                         break
-                if confirming and not consumed:
+                if confirming:
                     # rule 1: ACTIVE -> ACHIEVED on confirming evidence.
                     # rule 2: ACHIEVED (or MISSED) -> ACTIVE' in place.
+                    # NOTE (owner 5965764446 N1 裁定): no `not consumed` gate —
+                    # the frozen E2 rule table has no consumption condition on
+                    # rules 1/2; rule 4 ("CONSUMED alone never achieves") is
+                    # preserved because the ordinary branch below can never
+                    # set ACHIEVED.
                     if row.status == "active":
                         row.status = "achieved"
                     elif row.status in ("achieved", "missed"):
@@ -1155,9 +1160,11 @@ class SimulationEngine:
                     row.opportunity_window_start = event.tick
                     row.opportunity_window_end = event.tick + 10
                 else:
-                    # rule 3 (ordinary evidence) + rule 4 (consumed never
-                    # achieves): refresh & reactivate in place, no ACHIEVED.
-                    if row.status in ("missed", "achieved") and not consumed:
+                    # rule 3 (ordinary evidence): refresh & reactivate in
+                    # place, no ACHIEVED. No consumption condition either —
+                    # CONSUMED alone can never achieve because this branch
+                    # writes 'achieved' nowhere (rule 4, owner frozen).
+                    if row.status in ("missed", "achieved"):
                         row.status = "active"
                     row.opportunity_window_start = event.tick
                     row.opportunity_window_end = event.tick + 10
