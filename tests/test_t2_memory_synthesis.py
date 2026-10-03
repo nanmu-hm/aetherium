@@ -402,14 +402,38 @@ def test_n4_e3_mei_real_fixture_ordinary_evidence_never_achieves():
     Unlike the tautological E3 tests of head b4da351, this fixture is
     added to a live world and the transition is observed after real
     engine steps.
+
+    CHOREOGRAPHY (Arena 5967181342 §三 判别力缺口修正): 'mei' is injected
+    IMMEDIATELY AFTER BIRTH, while the row is still ACTIVE. This is what
+    makes the negative control falsifiable. In the earlier ordering the
+    row had already reached 'achieved', after which BOTH the confirming
+    and the ordinary branch converge to 'active' — so
+    ``assert status != "achieved"`` was vacuously true and the
+    ordinary-vs-confirming distinction had ZERO test coverage (P-B
+    collapse mutation `confirming = True` produced an identical failure
+    set).
+
+    Falsifiability (three-way, mutually complementary):
+      * real code                      -> PASS
+      * P-B predicate collapsed True  -> RED (ordinary evidence would be
+        misread as confirming and the row would become 'achieved')
+      * ACHIEVED writer removed        -> PASS here (that is F1's job)
     """
     from engine.core.models import CharacterState, RelationshipState
 
     world, eng = _genesis_run()
     key = _stable_key("yan", "belonging")
-    eng.step(world)  # tick 0: birth
-    eng.step(world)  # tick 1: P-B confirming -> ACHIEVED
-    assert world.memory_state.desires[key].status == "achieved"
+
+    # tick 0: birth -> ACTIVE. Inject 'mei' NOW, before the row can reach
+    # ACHIEVED, so the ordinary-evidence arrival is actually discriminating.
+    eng.step(world)
+    row = world.memory_state.desires[key]
+    assert row.status == "active", (
+        "N4/E3: fixture must inject the second counterpart while the row "
+        "is still ACTIVE, otherwise the negative control is vacuous"
+    )
+    assert row.source_event_id == "event-0-yan-contact_person"
+    assert row.tie == "relationship:yan->rui"
 
     # Second counterpart at the actor's current location. Low trust so the
     # ordinary pipeline's target selection (min trust among co-located)
@@ -419,8 +443,8 @@ def test_n4_e3_mei_real_fixture_ordinary_evidence_never_achieves():
     world.add_relationship(RelationshipState(source_id="yan", target_id="mei", trust=10.0))
     world.add_relationship(RelationshipState(source_id="mei", target_id="yan", trust=50.0))
 
-    # Advance until a yan<->mei event is observed (bounded; the fixture is
-    # validated to fire on the very next tick for seed 7).
+    # Advance until a yan<->mei event is observed (bounded; validated to
+    # fire on the very next tick for seed 7).
     seen = None
     for _ in range(40):
         res = eng.step(world)
@@ -438,10 +462,15 @@ def test_n4_e3_mei_real_fixture_ordinary_evidence_never_achieves():
         "branch as post-birth evidence"
     )
     # Ordinary evidence (tie 'yan->mei' differs from the stored birth tie
-    # 'yan->rui') can reactivation-refresh but can NEVER achieve.
+    # 'yan->rui') can reactivation-refresh but can NEVER achieve. This
+    # assertion is only meaningful because the row was ACTIVE on arrival.
     assert row.status != "achieved", (
         "N4/E3: ordinary evidence from a second counterpart must never "
         "produce ACHIEVED (frozen v3 negative control)"
+    )
+    assert row.status == "active", (
+        "N4/E3: ordinary evidence on an ACTIVE row leaves it ACTIVE "
+        "(refresh only, no status change)"
     )
     # Birth provenance / identity survive untouched.
     assert row.tie == "relationship:yan->rui"
