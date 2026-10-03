@@ -5,6 +5,7 @@ from __future__ import annotations
 from .models import ActionCandidate, CharacterState, WorldState
 from .action_types import event_action_type, goal_matches_action
 from .psychology import has_trait
+from .goal_fallback import goal_stagnation_candidate
 
 
 def _has_value(character: CharacterState, value: str) -> bool:
@@ -90,6 +91,12 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         return []
 
     pool: list[ActionCandidate] = []
+    # T1 M-B: single intermediate candidate for a structurally-stuck relational
+    # goal stage, tagged with the mb: provenance token. Enters the ordinary
+    # pool; no bypass, no timer, no new action type.
+    mb = goal_stagnation_candidate(state, character_id)
+    if mb is not None:
+        pool.append(mb)
     goal = max((g for g in character.goals if g.status == "active"), key=lambda item: item.priority, default=None)
     if goal and not goal.stage_conditions:
         pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id, action_type="pursue_goal", motivation=goal.current_description, confidence=0.8, difficulty=0.5, score=0.10))
