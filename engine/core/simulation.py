@@ -16,7 +16,7 @@ from .desire_interpretation import (
     interpret_desire_event,
     record_satisfaction_evidence,
 )
-from .models import ActionCandidate, ActionResult, Consequence, DesireCarrier, Event, WorldState
+from .models import ActionCandidate, ActionResult, CharacterState, Consequence, DesireCarrier, Event, WorldState
 from .preconditions import PreconditionEngine
 from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
@@ -565,6 +565,69 @@ class SimulationEngine:
                 ]
             )
 
+    def _event_preconditions(
+        self, action: ActionCandidate, precondition
+    ) -> list[str]:
+        """The declared preconditions plus the hard-gate outcome that actually
+        participated in this candidate -> execution decision.
+
+        `abilities` / `possessions` live in core/preconditions.py as
+        FEASIBILITY gates (can this action be attempted at all), not as utility
+        terms in decision.py. Recording the gate outcome here is what lets an
+        event answer "why was this executable *then*" instead of only "it
+        happened" (ChatGPT 5971081586 §1).
+
+        Deterministic: derived from the candidate and the gate result only, no
+        RNG, no clock.
+        """
+        recorded: list[str] = [f"declared: {item}" for item in action.preconditions]
+        if precondition.satisfied:
+            recorded.append("gate: satisfied")
+        else:
+            recorded.append(f"gate: blocked ({'; '.join(precondition.reasons)})")
+        return recorded
+
+    def _event_observations(
+        self, state: WorldState, actor: CharacterState, action: ActionCandidate
+    ) -> list[str]:
+        """A deterministic, serializable summary of what the actor could
+        actually see when it decided (ChatGPT 5971081586 §1: observations).
+
+        Only state the decision genuinely reads: its own location, who was
+        co-located, the relationship axes available to it, and its non-zero
+        desires. Never hidden world state. Rounded to 3 decimals so the value is
+        stable across platforms and round-trips byte-identically.
+        """
+        seen: list[str] = [f"location: {actor.location}"]
+
+        co_located = sorted(
+            other.id
+            for other in state.characters.values()
+            if other.id != actor.id and other.location == actor.location
+        )
+        seen.append(f"co_located: {','.join(co_located) if co_located else 'none'}")
+
+        for target_id in sorted(set(action.targets)):
+            relationship = state.get_relationship(actor.id, target_id)
+            if relationship is None:
+                seen.append(f"rel({actor.id}->{target_id}): none")
+                continue
+            seen.append(
+                f"rel({actor.id}->{target_id}): "
+                f"trust={relationship.trust:.3f},"
+                f"affection={relationship.affection:.3f},"
+                f"resentment={relationship.resentment:.3f},"
+                f"fear={relationship.fear:.3f}"
+            )
+
+        desires = actor.human_condition.desires
+        active = sorted(name for name, value in desires.items() if value > 0.0)
+        seen.append(
+            "desires: "
+            + (",".join(f"{n}={desires[n]:.3f}" for n in active) if active else "none")
+        )
+        return seen
+
     def resolve(self, state: WorldState, actions: list[ActionCandidate]) -> list[Event]:
         events: list[Event] = []
         for action in actions:
@@ -788,6 +851,15 @@ class SimulationEngine:
                 action_type=action.metadata.get("event_action_type", canonical_action_type(action.action_type)),
                 action_result=outcome,
                 consequences=consequences,
+                # --- event-level causal ledger (ChatGPT 5971081586 §1) ---
+                # These used to exist only on the transient ActionCandidate,
+                # which made Event.causes a dangling reference from the
+                # persistence boundary (Arena 5971061262 §4). They are
+                # propagated here, inside resolve(), where the candidate AND
+                # the pre-execution state are both still in scope.
+                intent=action.motivation,
+                preconditions=self._event_preconditions(action, precondition),
+                observations=self._event_observations(state, actor, action),
             )
             self._apply_social_reactions(state, event, action, outcome, consequences)
             self._update_procedural_habit(actor, action, outcome, consequences)
@@ -1072,6 +1144,13 @@ class SimulationEngine:
         self._settle_emotions(state)
         actions = self.generate_candidates(state)
         events = self.resolve(state, actions)
+        # Snapshot the fields that the non-event writers below are allowed to
+        # touch, so their real effect can be recorded as a passive/clock
+        # transition instead of being silently attributed to the last event
+        # (ChatGPT 5971081586 §3, acceptance B). Pure observation: this never
+        # feeds back into the dynamics.
+        before = self._transition_snapshot(state)
+
         self.memory_kernel.decay(state.memory_state, state.tick)
         self.memory_kernel.advance_desires(state.memory_state, state.tick)
         # Quiet time is part of the world, not a missing event. A character
@@ -1092,6 +1171,15 @@ class SimulationEngine:
         # nowhere else (Experiment AA).
         for event in events:
             self._apply_desire_interpretation(state, event)
+
+        # Record what happened WITHOUT an actor acting. These entries carry
+        # kind=passive_transition / clock_transition and are attached to no
+        # event, so they can never be read as "an event changed this
+        # character" (acceptance B).
+        passive = self._passive_transitions(state, before, events)
+        if passive:
+            state.memory_state.passive_transitions.extend(passive)
+
         errors = self.validate(state)
         current_tick = state.tick
         self._advance_clock(state)
@@ -1099,6 +1187,73 @@ class SimulationEngine:
         state.rng_state = self.random.getstate()
         state.simulation_seed = self.decision_kernel.seed
         return SimulationResult(current_tick, actions, events, errors)
+
+    def _transition_snapshot(self, state: WorldState) -> dict:
+        """Deterministic pre-tick reading of the only fields the non-event
+        writers may change: desires and fatigue."""
+        return {
+            "desires": {
+                character.id: dict(character.human_condition.desires)
+                for character in state.characters.values()
+            },
+            "fatigue": {
+                character.id: character.human_condition.fatigue
+                for character in state.characters.values()
+            },
+        }
+
+    def _passive_transitions(
+        self,
+        state: WorldState,
+        before: dict,
+        events: list[Event],
+    ) -> list[Consequence]:
+        """Diff the snapshot against the post-tick state and emit one
+        Consequence per changed desire/fatigue value, classified as a
+        passive (natural pressure) or clock (window/decay) transition.
+
+        Deterministic: derived purely from the two snapshots, no RNG, no clock.
+        Values rounded to 3 decimals so entries round-trip byte-identically.
+        """
+        if events:
+            # With an event this tick, changes are attributed to that event's
+            # own consequences; only fully silent ticks are recorded here.
+            return []
+
+        recorded: list[Consequence] = []
+        for character in state.characters.values():
+            old_desires = before["desires"].get(character.id, {})
+            for name, new_value in sorted(character.human_condition.desires.items()):
+                old_value = old_desires.get(name, 0.0)
+                if abs(float(new_value) - float(old_value)) < 1e-9:
+                    continue
+                recorded.append(
+                    Consequence(
+                        "character",
+                        character.id,
+                        f"human_condition.desires.{name}",
+                        round(float(old_value), 3),
+                        round(float(new_value), 3),
+                        "natural pressure growth with no character action",
+                        kind="passive_transition",
+                    )
+                )
+
+            old_fatigue = before["fatigue"].get(character.id, 0.0)
+            new_fatigue = character.human_condition.fatigue
+            if abs(float(new_fatigue) - float(old_fatigue)) >= 1e-9:
+                recorded.append(
+                    Consequence(
+                        "character",
+                        character.id,
+                        "human_condition.fatigue",
+                        round(float(old_fatigue), 3),
+                        round(float(new_fatigue), 3),
+                        "passive recovery during a silent tick",
+                        kind="passive_transition",
+                    )
+                )
+        return recorded
 
 
 class ActionResolver:

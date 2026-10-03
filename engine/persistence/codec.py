@@ -149,6 +149,12 @@ def _memory_state(data: dict[str, Any]) -> MemoryState:
             owner: {proposition: _knowledge(value) for proposition, value in facts.items()}
             for owner, facts in data.get("knowledge", {}).items()
         },
+        # Passive/clock transitions (ChatGPT 5971081586 §3). Defaulted to an
+        # empty list so snapshots written before this field load unchanged
+        # (acceptance D: old archives stay readable).
+        passive_transitions=[
+            _consequence(item) for item in data.get("passive_transitions", [])
+        ],
     )
 
 

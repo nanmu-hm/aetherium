@@ -3,6 +3,10 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:  # pragma: no cover - import cycle guard (core imports memory)
+    from ..core.models import Consequence
 
 
 @dataclass
@@ -102,6 +106,18 @@ class MemoryState:
     relationship_history: dict[str, list[RelationshipHistoryEntry]] = field(default_factory=dict)
     memory_revisions: dict[str, list[MemoryRevision]] = field(default_factory=dict)
     knowledge: dict[str, dict[str, KnowledgeFact]] = field(default_factory=dict)
+    # ---------------------------------------------------------------------
+    # State changes that happened with NO character action behind them
+    # (natural pressure growth, passive fatigue recovery, window/decay
+    # expiry). Each entry is a Consequence carrying
+    # kind=passive_transition / clock_transition.
+    #
+    # These live OUTSIDE event_log on purpose: a silent tick is a real world
+    # transition, but it must never be readable as "an event changed this
+    # character" (ChatGPT 5971081586 §3, acceptance B). Defaulted empty so
+    # pre-existing snapshots load unchanged (acceptance D).
+    # ---------------------------------------------------------------------
+    passive_transitions: list["Consequence"] = field(default_factory=list)
 
     def add_memory(self, memory: Memory) -> None:
         self.memories[memory.id] = memory

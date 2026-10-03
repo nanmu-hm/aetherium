@@ -138,6 +138,20 @@ class Consequence:
     old_value: Any
     new_value: Any
     reason: str = ""
+    # ---------------------------------------------------------------------
+    # Transition classification (ChatGPT 5971081586 §3). Optional + defaulted,
+    # so old snapshots keep loading and round-trip unchanged (acceptance D).
+    #
+    # event_transition  : caused by a character's action / an executed event.
+    #                     Eligible to be part of an event's causal feedback.
+    # clock_transition  : caused purely by the clock advancing (dated windows).
+    # passive_transition: caused by natural pressure / decay / environment,
+    #                     with no character action behind it.
+    #
+    # This exists so a silent tick's real state change can be recorded WITHOUT
+    # being counted as "an event changed this character" (acceptance B).
+    # ---------------------------------------------------------------------
+    kind: str = "event_transition"
 
 
 @dataclass
@@ -248,6 +262,34 @@ class Event:
     action_type: str = ""
     action_result: ActionResult | None = None
     consequences: list[Consequence] = field(default_factory=list)
+    # ---------------------------------------------------------------------
+    # Event-level causal ledger (ChatGPT 5971081586 §1). Every field below is
+    # OPTIONAL with a default so that snapshots written before this change
+    # still load (Event(**data) in persistence/codec.py) and still satisfy
+    # acceptance D (backward compatibility + byte-identical round-trip).
+    #
+    # This is NOT a second event system: actor/action/target/effects keep their
+    # existing carriers (participants / action_type / Consequence.target_id /
+    # consequences). What is added here is the evidence that used to live only
+    # on the transient ActionCandidate and was therefore a DANGLING reference
+    # from the persistence boundary (Arena 5971061262 §4).
+    # ---------------------------------------------------------------------
+    # Why the actor tried this: propagated from ActionCandidate.motivation.
+    # Serialized verbatim; deterministic (no RNG, no clock).
+    intent: str = ""
+    # The declared preconditions, PLUS the hard-gate outcome that actually
+    # participated in this candidate -> execution decision (abilities /
+    # possessions live in core/preconditions.py as feasibility gates, not as
+    # utility terms). Empty means "no gate was consulted" -- never a claim that
+    # nothing constrained the action.
+    preconditions: list[str] = field(default_factory=list)
+    # What the actor could actually see at decision time: a deterministic,
+    # serializable summary of the state the decision read (co-located targets,
+    # relationship axes, active desires). NOT hidden world state.
+    observations: list[str] = field(default_factory=list)
+    # Event ids this event caused. Event-id references only, never recursive
+    # nesting (ChatGPT 5971081586 §1).
+    downstream: list[str] = field(default_factory=list)
 
 
 @dataclass
