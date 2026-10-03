@@ -1224,16 +1224,25 @@ class SimulationEngine:
 
         Deterministic: derived purely from the two snapshots, no RNG, no clock.
         Values rounded to 3 decimals so entries round-trip byte-identically.
-        """
-        if events:
-            # With an event this tick, changes are attributed to that event's
-            # own consequences; only fully silent ticks are recorded here.
-            return []
 
+        Two independent classifications are recorded:
+
+          clock_transition   -- always recorded, EVEN ON AN EVENT TICK. A desire
+                                 window can close on the same tick a character
+                                 acts, and dropping it would lose the model's
+                                 only genuine clock-driven transition (found by
+                                 Arena while re-verifying 987cab5).
+          passive_transition -- only on fully silent ticks. When an event
+                                 happened, pressure changes are already
+                                 attributed to that event's own consequences,
+                                 so recording them again here would double
+                                 count them as event-caused.
+        """
         recorded: list[Consequence] = []
 
         # Clock-driven: a Store-1 desire row whose opportunity window closed.
-        # Recorded against the DesireCarrier, NOT against any event.
+        # Recorded against the DesireCarrier, NOT against any event -- and not
+        # suppressed when the tick also carried an event.
         old_status = before["desire_status"]
         for row_id, row in sorted(state.memory_state.desires.items()):
             previous = old_status.get(row_id)
@@ -1251,6 +1260,9 @@ class SimulationEngine:
                     kind="clock_transition",
                 )
             )
+
+        if events:
+            return recorded
 
         for character in state.characters.values():
             old_desires = before["desires"].get(character.id, {})
