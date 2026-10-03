@@ -1189,8 +1189,14 @@ class SimulationEngine:
         return SimulationResult(current_tick, actions, events, errors)
 
     def _transition_snapshot(self, state: WorldState) -> dict:
-        """Deterministic pre-tick reading of the only fields the non-event
-        writers may change: desires and fatigue."""
+        """Deterministic pre-tick reading of every field the non-event writers
+        may change: desire/fatigue pressures, and the Store-1 desire status.
+
+        The status read matters: `MemoryKernel.advance_desires` flips a row to
+        "missed" when its opportunity window closes, and that is the model's
+        ONE genuine clock-driven transition. Reading only the float desires
+        would have left it invisible (found by Arena while re-verifying).
+        """
         return {
             "desires": {
                 character.id: dict(character.human_condition.desires)
@@ -1199,6 +1205,9 @@ class SimulationEngine:
             "fatigue": {
                 character.id: character.human_condition.fatigue
                 for character in state.characters.values()
+            },
+            "desire_status": {
+                row_id: row.status for row_id, row in state.memory_state.desires.items()
             },
         }
 
@@ -1209,8 +1218,9 @@ class SimulationEngine:
         events: list[Event],
     ) -> list[Consequence]:
         """Diff the snapshot against the post-tick state and emit one
-        Consequence per changed desire/fatigue value, classified as a
-        passive (natural pressure) or clock (window/decay) transition.
+        Consequence per changed value, classified as:
+          passive_transition : natural pressure / passive recovery, no actor
+          clock_transition   : a dated window closing (Store-1 desire expiry)
 
         Deterministic: derived purely from the two snapshots, no RNG, no clock.
         Values rounded to 3 decimals so entries round-trip byte-identically.
@@ -1221,6 +1231,27 @@ class SimulationEngine:
             return []
 
         recorded: list[Consequence] = []
+
+        # Clock-driven: a Store-1 desire row whose opportunity window closed.
+        # Recorded against the DesireCarrier, NOT against any event.
+        old_status = before["desire_status"]
+        for row_id, row in sorted(state.memory_state.desires.items()):
+            previous = old_status.get(row_id)
+            if previous is None or previous == row.status:
+                continue
+            recorded.append(
+                Consequence(
+                    "desire",
+                    row_id,
+                    "status",
+                    previous,
+                    row.status,
+                    row.reason
+                    or "opportunity window closed before the desire was fulfilled",
+                    kind="clock_transition",
+                )
+            )
+
         for character in state.characters.values():
             old_desires = before["desires"].get(character.id, {})
             for name, new_value in sorted(character.human_condition.desires.items()):

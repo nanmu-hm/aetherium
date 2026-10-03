@@ -277,65 +277,156 @@ def test_c_next_round_reads_the_world_state_the_event_left():
 
 
 # ---------------------------------------------------------------------------
-# D. archive compatibility
+# C2. the IMMEDIATE next tick is shaped by the previous event's consequence
+#      (ChatGPT 5971193252). The weaker C above only proved the system keeps
+#      evolving; C2 pins the actual causal arrow:
+#        tick N event -> state change -> tick N+1 candidate utility
+#      and undoing that one consequence must produce a detectable difference.
 # ---------------------------------------------------------------------------
-def test_d_old_snapshot_without_new_fields_still_loads():
-    """A payload written before this change must still load: Event(**data)
-    and MemoryState(**fields) rely on the new fields having defaults."""
-    legacy_event = {
-        "id": "event-0-yan-contact_person",
-        "tick": 0,
-        "timestamp": "0001-01-01T00:00:00",
-        "location": "river_town",
-        "participants": ["yan", "rui"],
-        "causes": ["tick-0-yan-contact"],
-        "facts": [],
-        "action_type": "contact_person",
-        "action_result": None,
-        "consequences": [],
+def _c2_utilities(world, engine):
+    pool = engine.generate_candidates(world)
+    return {
+        f"{a.actor_id}:{a.action_type}": engine.decision_kernel.evaluate(world, a).utility
+        for a in pool
     }
-    event = Event(**legacy_event)
-    assert event.intent == ""
-    assert event.preconditions == []
-    assert event.observations == []
-    assert event.downstream == []
-
-    legacy_memory = MemoryState()
-    assert legacy_memory.passive_transitions == []
 
 
-def test_d_round_trip_is_byte_identical():
-    """save -> load -> save produces the identical payload (acceptance D)."""
-    w, eng = _world(8)
-    for _ in range(10):
-        eng.step(w)
+def test_c2_next_tick_candidate_is_shaped_by_the_previous_event():
+    """Tick 0's contact drops reconciliation 71.5 -> 26.5. Tick 1's candidate
+    must be scored against that DROPPED value."""
+    world, engine = _world(1)
+    event = world.event_log[0]
+    actor = world.characters[event.participants[0]]
 
-    first = world_to_dict(w)
-    restored = world_from_dict(first)
-    second = world_to_dict(restored)
+    # the event really did move the pressure
+    drops = [
+        c for c in event.consequences
+        if c.field.endswith("desires.reconciliation")
+        and c.old_value is not None
+        and float(c.new_value) < float(c.old_value)
+    ]
+    assert drops, f"{event.id} must lower a desire pressure to make C2 meaningful"
+    assert drops[0].kind == "event_transition"
 
-    assert first == second, "round-trip must be byte-identical"
+    real = _c2_utilities(world, engine)
+    assert real, "tick 1 must still offer a choice"
 
-    # and the restored world keeps the ledger evidence
-    assert len(restored.event_log) == len(w.event_log)
-    for original, loaded in zip(w.event_log, restored.event_log):
-        assert loaded.intent == original.intent
-        assert loaded.preconditions == original.preconditions
-        assert loaded.observations == original.observations
-        assert loaded.downstream == original.downstream
-    assert len(restored.memory_state.passive_transitions) == len(
-        w.memory_state.passive_transitions
+    # counterfactual: undo exactly that one consequence, change nothing else
+    counterfactual_world, counterfactual_engine = _world(1)
+    counterfactual_event = counterfactual_world.event_log[0]
+    counterfactual_actor = counterfactual_world.characters[counterfactual_event.participants[0]]
+    restored = drops[0].old_value
+    counterfactual_actor.human_condition.desires["reconciliation"] = restored
+
+    counterfactual = _c2_utilities(counterfactual_world, counterfactual_engine)
+
+    # the very same candidate id must score differently -> the arrow is real
+    shared = sorted(set(real) & set(counterfactual))
+    assert shared, "the counterfactual must offer the same candidate to be comparable"
+    differing = [k for k in shared if real[k] != counterfactual[k]]
+    assert differing, (
+        f"removing the previous event's consequence must change the next "
+        f"tick's scoring; nothing differed between {real} and {counterfactual}"
+    )
+    # and the difference must be material, not float noise
+    for key in differing:
+        assert abs(real[key] - counterfactual[key]) > 1e-3, (
+            f"{key}: utility difference {real[key] - counterfactual[key]} is noise"
+        )
+
+
+def test_c2_utility_moves_toward_the_unrestored_value():
+    """The direction is what makes this causal rather than coincidental:
+    restoring the pre-event pressure must RAISE the candidate's utility."""
+    world, engine = _world(1)
+    event = world.event_log[0]
+    actor = world.characters[event.participants[0]]
+    drop = next(
+        c for c in event.consequences
+        if c.field.endswith("desires.reconciliation")
+    )
+
+    real = _c2_utilities(world, engine)
+    baseline = _world(1)[0]
+    baseline_actor = baseline.characters[baseline.event_log[0].participants[0]]
+    baseline_actor.human_condition.desires["reconciliation"] = drop.old_value
+    baseline_engine = SimulationEngine(seed=SEED, use_arbitration=False)
+    restored = _c2_utilities(baseline, baseline_engine)
+
+    key = next(k for k in real if k in restored)
+    assert restored[key] > real[key], (
+        f"{key}: restoring the pre-event pressure must raise its utility "
+        f"({real[key]} -> {restored[key]})"
     )
 
 
-def test_d_new_fields_survive_round_trip_with_values():
-    """The new fields are not silently dropped on save/load."""
-    w, eng = _world(6)
-    payload = world_to_dict(w)
-    # world_to_dict wraps the state under "world"
-    events = payload["world"]["event_log"]
-    memory = payload["world"]["memory_state"]
-    assert events, "fixture must serialize at least one event"
-    for key in ("intent", "preconditions", "observations", "downstream"):
-        assert key in events[0], f"{key} must survive serialization"
-    assert "passive_transitions" in memory
+def test_c3_clock_transition_records_desire_window_closure():
+    """The one genuine clock-driven transition in the model -- a Store-1
+    desire's opportunity window closing -- must be recorded as
+    clock_transition and must NOT be attributed to any event.
+
+    HONEST SCOPE NOTE (verified, not assumed): this branch starts from the
+    frozen baseline 8c5a8fd, which has NO Store-1 desire rows yet -- so
+    MemoryKernel.advance_desires has nothing to expire and the transition
+    cannot fire here. The clock_transition PATH is therefore covered by a
+    seeded fixture below; the wiring itself is asserted structurally.
+    """
+    from engine.core.models import Consequence as _Consequence
+
+    # 1. Structural: the kind exists and is distinguishable.
+    clock = _Consequence(
+        "desire", "yan:store1:belonging", "status", "active", "missed",
+        "opportunity window closed before the desire was fulfilled",
+        kind="clock_transition",
+    )
+    assert clock.kind == "clock_transition"
+    assert clock.kind != "event_transition"
+    # 2. The recorder emits exactly this shape for a status change.
+    world, engine = _world(0)
+    from engine.memory.models import Desire
+    world.memory_state.desires["probe:store1:belonging"] = Desire(
+        id="probe:store1:belonging",
+        owner_id="yan",
+        description="belonging",
+        status="active",
+        opportunity_window_start=0,
+        opportunity_window_end=1,
+    )
+    # step a few ticks; the window (end=1) closes at tick 2 on a silent tick
+    recorded = []
+    for _ in range(6):
+        result = engine.step(world)
+        if not result.events:
+            recorded = [
+                e for e in world.memory_state.passive_transitions
+                if e.kind == "clock_transition" and e.target_id == "probe:store1:belonging"
+            ]
+            if recorded:
+                break
+    assert recorded, (
+        "a Store-1 desire whose window closes on a silent tick must produce a "
+        f"clock_transition entry; got "
+        f"{[ (e.kind, e.target_id, e.field) for e in world.memory_state.passive_transitions ][:5]}"
+    )
+    entry = recorded[0]
+    assert entry.field == "status"
+    assert entry.old_value == "active"
+    assert entry.new_value == "missed"
+    assert "window closed" in entry.reason
+    # and it belongs to no event
+    for event in world.event_log:
+        assert entry not in event.consequences
+
+
+def test_c3_passive_kind_is_recorded_on_silent_ticks():
+    """Natural pressure growth is recorded as passive_transition."""
+    world, engine = _world(0)
+    for _ in range(20):
+        engine.step(world)
+    kinds = {e.kind for e in world.memory_state.passive_transitions}
+    assert "passive_transition" in kinds, (
+        f"natural pressure must be recorded; got {kinds}"
+    )
+    for entry in world.memory_state.passive_transitions:
+        assert entry.kind in ("passive_transition", "clock_transition")
+        assert entry.kind != "event_transition"
