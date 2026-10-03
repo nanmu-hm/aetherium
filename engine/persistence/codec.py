@@ -20,6 +20,7 @@ from ..core.human_condition import HumanCondition
 from ..memory.models import (
     Belief,
     Desire,
+    DesireHistory,
     KnowledgeFact,
     Memory,
     MemoryRevision,
@@ -120,6 +121,77 @@ def _desire(data: dict[str, Any]) -> Desire:
     return Desire(**data)
 
 
+def _desire_history(data: dict[str, Any]) -> DesireHistory:
+    return DesireHistory(**data)
+
+
+def _evidence_tick(event_id: str) -> int:
+    """Tick encoded in an event id (``event-{tick}-{actor}-{action}``).
+
+    Canonicalization needs a total order of evidence recency; string order of
+    event ids is NOT tick order (``event-105`` < ``event-20`` lexically), so
+    the embedded tick is parsed explicitly. Unparseable ids rank lowest.
+    """
+    parts = event_id.split("-")
+    if len(parts) >= 2 and parts[0] == "event" and parts[1].isdigit():
+        return int(parts[1])
+    return -1
+
+
+def _canonicalize_desires(raw_desires: dict[str, dict[str, Any]]) -> tuple[dict[str, Desire], dict[str, list[DesireHistory]]]:
+    """Collapse old multi-row ``desires`` payloads to one current row per identity.
+
+    Identity = ``(owner_id, description)``, stored under the STABLE key
+    ``"{owner}:store1:{desc}"``. A new-style payload already holds one row per
+    identity (the stable key). An old-style payload may hold several rows for
+    the same identity (one per per-event suffix); exactly the most-recent-
+    evidence row survives as the current row, and the displaced rows migrate
+    into the independent ``desire_history`` container (provenance only).
+    Every surviving row is re-keyed to the stable key so ``desires`` is always
+    in canonical form after load.
+    """
+    from collections import defaultdict
+
+    groups: dict[str, list[str]] = defaultdict(list)
+    identity_of: dict[str, str] = {}
+    for row_id in raw_desires:
+        owner = raw_desires[row_id].get("owner_id", "")
+        desc = raw_desires[row_id].get("description", "")
+        key = f"{owner}:store1:{desc}"
+        identity_of[row_id] = key
+        groups[key].append(row_id)
+
+    current: dict[str, Desire] = {}
+    displaced: dict[str, list[DesireHistory]] = defaultdict(list)
+    for key, row_ids in groups.items():
+        owner = raw_desires[row_ids[0]].get("owner_id", "")
+        desc = raw_desires[row_ids[0]].get("description", "")
+
+        def _recency(rid: str) -> tuple[int, str]:
+            d = raw_desires[rid]
+            evidence = d.get("latest_evidence_event_id", "") or d.get("source_event_id", "")
+            return (_evidence_tick(evidence), rid)
+
+        ranked = sorted(row_ids, key=_recency, reverse=True)
+        winner, older = ranked[0], ranked[1:]
+        data = dict(raw_desires[winner])
+        data["id"] = key
+        current[key] = _desire(data)
+        for rid in older:
+            d = raw_desires[rid]
+            displaced[key].append(
+                DesireHistory(
+                    owner_id=owner,
+                    description=desc,
+                    status=d.get("status", ""),
+                    reason=d.get("reason", ""),
+                    source_event_id=d.get("source_event_id", ""),
+                    latest_evidence_event_id=d.get("latest_evidence_event_id", ""),
+                )
+            )
+    return current, dict(displaced)
+
+
 def _knowledge(data: dict[str, Any]) -> KnowledgeFact:
     return KnowledgeFact(**data)
 
@@ -133,10 +205,21 @@ def _memory_revision(data: dict[str, Any]) -> MemoryRevision:
 
 
 def _memory_state(data: dict[str, Any]) -> MemoryState:
+    raw_desires = data.get("desires", {})
+    desires, canonical_history = _canonicalize_desires(raw_desires)
+    # Load-time canonicalization merges any explicitly-saved desire_history with
+    # the rows displaced from the old-style `desires` payload. Provenance only.
+    saved_history = {
+        key: [_desire_history(item) for item in values]
+        for key, values in data.get("desire_history", {}).items()
+    }
+    for key, entries in canonical_history.items():
+        saved_history.setdefault(key, []).extend(entries)
     return MemoryState(
         memories={key: _memory(value) for key, value in data.get("memories", {}).items()},
         beliefs={key: _belief(value) for key, value in data.get("beliefs", {}).items()},
-        desires={key: _desire(value) for key, value in data.get("desires", {}).items()},
+        desires=desires,
+        desire_history=saved_history,
         relationship_history={
             key: [_relationship_history(item) for item in values]
             for key, values in data.get("relationship_history", {}).items()

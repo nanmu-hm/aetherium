@@ -96,7 +96,37 @@ class Desire:
     # row. Empty string = genesis/pre-history (no runtime event). Never
     # read from `reason` (frozen rule: reason carries no provenance).
     # Old codec saves (without this key) decode to "" via the default.
+    # source_event_id stays immutable once set (birth provenance); it is
+    # never repurposed as a latest-evidence pointer.
     source_event_id: str = ""
+    # T2 (v3 frozen): latest evidence event that drove the most recent
+    # status transition / reactivation. Empty = no post-birth evidence yet.
+    # Separate from source_event_id: that one is the immutable birth event.
+    latest_evidence_event_id: str = ""
+
+
+@dataclass
+class DesireHistory:
+    """Independent container for non-current Desire rows (v3 T2-3(i)).
+
+    A row ends up here after load-time canonicalization: when an old codec
+    payload held multiple rows with the same (owner_id, description) logical
+    identity, all but the canonical current row are migrated here.
+
+    Invariants:
+    - advance_desires does NOT touch this container (only desires does).
+    - decision.read path does NOT read this container.
+    - It enters the _memory_state codec round-trip (saved/restored), but
+      is provenance/history only — it never participates in current-state
+      decision.
+    """
+
+    owner_id: str
+    description: str
+    status: str = ""
+    reason: str = ""
+    source_event_id: str = ""
+    latest_evidence_event_id: str = ""
 
 
 @dataclass
@@ -104,6 +134,10 @@ class MemoryState:
     memories: dict[str, Memory] = field(default_factory=dict)
     beliefs: dict[str, Belief] = field(default_factory=dict)
     desires: dict[str, Desire] = field(default_factory=dict)
+    # T2 (v3 T2-3(i)): independent provenance container for non-current
+    # Desire rows. Key = "{owner_id}:{description}". advance_desires does NOT
+    # touch this; decision does NOT read this. Enters codec round-trip.
+    desire_history: dict[str, list[DesireHistory]] = field(default_factory=dict)
     relationship_history: dict[str, list[RelationshipHistoryEntry]] = field(default_factory=dict)
     memory_revisions: dict[str, list[MemoryRevision]] = field(default_factory=dict)
     knowledge: dict[str, dict[str, KnowledgeFact]] = field(default_factory=dict)
@@ -116,6 +150,10 @@ class MemoryState:
 
     def add_desire(self, desire: Desire) -> None:
         self.desires[desire.id] = desire
+
+    def add_desire_history(self, owner_id: str, description: str, entry: DesireHistory) -> None:
+        key = f"{owner_id}:{description}"
+        self.desire_history.setdefault(key, []).append(entry)
 
     def add_knowledge(self, fact: KnowledgeFact) -> None:
         self.knowledge.setdefault(fact.owner_id, {})[fact.proposition] = fact

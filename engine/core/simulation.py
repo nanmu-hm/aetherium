@@ -20,7 +20,7 @@ from .models import ActionCandidate, ActionResult, Consequence, DesireCarrier, E
 from .preconditions import PreconditionEngine
 from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
-from ..memory.models import Desire
+from ..memory.models import Desire, DesireHistory
 
 
 @dataclass
@@ -1026,7 +1026,15 @@ class SimulationEngine:
                 # Genesis pre-history rows carry "" — this branch is the
                 # sole runtime birth writer, so a non-empty source_event_id
                 # here is always event-sourced.
-                store1_id = f"{subject.id}:store1:{interp.desire}:{event.id}"
+                #
+                # T2 (v3 T2-3(i)): identity = (owner_id, description); the
+                # Store-1 row id is the STABLE in-place key (no per-event
+                # suffix). Each identity owns exactly ONE current row; a
+                # second row for the same identity is never appended — old
+                # multi-row payloads are canonicalized into the independent
+                # desire_history container at load time, never left in
+                # `desires`.
+                store1_id = f"{subject.id}:store1:{interp.desire}"
                 state.memory_state.add_desire(
                     Desire(
                         id=store1_id,
@@ -1040,6 +1048,9 @@ class SimulationEngine:
                         opportunity_window_start=event.tick,
                         opportunity_window_end=event.tick + 10,
                         source_event_id=event.id,
+                        # T2: latest evidence = "" until a post-birth
+                        # transition writes it (never inferred from reason).
+                        latest_evidence_event_id="",
                     )
                 )
                 continue
@@ -1086,6 +1097,23 @@ class SimulationEngine:
                 carrier.lifecycle = "SATISFIED" if value == 0.0 else "ACTIVE"
                 carrier.consumed_at = None
                 carrier.consumed_evidence = ""
+            # T2 E2: post-birth evidence update — mirror the carrier's latest
+            # evidence event into the Store-1 row. This is the ONLY writer of
+            # latest_evidence_event_id after birth. CONSUMED alone does NOT
+            # change the row status (v3 union rule): ACHIEVED may only be set
+            # by P-B confirmation; the row stays "active" through consumption
+            # until a new P-B-confirmed event re-activates or confirms it.
+            row_id = f"{subject.id}:store1:{interp.desire}"
+            row = state.memory_state.desires.get(row_id)
+            if row is not None:
+                row.latest_evidence_event_id = event.id
+                # T2 P-B reactivation: a newly admitted post-birth evidence
+                # event revives a 'missed' row back to 'active'. 'achieved'
+                # is terminal (set only by P-B confirmation, never here) and a
+                # still-'active' row is untouched. State-based on evidence
+                # presence — no tick counter / timer (owner frozen rule).
+                if row.status == "missed":
+                    row.status = "active"
 
     def _advance_clock(self, state: WorldState) -> None:
         current = datetime.fromisoformat(state.timestamp)

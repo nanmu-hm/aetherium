@@ -7,6 +7,7 @@ import math
 from .models import (
     Belief,
     Desire,
+    DesireHistory,
     KnowledgeFact,
     Memory,
     MemoryRevision,
@@ -269,6 +270,12 @@ class MemoryKernel:
     def advance_desires(self, state: MemoryState, current_tick: int) -> None:
         for desire in state.desires.values():
             if desire.status != "active":
+                continue
+            # T2 P-B: a row carrying post-birth evidence (latest_evidence_event_id
+            # set) is "evidence-alive"; the opportunity-window fallback must not
+            # re-miss it (state-based on evidence presence, no tick timer). Only
+            # rows with no post-birth evidence auto-miss on window close.
+            if desire.latest_evidence_event_id:
                 continue
             if desire.opportunity_window_end is not None and current_tick > desire.opportunity_window_end:
                 desire.status = "missed"
