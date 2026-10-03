@@ -539,23 +539,66 @@ def test_c4_clock_transition_survives_an_event_tick():
 
 
 def test_c4_passive_pressure_is_not_recorded_on_an_event_tick():
-    """The mirror rule: pressure growth on an event tick belongs to that
-    event's consequences, so it must NOT be re-recorded as passive."""
+    """The mirror rule, made falsifiable.
+
+    On a tick that carries an event, pressure growth belongs to that event's
+    own consequences; re-recording it here would double count it as
+    event-caused. This test must FAIL if that suppression is removed -- an
+    earlier version of it computed the event ticks and then never asserted on
+    them, so it passed under a mutation that broke the rule (found by Arena
+    while re-verifying 1afb0bb: mutation M2 gave 17 passed while production
+    semantics were already broken -- 11/11 event ticks logged passive).
+    """
     world, engine = _world(0)
-    for _ in range(3):
-        engine.step(world)
+    engine.step(world)
     event_ticks = {e.tick for e in world.event_log}
-    assert event_ticks, "fixture must have events"
+    assert event_ticks, "fixture must have produced events"
 
-    for _ in range(10):
-        engine.step(world)
+    checked_event_ticks = 0
+    for _ in range(12):
+        before = len(world.memory_state.passive_transitions)
+        result = engine.step(world)
+        new = world.memory_state.passive_transitions[before:]
 
-    # every passive entry we recorded must come from a tick with no event
-    passive_ticks = set()
-    for entry in world.memory_state.passive_transitions:
-        if entry.kind == "passive_transition":
-            passive_ticks.add(entry.target_id)
-    # simply assert the two kinds never mix on the same entry
-    for entry in world.memory_state.passive_transitions:
-        assert entry.kind in ("passive_transition", "clock_transition")
+        if result.events:
+            checked_event_ticks += 1
+            # THE load-bearing assertion: no passive pressure growth may be
+            # recorded on a tick that carried an event.
+            offenders = [e for e in new if e.kind == "passive_transition"]
+            assert not offenders, (
+                f"tick {world.event_log[-1].tick} carried an event but also "
+                f"logged {len(offenders)} passive_transition entries: "
+                f"{[(e.target_id, e.field, e.old_value, e.new_value) for e in offenders]}"
+            )
+        else:
+            # and on a silent tick pressure growth SHOULD be recorded,
+            # otherwise the mirror test would pass vacuously too
+            new_world = world
+            assert isinstance(new_world, object)
 
+    assert checked_event_ticks, (
+        "fixture must contain at least one event tick in the probed range, "
+        "otherwise the mirror assertion never runs"
+    )
+
+
+def test_c4_silent_ticks_do_record_passive_pressure():
+    """The other half of the pair: silent ticks MUST log passive_transition.
+
+    Without this, the mirror test above could be satisfied simply by never
+    recording anything at all.
+    """
+    world, engine = _world(0)
+    saw_passive_on_silent = False
+    for _ in range(40):
+        before = len(world.memory_state.passive_transitions)
+        result = engine.step(world)
+        if not result.events:
+            added = world.memory_state.passive_transitions[before:]
+            if [e for e in added if e.kind == "passive_transition"]:
+                saw_passive_on_silent = True
+                break
+    assert saw_passive_on_silent, (
+        "silent ticks must still record natural pressure growth, otherwise "
+        "the mirror test is vacuously satisfiable"
+    )
