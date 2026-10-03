@@ -91,12 +91,11 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
         return []
 
     pool: list[ActionCandidate] = []
-    # T1 M-B: single intermediate candidate for a structurally-stuck relational
-    # goal stage, tagged with the mb: provenance token. Enters the ordinary
-    # pool; no bypass, no timer, no new action type.
-    mb = goal_stagnation_candidate(state, character_id)
-    if mb is not None:
-        pool.append(mb)
+    # T1 M-B is appended AFTER the ordinary pool is fully generated, so the
+    # generation-only gate (owner 5965764446 §2) can read the ordinary pool:
+    # if the ordinary pool already carries a candidate for the current stage's
+    # declared action_types, the stage has a live generable path and M-B must
+    # stay quiet. No bypass, no timer, no new action type, no threshold copy.
     goal = max((g for g in character.goals if g.status == "active"), key=lambda item: item.priority, default=None)
     if goal and not goal.stage_conditions:
         pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-pursue", actor_id=character.id, action_type="pursue_goal", motivation=goal.current_description, confidence=0.8, difficulty=0.5, score=0.10))
@@ -274,6 +273,13 @@ def generate_action_pool(state: WorldState, character_id: str) -> list[ActionCan
     sorrow = max(0.0, character.emotions.get("sorrow", 0.0))
     if fatigue >= 10.0 or stress >= 20.0 or sorrow >= 35.0:
         pool.append(ActionCandidate(id=f"tick-{state.tick}-{character.id}-rest", actor_id=character.id, action_type="rest", motivation="rest and recover from current pressures", preconditions=["current location permits rest"], expected_outcomes=["recover and continue later"], confidence=0.95, difficulty=0.05, score=0.05, metadata={"rest_reason": "fatigue_recovery"}))
+    # T1 M-B: append the single intermediate recovery candidate AFTER the
+    # ordinary pool is complete, passing it through the generation-only gate
+    # (owner 5965764446 §2). If the ordinary pool already carries a candidate
+    # for the current stage's declared action_types, the gate keeps M-B quiet.
+    mb = goal_stagnation_candidate(state, character_id, ordinary_pool=pool)
+    if mb is not None:
+        pool.append(mb)
     return pool
 
 
