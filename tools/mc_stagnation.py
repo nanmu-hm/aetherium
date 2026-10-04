@@ -17,9 +17,14 @@ empty). Those point at different fixes, so the report must distinguish them.
 
 Definitions used throughout, stated so they are checkable:
   silence_tick        : a tick that produced no Event
-  sustained_silence   : the first tick t such that EVERY tick from t to the
-                        horizon produced no Event. This is the stagnation
-                        point. (Not "first gap" -- one quiet tick is normal.)
+  silent_tail_length  : horizon - last_event_tick, where last_event_tick is
+                        read off the Event (NOT world.tick after step(), which
+                        is already incremented). "The run ended silent" means
+                        this number is positive -- it is a bounded observation,
+                        not a claim that revival is impossible.
+                        A former definition of "first tick with no later event"
+                        was a restatement of max(event_ticks) and therefore
+                        a tautology (Arena 5976670109 §3); it was removed.
   silent_tail_length  : horizon - last_event_tick
   nonnegative_ratio   : of all raw candidates over the run, the fraction with
                         utility > 0 (i.e. selectable)
@@ -78,23 +83,26 @@ def measure(seed: int, horizon: int = HORIZON) -> dict:
 
         result = engine.step(world)
         if result.events:
-            event_ticks.append(world.tick)
+            # NOTE the unit convention (Arena 5976670109 §4): read the tick
+            # off the EVENT, not off world.tick after step(), which has
+            # already been incremented and would report Event.tick + 1. The
+            # causal-ledger 33/34 canary uses Event.tick; matching it here
+            # keeps one convention in the repo.
+            event_ticks.append(max(event.tick for event in result.events))
 
-    # sustained silence: first tick after which no event ever appears again
-    sustained = None
-    for t in range(horizon):
-        if not any(et > t for et in event_ticks):
-            sustained = t
-            break
-
+    # Stagnation point, defined so it is NOT a tautology.
+    #
+    # Arena 5976670109 §3: the previous definition ("first t with no event
+    # after t") is a restatement of max(event_ticks) for ANY list, so the
+    # table's "sustained == last => never revived" was an identity, not
+    # evidence. A revival would simply become the new max and stay invisible.
+    #
+    # The honest quantity is the SILENT TAIL LENGTH plus an explicit check
+    # that the run ended in silence. "No revival" is then a statement about
+    # the observed window with a stated bound, not a definitional truth.
     last_event = max(event_ticks) if event_ticks else None
-
-    # raw-pool emptiness is a different fact from engine-pool emptiness
-    raw_empty_after = None
-    for t in range(horizon):
-        if all(c == 0 for c in raw_counts[t:]):
-            raw_empty_after = t
-            break
+    silent_tail = (horizon - last_event) if last_event is not None else None
+    ends_in_silence = bool(event_ticks) and (silent_tail or 0) > 0
 
     return {
         "seed": seed,
@@ -102,10 +110,10 @@ def measure(seed: int, horizon: int = HORIZON) -> dict:
         "events": len(event_ticks),
         "first_event_tick": event_ticks[0] if event_ticks else None,
         "last_event_tick": last_event,
-        "sustained_silence_tick": sustained,
+        "ends_in_silence": ends_in_silence,
         "silent_tail_length": (horizon - last_event) if last_event is not None else None,
         "raw_pool_total": raw_total,
-        "raw_pool_empty_from": raw_empty_after,
+        "raw_pool_never_empty": all(c > 0 for c in raw_counts),
         "engine_pool_nonempty_ticks": sum(1 for c in engine_counts if c > 0),
         "nonnegative_candidates": nonnegative,
         "nonnegative_ratio": (nonnegative / raw_total) if raw_total else None,
@@ -126,18 +134,20 @@ def main() -> None:
     print(f"M-C stagnation measurement, horizon={horizon}, seeds={list(OFFICIAL_SEEDS)}")
     print()
     header = (
-        f"{'seed':>4} {'events':>6} {'1st':>5} {'last':>5} {'sustain':>7} "
-        f"{'tail':>5} {'rawEmpty':>8} {'engNonEmpty':>11} {'nonneg':>7} {'nonneg%':>7}"
+        f"{'seed':>4} {'evTicks':>7} {'1st':>5} {'lastEv':>6} {'tail':>5} "
+        f"{'endsQuiet':>9} {'rawNeverEmpty':>13} {'engNonEmpty':>11} "
+        f"{'nonneg':>7} {'nonneg%':>7}"
     )
     print(header)
     print("-" * len(header))
     for r in results:
         pct = (r["nonnegative_ratio"] * 100) if r["nonnegative_ratio"] is not None else 0.0
         print(
-            f"{r['seed']:>4} {r['events']:>6} "
-            f"{str(r['first_event_tick']):>5} {str(r['last_event_tick']):>5} "
-            f"{str(r['sustained_silence_tick']):>7} {str(r['silent_tail_length']):>5} "
-            f"{str(r['raw_pool_empty_from']):>8} "
+            f"{r['seed']:>4} {r['events']:>7} "
+            f"{str(r['first_event_tick']):>5} {str(r['last_event_tick']):>6} "
+            f"{str(r['silent_tail_length']):>5} "
+            f"{str(r['ends_in_silence']):>9} "
+            f"{str(r['raw_pool_never_empty']):>13} "
             f"{r['engine_pool_nonempty_ticks']:>11} "
             f"{r['nonnegative_candidates']:>7} {pct:>6.2f}%"
         )
@@ -159,10 +169,18 @@ def main() -> None:
             f"mean={r['utility_mean']:.4f}"
         )
 
-    with open("/home/ming/.hermes/cache/scratch/mc_results.json", "w") as handle:
+    # Arena 5976670109 §6: this used to be a hardcoded absolute path, so the
+    # script crashed at the very end on any other machine, after printing the
+    # table. Now an argument, with the directory created on demand.
+    import os
+    out = sys.argv[2] if len(sys.argv) > 2 else "mc_results.json"
+    parent = os.path.dirname(os.path.abspath(out))
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(out, "w") as handle:
         json.dump(results, handle, indent=1)
     print()
-    print("full series written to /home/ming/.hermes/cache/scratch/mc_results.json")
+    print(f"full series written to {out}")
 
 
 if __name__ == "__main__":

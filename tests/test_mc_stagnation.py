@@ -69,8 +69,11 @@ def run(seed: int, horizon: int):
         if engine.generate_candidates(world):
             engine_nonempty += 1
 
-        if engine.step(world).events:
-            event_ticks.append(world.tick)
+        result = engine.step(world)
+        if result.events:
+            # Event.tick, not world.tick after step() -- matches the
+            # causal-ledger 33/34 canary convention (Arena §4).
+            event_ticks.append(max(event.tick for event in result.events))
 
     return {
         "event_ticks": event_ticks,
@@ -106,8 +109,12 @@ def test_mc_baseline_stagnates_and_never_recovers(seed):
         f"seed {seed}: expected a long silent tail, got {tail} ticks "
         f"(last event {r['last_event']}, horizon {SHORT_HORIZON})"
     )
-    # measured last-event ticks, pinned so a baseline change is visible
-    assert r["last_event"] in (105, 106, 108, 111), (
+    # Measured last-event ticks on the Event.tick convention, pinned so a
+    # baseline change is visible. Arena 5976670109 §4 measured these
+    # independently as 110/107/105/105/104 and they match exactly.
+    # An earlier canary used world.tick AFTER step(), i.e. Event.tick + 1,
+    # which put two different conventions in one repo.
+    assert r["last_event"] in (104, 105, 107, 110), (
         f"seed {seed}: last event moved to {r['last_event']}; the M-B "
         f"comparison baseline must be re-measured, not silently accepted"
     )
@@ -119,17 +126,29 @@ def test_mc_baseline_stagnates_and_never_recovers(seed):
 
 
 @pytest.mark.parametrize("seed", OFFICIAL_SEEDS)
-def test_mc_selectable_candidates_are_a_small_minority(seed):
+def test_mc_selectable_candidates_are_a_measured_tiny_fraction(seed):
     """The engine rejects the overwhelming majority of what it proposed.
 
-    This is the quantitative form of "candidates exist but all score <= 0",
-    and it is the number M-B has to move.
+    The band is deliberately TIGHT. An earlier version asserted only "< 10%",
+    and mutation M3 proved that guard nearly vacuous: on seed 7 travel alone is
+    843 of 851 raw candidates, so making every contact_person selectable moved
+    the ratio by well under a percentage point -- still under 10%, so the test
+    passed against a changed world.
+
+    The band is tied to SHORT_HORIZON on purpose. The ratio is NOT scale
+    invariant: the selectable candidates are a small fixed set concentrated in
+    the early ticks, while travel keeps being proposed forever, so the
+    denominator grows with the horizon. Measured for this horizon (160):
+    3.03% - 4.24%. At horizon 420 the same seeds measure 1.18% - 1.65%.
+    Quoting either number without its horizon would be meaningless.
     """
     r = run(seed, SHORT_HORIZON)
     ratio = r["nonnegative"] / r["raw_total"] if r["raw_total"] else 0.0
-    assert ratio < 0.10, (
-        f"seed {seed}: {ratio:.1%} of raw candidates were selectable -- if this "
-        f"is already high, the stagnation has a different cause"
+    assert 0.025 < ratio < 0.050, (
+        f"seed {seed}: selectable ratio {ratio:.3%} is outside the measured "
+        f"band (~3.0-4.2% at horizon {SHORT_HORIZON}; it is ~1.2-1.7% at 420). "
+        f"Either the world changed or the measurement did; "
+        f"re-measure rather than widening this bound"
     )
 
 
@@ -146,10 +165,14 @@ def test_mc_after_stagnation_only_travel_persists_and_nothing_is_selected():
       * selected: zero. No event occurs, because every remaining candidate
         scores <= 0.
 
-    Note contact_person is still occasionally PROPOSED after the last event
-    (measured: 3 occurrences on seed 7 over 420 ticks) while never being
-    SELECTED. An earlier version of this test asserted a hard zero and failed
-    against correct data.
+    Arena 5976670109 §5 checked this and found the hard zero HOLDS: contact_person
+    is proposed at ticks 0/13/35/105 with the last event at 105, so it is never
+    proposed afterwards (0 occurrences, all five seeds), and rest is 0 too after
+    stagnation. An intermediate version of this test reported "3 occurrences
+    after the last event" -- that was the monotone-flag window this file already
+    fixed, i.e. "after the FIRST event", not after the last. The attribution of
+    that earlier failure to "correct data" was wrong; the hard zero is restored
+    below because it is a meaningful canary.
     """
     # Two-pass on purpose. A monotone "we have stagnated" flag classifies
     # everything after the FIRST event as post-stagnation; the stagnation
@@ -173,8 +196,9 @@ def test_mc_after_stagnation_only_travel_persists_and_nothing_is_selected():
                 proposed[candidate.action_type] = proposed.get(candidate.action_type, 0) + 1
         proposed_by_tick[world.tick] = proposed
         selected_by_tick[world.tick] = len(engine.generate_candidates(world))
-        if engine.step(world).events:
-            event_ticks.append(world.tick)
+        result = engine.step(world)
+        if result.events:
+            event_ticks.append(max(event.tick for event in result.events))
 
     assert event_ticks, "fixture must produce events"
     last = max(event_ticks)
@@ -187,10 +211,11 @@ def test_mc_after_stagnation_only_travel_persists_and_nothing_is_selected():
     post_selected = sum(selected_by_tick[tick] for tick in after)
 
     assert post_proposed, "candidates must still be proposed after stagnation"
-    # travel dominates the residual proposals
-    assert post_proposed.get("travel", 0) > sum(
-        v for k, v in post_proposed.items() if k != "travel"
-    ), f"expected travel to dominate residual proposals, got {post_proposed}"
+    # Hard zero, restored deliberately: after the last event ONLY travel is
+    # proposed. If anything else reappears, the baseline has moved.
+    assert set(post_proposed) == {"travel"}, (
+        f"expected travel only after stagnation, got {post_proposed}"
+    )
     # nothing is ever chosen, and nothing ever happens
     assert post_selected == 0, (
         f"{post_selected} candidates were SELECTED after tick {last} -- the "
@@ -221,7 +246,7 @@ def test_mc_measurement_does_not_disturb_the_world():
                             engine.decision_kernel.evaluate(world, candidate)
             result = engine.step(world)
             trace.append(
-                f"{world.tick}|{len(result.events)}|"
+                f"{max((e.tick for e in result.events), default=-1)}|{len(result.events)}|"
                 f"{[e.id for e in result.events]}|"
                 f"{[c.new_value for c in (result.events[0].consequences if result.events else [])]}"
             )
@@ -230,21 +255,3 @@ def test_mc_measurement_does_not_disturb_the_world():
     assert trajectory(probe=True) == trajectory(probe=False), (
         "probing changed the trajectory -- the measurement is not read-only"
     )
-
-
-def test_mc_sustained_silence_equals_last_event_tick():
-    """No seed ever revives after its final event.
-
-    If a future change makes a seed produce an event after a long quiet
-    stretch, this fails and the baseline must be re-measured rather than
-    quietly updated. Arena's 33/34 canary works the same way: re-measure,
-    do not delete.
-    """
-    for seed in OFFICIAL_SEEDS:
-        r = run(seed, SHORT_HORIZON)
-        after = r["event_ticks"]
-        last = r["last_event"]
-        later = [t for t in after if t > last]
-        assert not later, (
-            f"seed {seed} produced events after its last event: {later}"
-        )
