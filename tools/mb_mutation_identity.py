@@ -144,7 +144,14 @@ def run(tag):
     for f in sorted(fails):
         print(f"       - {f}")
     if not fails:
-        print("       (no test failed -- the mutation is UNOBSERVED)")
+        if tag.startswith("unmutated"):
+            # The control is not a mutation. It is EXPECTED to fail nothing, and
+            # saying "UNOBSERVED" here would put the exact phrase this guard
+            # exists to suppress into the output of a run that observed nothing
+            # at all.
+            print("       (control: no test failed, as expected)")
+        else:
+            print("       (no test failed -- the mutation is UNOBSERVED)")
     return set(fails)
 
 
