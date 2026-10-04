@@ -17,6 +17,7 @@ from .desire_interpretation import (
     record_satisfaction_evidence,
 )
 from .models import ActionCandidate, ActionResult, CharacterState, Consequence, DesireCarrier, Event, WorldState
+from .outcome_policy import resolve_policy_outcome
 from .preconditions import PreconditionEngine
 from .psychology import emotion_decay, has_trait, social_reaction, witness_reaction
 from ..memory.kernel import MemoryKernel
@@ -643,7 +644,16 @@ class SimulationEngine:
                     f"{actor.name} cannot attempt {action.action_type}: {outcome.reason}."
                 )
             else:
-                outcome = self.action_resolver.resolve_outcome(state, action)
+                # An action with a DECLARED outcome policy owns its result: the
+                # resolver is not consulted and nothing is discarded. Actions
+                # absent from the mapping have no authority and keep the
+                # resolver's result verbatim. See engine/core/outcome_policy.py.
+                declared = resolve_policy_outcome(action)
+                outcome = (
+                    declared
+                    if declared is not None
+                    else self.action_resolver.resolve_outcome(state, action)
+                )
 
                 if action.action_type == "travel":
                     destination = action.targets[0]
@@ -766,10 +776,19 @@ class SimulationEngine:
                         facts.append(f"{actor.name} tries to help {target.name}, but fails.")
 
                 elif action.action_type == "rest":
-                    # Rest is deterministic when attempted, but its value is
-                    # determined by the actor's actual recovery state.
-                    outcome = ActionResult("success", "rest completed", 1.0)
-                    facts.append(f"{actor.name} rests at {actor.location}.")
+                    # The always-succeed behaviour is a DECLARED policy, applied
+                    # above in engine/core/outcome_policy.py -- not an assignment
+                    # made here. What is decided here is only how the outcome is
+                    # recorded, and that must stay status-sensitive: a failure
+                    # probe, or any future policy that can fail, must never write
+                    # a success fact. 3ad2b21 had this guard; flattening the
+                    # override dropped it.
+                    if outcome.status == "success":
+                        facts.append(f"{actor.name} rests at {actor.location}.")
+                    else:
+                        facts.append(
+                            f"{actor.name} tries to rest at {actor.location}, but fails."
+                        )
                 else:
                     facts.append(
                         f"{actor.name} attempts to {action.motivation} and {outcome.status}."
