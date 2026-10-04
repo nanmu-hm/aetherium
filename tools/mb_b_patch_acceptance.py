@@ -275,4 +275,12 @@ check("C8 authority is locatable and named", policy_actions() == ["rest"],
       f"declared policies = {policy_actions()}")
 
 print()
-print(f"  {sum(1 for _, ok in results if ok)}/{len(results)} acceptance items pass")
+print("  SCOPE OF THIS TOOL, stated honestly:")
+print("    This tool evaluates C1-C8 only. C9 -- the full suite on a clean")
+print("    runner -- is NOT evaluated here; it is a shell-level measurement.")
+print("    An earlier version of this file printed '9/9', which counted a")
+print("    criterion it never ran.")
+print()
+print(f"  {sum(1 for _, ok in results if ok)}/{len(results)} of the criteria this tool")
+print("  actually evaluates pass. C9 is reported separately in the commit")
+print("  message and must be run from a clean shell.")
