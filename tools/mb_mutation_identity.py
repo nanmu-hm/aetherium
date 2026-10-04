@@ -1,6 +1,6 @@
 """Report mutation results by TEST IDENTITY, not by count.
 
-Arena (5979...) is right about both of these:
+Arena (PR#10 `5979951566` / PR#9 `5979951698`) is right about both of these:
 
   * "the old pseudo-flow" names at least three different mutations of the same
     region. My table reported a bare "4 failed" for one of them. Reconstructing
@@ -92,22 +92,59 @@ def fresh():
 
 
 def run(tag):
+    """Run the acceptance file and REPORT ONLY WHAT ACTUALLY RAN.
+
+    A run that produced no pytest summary is a FAILED RUN, not a result. The
+    first version of this tool conflated the two: it printed
+    "(no summary)" and then, because the failure list was empty, printed
+    "NOTHING CAUGHT IT -- the mutation is UNOBSERVED". In an environment where
+    the inner interpreter could not run pytest, six runs that produced no
+    result at all were therefore reported as six findings about the code.
+
+    That is the same shape as the two retracted claims in this project -- a
+    measurement whose precondition was never checked, printed as a conclusion.
+    So the guard is explicit and loud: no summary means RUN FAILED, and a failed
+    run is never evidence about a mutation.
+    """
     for pc in glob.glob(str(MUT / "**/__pycache__"), recursive=True):
         shutil.rmtree(pc, ignore_errors=True)
-    r = subprocess.run(
-        ["python3", "-B", "-m", "pytest", "-q",
-         "tests/test_outcome_policy_authority.py"],
-        capture_output=True, text=True, cwd=MUT, timeout=900)
+    try:
+        r = subprocess.run(
+            [sys.executable, "-B", "-m", "pytest", "-q",
+             "tests/test_outcome_policy_authority.py"],
+            capture_output=True, text=True, cwd=MUT, timeout=900)
+    except (OSError, subprocess.SubprocessError) as exc:
+        # The interpreter could not be launched at all. subprocess.run RAISES
+        # here rather than returning a result, so a guard that only inspects a
+        # return code would never see it. Verified: without this except, a
+        # missing interpreter produced a bare traceback and the run below it
+        # was never reached -- which is the same hole Arena found, one level
+        # deeper.
+        print(f"\n{tag}")
+        print("    *** RUN FAILED -- NOT EVIDENCE ***")
+        print(f"    could not launch the test runner: {type(exc).__name__}: {exc}")
+        return None
+
     fails = [l.split("::")[1].split()[0] for l in r.stdout.splitlines()
              if l.startswith("FAILED")]
     tail = [x for x in r.stdout.splitlines() if "passed" in x or "failed" in x]
+
     print(f"\n{tag}")
-    print(f"    {tail[-1].strip() if tail else '(no summary)'}")
+    print(f"    runner: {sys.executable}")
+    if r.returncode not in (0, 1) or not tail:
+        print("    *** RUN FAILED -- NOT EVIDENCE ***")
+        print(f"    pytest exit={r.returncode}, no summary line in stdout.")
+        if r.stderr.strip():
+            print(f"    stderr: {r.stderr.strip().splitlines()[-1][:160]}")
+        print("    This tells us nothing about the mutation. Fix the runner")
+        print("    before reading anything into this line.")
+        return None
+    print(f"    {tail[-1].strip()}")
     print(f"    caught by {len(fails)} test(s):")
     for f in sorted(fails):
         print(f"       - {f}")
-    if not fails and not tag.startswith("unmutated"):
-        print("       (NOTHING CAUGHT IT -- the mutation is UNOBSERVED)")
+    if not fails:
+        print("       (no test failed -- the mutation is UNOBSERVED)")
     return set(fails)
 
 
@@ -115,7 +152,21 @@ print("=" * 96)
 print("BASELINE")
 print("=" * 96)
 fresh()
-run("unmutated tree (expected: nothing fails -- this is the control)")
+control = run("unmutated tree (expected: nothing fails -- this is the control)")
+if control is None:
+    print()
+    print("=" * 96)
+    print("STOP: the control run did not execute. Nothing below is evidence.")
+    print("=" * 96)
+    raise SystemExit(1)
+if control:
+    print()
+    print("=" * 96)
+    print("STOP: the UNMUTATED tree already fails these tests:")
+    print("      " + ", ".join(sorted(control)))
+    print("      A mutation report on top of a red baseline measures nothing.")
+    print("=" * 96)
+    raise SystemExit(1)
 
 results = {}
 for tag, edits in CONSTRUCTIONS.items():
@@ -133,7 +184,9 @@ for tag, edits in CONSTRUCTIONS.items():
         p.write_text(s.replace(old, new, 1))
         changed = True
     if changed:
-        results[tag] = run(tag)
+        outcome = run(tag)
+        if outcome is not None:
+            results[tag] = outcome
 
 # F: target the habit function precisely, not the first textual match
 fresh()
@@ -152,8 +205,9 @@ if hit is not None:
         'if outcome.status == "failure":',
         'if False:  # MUTATED: habit never penalises failure')
     p.write_text("".join(lines))
-    results["F  habit failure-penalty disabled (the habit fn only)"] = run(
-        "F  habit failure-penalty disabled (the habit fn only)")
+    outcome_f = run("F  habit failure-penalty disabled (the habit fn only)")
+    if outcome_f is not None:
+        results["F  habit failure-penalty disabled (the habit fn only)"] = outcome_f
 else:
     print("\nF  habit penalty: ANCHOR MISSING -- skipped")
 
