@@ -32,14 +32,15 @@ changes the shape of the answer:
 """
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.actions import generate_action_pool
 from engine.core.simulation import SimulationEngine
 from engine.genesis import build_genesis_world
 
-WT = "/home/ming/aetherium/.worktrees/m-b-ab"
+WT = str(Path(__file__).resolve().parent.parent)
 
 
 def show(title, cmd, limit=40, path=None):

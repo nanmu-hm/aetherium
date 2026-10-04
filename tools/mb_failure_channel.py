@@ -13,8 +13,9 @@ Everything below is a census of the existing code, not a proposal.
 """
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 def grep(pattern, path="engine", extra=()):

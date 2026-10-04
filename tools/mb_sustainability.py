@@ -10,8 +10,9 @@ precondition-driven world sustain itself WITHOUT the intervention, i.e. is the
 precondition itself renewable from inside the simulation?
 """
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.simulation import SimulationEngine
 from engine.genesis import build_genesis_world

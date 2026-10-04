@@ -19,8 +19,9 @@ READ-ONLY. Nothing here writes to world state; the engine is never edited.
 """
 import subprocess
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.actions import generate_action_pool
 from engine.core.simulation import SimulationEngine

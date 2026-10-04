@@ -31,8 +31,9 @@ action is the only action whose failure cannot produce distress.
 This script measures both halves of that claim rather than asserting it.
 """
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.actions import generate_action_pool
 from engine.core.simulation import FAILURE_PRESSURE_MAP, SimulationEngine

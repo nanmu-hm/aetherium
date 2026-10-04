@@ -15,8 +15,9 @@ actually names, and separately measure whether travel EVER has goal-directed
 motive available in this baseline.
 """
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.action_types import canonical_action_type
 from engine.core.actions import generate_action_pool, goal_matches_action

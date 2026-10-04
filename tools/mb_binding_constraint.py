@@ -16,8 +16,9 @@ NO lifecycle change. If the world revives, H2 was the binding constraint and
 H1 is not the root cause of stagnation.
 """
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.actions import generate_action_pool
 from engine.core.decision import DecisionKernel

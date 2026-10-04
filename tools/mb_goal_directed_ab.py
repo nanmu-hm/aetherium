@@ -24,8 +24,9 @@ another.
 from __future__ import annotations
 
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.action_types import canonical_action_type
 from engine.core.actions import goal_matches_action

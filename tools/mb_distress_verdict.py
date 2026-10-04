@@ -26,8 +26,9 @@ READ-ONLY with respect to production. The fixture writes only to a throwaway
 WorldState in memory; the engine and its files are untouched.
 """
 import sys
+from pathlib import Path
 
-sys.path.insert(0, ".")
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from engine.core.actions import generate_action_pool
 from engine.core.simulation import SimulationEngine
