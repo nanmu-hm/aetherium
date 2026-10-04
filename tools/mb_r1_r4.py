@@ -152,12 +152,35 @@ for wt, label in [("/tmp/t1_base_wt", "frozen baseline 8c5a8fd"),
     for f in fails:
         print(f"      FAILED: {f}")
 print()
-print("   => test_memory::test_relationship_history_preserves_causal_changes is")
-print("      INHERITED, present at 8c5a8fd and in every worktree. Every")
-print("      '323 passed / 1 failed' I reported before understated the baseline.")
-print("      Correct figure: 322 passed / 2 failed.")
-
+print("   ROOT CAUSE of the second failure (verified, not assumed):")
+print("     tests/ has NO __init__.py, and test_memory.py:82 does")
+print("         from tests.test_simulation import build_demo_world")
+print("     That is an implicit namespace-package import. It resolves only if")
+print("     something else has already registered 'tests' in sys.modules, so")
+print("     the failure is collection-ORDER dependent, not content dependent.")
+print("     Running test_memory.py alone reproduces it, and it is the ONLY file")
+print("     in tests/ that imports from tests.*")
 print()
+print("   REPRODUCED UNDER BOTH INTERPRETERS (this is why the figure is firm):")
+for py, tag in [("python3", "hermes toolchain"),
+                ("/home/ming/aetherium/.venv/bin/python", "project .venv")]:
+    if not Path(py).exists() and not shutil.which(py):
+        print(f"     {tag}: interpreter absent")
+        continue
+    exe = py if Path(py).exists() else shutil.which(py)
+    r = subprocess.run([exe, "-m", "pytest", "-q"], capture_output=True,
+                       text=True, cwd=REPO, timeout=900)
+    tail = [l for l in r.stdout.splitlines() if "passed" in l or "failed" in l]
+    fails = sorted(set(re.findall(r"FAILED ([\w/\.\-]+?)(?:::|\s)", r.stdout)))
+    print(f"     {tag:<20} {tail[-1] if tail else ''}")
+    for f in fails:
+        print(f"        FAILED: {f}")
+print()
+print("   => test_memory::test_relationship_history_preserves_causal_changes")
+print("      is INHERITED, present at frozen 8c5a8fd and in every worktree.")
+print("      Every '323 passed / 1 failed' I reported before understated the")
+print("      baseline. Correct figure: 322 passed / 2 failed.")
+
 print("#" * 98)
 print("# R1. IS THE fatigue/stress/sorrow GATE AN OUTCOME POLICY?")
 print("#" * 98)
