@@ -256,6 +256,39 @@ class Event:
     timestamp: str
     location: str
     participants: list[str]
+    # ---------------------------------------------------------------------
+    # causes = HISTORICAL CANDIDATE / ACTION-ORIGIN LABELS.
+    #
+    # Frozen contract (ChatGPT ruling 5974484663 §2, superseding the wording
+    # in 5971318199 §4; Arena 5971526976 closed it as "historical candidate-id
+    # labels"). Read this before "fixing" the dangling-reference report:
+    #
+    #   * causes is NOT a persistent event reference and NOT an event id.
+    #     A value looks like "tick-0-yan-contact": tick + actor + action type.
+    #     There is no resolver at the persistence boundary BY DESIGN, and
+    #     adding one would be wrong, not a missing feature.
+    #   * It is NOT resolved, NOT back-filled, and NOT guessed for old events.
+    #   * No candidate store is introduced, and no event-id is ever fabricated
+    #     to make a chain look complete.
+    #   * If a genuinely resolvable cross-event causal reference is ever needed,
+    #     it gets a NEW structured field. causes must never be reinterpreted.
+    #
+    # It has three real, load-bearing consumers, all measured:
+    #   1. core/action_types.event_action_type() -- legacy events with no
+    #      explicit action_type derive their semantic type from causes[0].
+    #      Events written by the current engine always set action_type
+    #      explicitly, so this path serves older snapshots only.
+    #   2. persistence/replay.ReplayVerifier.event_signature() includes
+    #      tuple(causes), so replay equality depends on it.
+    #   3. simulation.remember_event(unresolved=bool(event.causes)) -- every
+    #      event-derived memory is flagged unresolved because causes is
+    #      always non-empty for engine-written events.
+    #
+    # Because the labels are derived from tick/actor/action_type and contain no
+    # RNG, they are reproducible: measured identical across two runs of seed 7
+    # AND identical between seed 7 and seed 13. They are stable provenance,
+    # which is exactly what they are for.
+    # ---------------------------------------------------------------------
     causes: list[str]
     facts: list[str]
     # Structured action identity; causes remain as provenance IDs for compatibility.

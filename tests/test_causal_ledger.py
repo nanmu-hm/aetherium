@@ -10,11 +10,16 @@
      Next Choice; the next decision can read the previous event's effect.
   D. 存档兼容: snapshots written WITHOUT the new fields still load, and a
      round-trip is byte-identical.
+  E. causes contract: causes holds historical candidate / action-origin labels,
+     NOT persistent event references (ChatGPT ruling 5974484663 §2). These
+     tests pin the semantics so the non-dangling-reference report is not later
+     "fixed" by adding a candidate store or fabricating event ids.
 
 Pure tests. No production semantics outside the four ledger fields.
 """
 from __future__ import annotations
 
+import json
 import sys
 
 sys.path.insert(0, ".")
@@ -602,3 +607,106 @@ def test_c4_silent_ticks_do_record_passive_pressure():
         "silent ticks must still record natural pressure growth, otherwise "
         "the mirror test is vacuously satisfiable"
     )
+
+
+# ---------------------------------------------------------------------------
+# E. causes contract -- historical candidate / action-origin labels
+#    (ChatGPT ruling 5974484663 §2). These tests pin the SEMANTICS, so a
+#    future reader does not "fix" the non-dangling-reference report by adding
+#    a candidate store or fabricating event ids.
+# ---------------------------------------------------------------------------
+def test_e_causes_are_action_origin_labels_not_event_ids():
+    """causes holds action-origin labels ("tick-N-actor-action"), never event ids."""
+    world, _ = _world(6)
+    assert world.event_log, "fixture must produce events"
+    for event in world.event_log:
+        assert event.causes, f"{event.id}: engine-written events always carry a label"
+        for cause in event.causes:
+            assert not cause.startswith("event-"), (
+                f"{event.id}: causes must never be fabricated event ids, "
+                f"got {cause!r}"
+            )
+            assert cause not in {e.id for e in world.event_log}, (
+                f"{event.id}: causes must not point at events, got {cause!r}"
+            )
+
+
+def test_e_causes_survive_save_load_unchanged():
+    """The ruling's required assertion: causes is preserved verbatim."""
+    world, _ = _world(6)
+    payload = world_to_dict(world)
+    restored = world_from_dict(payload)
+    assert [e.causes for e in restored.event_log] == [e.causes for e in world.event_log]
+    # and the payload itself carries them, not just the in-memory object
+    raw = json.loads(json.dumps(payload))
+    assert [
+        e["causes"] for e in raw["world"]["event_log"]
+    ] == [e.causes for e in world.event_log]
+
+
+def test_e_causes_are_deterministic_across_runs_and_seeds():
+    """No RNG in a label => same inputs give the same provenance."""
+    def causes_of(seed, ticks=30):
+        world = build_genesis_world()
+        world.timestamp = "0001-01-01T00:00:00"
+        engine = SimulationEngine(seed=seed, use_arbitration=False)
+        for _ in range(ticks):
+            engine.step(world)
+        return [e.causes for e in world.event_log]
+
+    assert causes_of(7) == causes_of(7), "same seed must reproduce causes exactly"
+    # labels are derived from tick/actor/action_type, so they are also stable
+    # across seeds -- they are provenance, not a random branch marker
+    assert causes_of(7) == causes_of(13)
+
+
+def test_e_causes_are_load_bearing_for_replay_signature():
+    """Replay equality DEPENDS on causes -- they are not decorative."""
+    from engine.persistence.replay import ReplayVerifier
+    world, _ = _world(6)
+    event = world.event_log[0]
+
+    signature = ReplayVerifier.event_signature(event)
+    assert tuple(event.causes) in signature, (
+        "replay signature must include causes"
+    )
+
+    stripped = type(event)(**{**event.__dict__, "causes": []})
+    assert ReplayVerifier.event_signature(stripped) != signature, (
+        "changing causes must change the replay signature -- if this ever "
+        "stops being true, causes has become decorative and the contract "
+        "needs revisiting"
+    )
+
+
+def test_e_causes_drive_legacy_action_type_derivation():
+    """Consumer 1: an event with no explicit action_type derives it from
+    causes[0]. This is the legacy-snapshot path and must keep working."""
+    from engine.core.action_types import event_action_type
+    world, _ = _world(6)
+    event = world.event_log[0]
+
+    explicit = event_action_type(event)
+    assert explicit, "explicit action_type must resolve"
+
+    legacy = type(event)(**{**event.__dict__, "action_type": ""})
+    derived = event_action_type(legacy)
+    assert derived == explicit, (
+        f"legacy derivation from causes[0]={legacy.causes[0]!r} gave "
+        f"{derived!r} but the explicit field gives {explicit!r}"
+    )
+
+
+def test_e_causes_flag_event_memories_unresolved():
+    """Consumer 3: remember_event(unresolved=bool(event.causes))."""
+    world, _ = _world(6)
+    assert all(e.causes for e in world.event_log), (
+        "if any event had empty causes, the unresolved flag below would be "
+        "testing nothing"
+    )
+    flagged = [
+        memory_id
+        for memory_id, memory in world.memory_state.memories.items()
+        if getattr(memory, "unresolved", False)
+    ]
+    assert flagged, "engine-written event memories must be flagged unresolved"
