@@ -222,8 +222,14 @@ try:
             and ev3.action_result.probability == 1.0)
 finally:
     ActionResolver.resolve_outcome = orig2
-check("C4 policy beats a synthetic resolver failure", kept,
-      f"probe installed={synthetic['hit']} committed={ev3.action_result.status}")
+# NOTE: this probe is VACUOUS by construction and is reported as such. The
+# policy short-circuits before the resolver, so a resolver-side probe is never
+# offered -- synthetic["hit"] is 0. Arena caught this: the load-bearing check is
+# C2 (the resolver is never consulted), and the real authority test drives the
+# POLICY to failure, which lives in tests/test_outcome_policy_authority.py.
+check("C4 (VACUOUS probe, see note) commit is the policy triple", kept,
+      f"resolver-side probe installed {synthetic['hit']} time(s) -- expected 0; "
+      f"committed={ev3.action_result.status}")
 
 # C5 status-sensitive facts, both directions
 src = (PATCHED / "engine/core/simulation.py").read_text()
@@ -237,8 +243,13 @@ for s in (1, 7, 13):
     for row in B[str(s)]["rows"]:
         if row[1] in triples:
             triples[row[1]].add((row[2], row[3], row[4]))
-untouched = all("rest completed" not in row[1]
-                  for rows in triples.values() for row in rows)
+# `triples` holds (status, probability, reason) per action type. The rest
+# policy's reason must never appear on another action's committed triple.
+POLICY_REASON = "rest completed"
+untouched = all(
+    POLICY_REASON not in (t[2] or "")
+    for rows in triples.values() for t in rows
+)
 check("C6 contact/travel never carry the rest policy triple", untouched,
       f"{ {k: sorted(v)[:2] for k, v in triples.items()} }")
 

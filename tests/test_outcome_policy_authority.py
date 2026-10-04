@@ -77,24 +77,77 @@ def test_committed_rest_carries_the_policy_triple():
     assert event.action_result.probability == 1.0
 
 
-# --- C4: a declared policy outranks the resolver ---------------------------
-# The load-bearing test. It asserts the ORDER, not the outcome: whatever the
-# resolver is forced to return, the policy's triple is what gets committed.
+# --- C4: the policy is the single authority, and consequences follow it -----
+#
+# My previous version of this test forced the RESOLVER to return a failure and
+# asserted the policy still won. That was vacuous: the policy short-circuits
+# before the resolver, so the forcing function was never invoked and the probe
+# was never installed (measured: 0 installs). It would have passed with the
+# policy deleted. Arena caught this; the resolver-order test (C2) is the check
+# that actually discriminates.
+#
+# The load-bearing version offers the POLICY a competing outcome and asserts
+# that everything downstream follows it -- commit, facts, and consequence. That
+# is a behavioural claim, not a restatement of the policy.
 
-def test_policy_outranks_a_forced_resolver_failure(monkeypatch):
+def test_consequences_follow_the_policy_when_the_policy_yields_failure(monkeypatch):
+    """Drive the declared policy to failure; the world must record a failure.
+
+    This is the test that makes :772's failure arm reachable. Under the shipped
+    rest policy that arm is dead code, which is precisely why it needs a test:
+    otherwise nothing would notice if it were deleted, and nothing would notice
+    if it were unreachable forever.
+    """
+    import engine.core.outcome_policy as op
+
+    monkeypatch.setitem(
+        op.ACTION_OUTCOME_POLICIES,
+        "rest",
+        lambda: ActionResult("failure", "POLICY_FAILURE_PROBE", 0.25),
+    )
+
+    world = tired_world()
+    engine = SimulationEngine(seed=7)
+    event = engine.resolve(world, [rest_candidate()])[0]
+
+    # the commit follows the policy, not a hard-coded success
+    assert event.action_result.status == "failure"
+    assert event.action_result.reason == "POLICY_FAILURE_PROBE"
+    assert event.action_result.probability == 0.25
+
+    # the fact follows the committed status
+    recorded = " ".join(
+        str(getattr(world.characters["yan"], attr, "") or "")
+        for attr in ("facts", "beliefs", "knowledge")
+    )
+    assert "tries to rest" in recorded
+    assert "rests at" not in recorded
+
+    # and the consequence layer follows too: a failure is penalised
+    assert world.characters["yan"].habits.get("rest", 0.0) < 0.0
+
+
+def test_policy_is_the_only_source_of_the_rest_outcome(monkeypatch):
+    """If the resolver is unreachable for rest, no resolver result can leak in.
+
+    Asserted as a conjunction so that neither half can pass alone: the policy
+    must be declared, AND the resolver must not be consulted. The first half
+    alone is satisfied by a policy that never runs; the second alone by a
+    resolver that always succeeds.
+    """
+    consulted = []
     original = ActionResolver.resolve_outcome
 
-    def forcing(self, state, action):
-        if action.action_type == "rest":
-            return ActionResult("failure", "SYNTHETIC_PROBE", 0.123456)
+    def counting(self, state, action):
+        consulted.append(action.action_type)
         return original(self, state, action)
 
-    monkeypatch.setattr(ActionResolver, "resolve_outcome", forcing)
+    monkeypatch.setattr(ActionResolver, "resolve_outcome", counting)
     event = SimulationEngine(seed=7).resolve(tired_world(), [rest_candidate()])[0]
 
-    assert event.action_result.status == "success"
+    assert "rest" in ACTION_OUTCOME_POLICIES
+    assert consulted == [], f"rest reached the resolver: {consulted}"
     assert event.action_result.reason == "rest completed"
-    assert event.action_result.probability == 1.0
 
 
 # --- C5: facts are status-sensitive ----------------------------------------
@@ -112,17 +165,40 @@ def test_rest_records_a_success_fact():
     assert "rests at" in recorded
 
 
-def test_rest_facts_are_status_sensitive_by_construction():
-    source = (
-        __import__("pathlib").Path(__file__).resolve().parents[1]
-        / "engine/core/simulation.py"
-    ).read_text()
-    assert 'f"{actor.name} rests at {actor.location}."' in source
-    assert "tries to rest at {actor.location}, but fails." in source
-    # the success fact must be behind a status test, not unconditional
-    rest_branch = source.split('elif action.action_type == "rest":')[1]
-    rest_branch = rest_branch.split("else:")[0]
-    assert 'outcome.status == "success"' in rest_branch
+def test_rest_facts_are_status_sensitive_in_both_directions(monkeypatch):
+    """Both fact branches are reachable and each writes its own text.
+
+    ChatGPT's integration review flagged that the previous version asserted on
+    the SOURCE STRING of simulation.py. That couples the test to formatting and
+    passes without running anything. This version drives both statuses and
+    reads what was actually recorded.
+    """
+    import engine.core.outcome_policy as op
+
+    # success branch, with the shipped policy
+    world = tired_world()
+    SimulationEngine(seed=7).resolve(world, [rest_candidate()])
+    ok_text = " ".join(
+        str(getattr(world.characters["yan"], attr, "") or "")
+        for attr in ("facts", "beliefs", "knowledge")
+    )
+    assert "rests at" in ok_text
+    assert "tries to rest" not in ok_text
+
+    # failure branch, by making the policy itself fail
+    monkeypatch.setitem(
+        op.ACTION_OUTCOME_POLICIES,
+        "rest",
+        lambda: ActionResult("failure", "POLICY_FAILURE_PROBE", 0.25),
+    )
+    world2 = tired_world()
+    SimulationEngine(seed=7).resolve(world2, [rest_candidate()])
+    fail_text = " ".join(
+        str(getattr(world2.characters["yan"], attr, "") or "")
+        for attr in ("facts", "beliefs", "knowledge")
+    )
+    assert "tries to rest" in fail_text
+    assert " but fails" in fail_text
 
 
 # --- C6: other actions keep all three fields -------------------------------

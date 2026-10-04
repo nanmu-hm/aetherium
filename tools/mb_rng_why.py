@@ -6,10 +6,19 @@ The (b) patch stops consulting the resolver for rest, so rest no longer calls
 advance the resolver's stream one step fewer per rest event, and every later
 resolver draw should shift.
 
-Measured: `action_resolver.rng.getstate()` is byte-identical before and after on
-20/20 seeds, and 0/20 seeds diverge at all.
+Measured, on a correctly reverted baseline: resolver draw counts drop from 13
+to 10 on seed 7 (rest's 3 draws disappear), and the resolver's
+`rng.getstate()` differs on 20/20 seeds -- the stream genuinely moves. The
+committed trajectories are nevertheless identical over 20 seeds x 400 ticks
+(245 events both sides), because no shifted draw crossed its threshold in that
+sample.
 
-This script finds out why, rather than reporting the number and hoping.
+An earlier version of this file claimed the RNG state was byte-identical on
+20/20 seeds. That number was produced by comparing the patched tree against
+itself: the baseline copy has no .git, so the `git checkout` that was meant to
+revert it failed silently and the "before" side was already patched. The claim
+is retracted. This script now materialises the baseline from git and checks that
+it really was reverted.
 """
 import json
 import random
@@ -89,7 +98,7 @@ def run(repo):
                        capture_output=True, text=True, cwd=str(repo), timeout=560)
     if r.returncode:
         print("ERR", r.stderr[-800:]); sys.exit(1)
-    return json.loads(r.stdout.strip().splitlines()[-1])
+    return json.loads(r.stdout.strip())
 
 
 A = run(PRISTINE)
@@ -138,6 +147,12 @@ for tag, repo in (("before", PRISTINE), ("after", PATCHED)):
     print(f"    {tag:<7} first draw {r1.stdout.strip()[:20]}   second draw "
           f"{r2.stdout.strip()[:20]}")
 print()
-print("  If those differ, the stream DOES advance per call, and the only")
-print("  explanation for identical end-state is that the number of resolver")
-print("  calls is unchanged -- which the draw counts above will show.")
+print("  If those are the SAME, the isolated stream advances identically in")
+print("  both trees -- which is the point: the resolver's stream is unchanged")
+print("  by anything except how many times resolve_outcome is called on it.")
+print()
+print("  CONCLUSION: the patch removes 3 resolver draws (one per rest event),")
+print("  so the stream MOVES (rng byte-identical = False). Trajectories still")
+print("  match over 20 seeds x 400 ticks because no shifted draw crossed its")
+print("  threshold in this sample. That is a property of the sample, not a")
+print("  guarantee -- see the report's COST section.")

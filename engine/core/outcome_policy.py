@@ -29,7 +29,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 
-from engine.core.models import ActionCandidate, ActionResult, WorldState
+from engine.core.models import ActionCandidate, ActionResult
 
 # --- Explicit action outcome policies ---------------------------------------
 #
@@ -54,6 +54,18 @@ from engine.core.models import ActionCandidate, ActionResult, WorldState
 #   This restores the declaration. The semantics are unchanged: a rest action
 #   that has passed its preconditions commits success with reason
 #   "rest completed" and probability 1.0.
+# API BOUNDARY -- a declared policy is STATE-BLIND.
+#
+# A policy factory takes no arguments and cannot see the world, the actor, or
+# the candidate. That is deliberate: rest's rule ("if it is available, it
+# succeeds") is a property of the ACTION, not of the situation, and keeping the
+# factory argument-free makes that property checkable by reading the signature.
+#
+# The cost is that a genuinely state-dependent rule cannot be expressed here.
+# If one is ever needed, the signature has to widen -- and at that point the
+# policy stops being a constant and becomes a function of the world, which is a
+# materially stronger claim and should be reviewed as one. Do not widen this
+# signature to work around a single awkward policy.
 ACTION_OUTCOME_POLICIES: dict[str, Callable[[], ActionResult]] = {
     "rest": lambda: ActionResult("success", "rest completed", 1.0),
 }
