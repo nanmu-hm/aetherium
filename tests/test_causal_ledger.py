@@ -645,19 +645,63 @@ def test_e_causes_survive_save_load_unchanged():
 
 
 def test_e_causes_are_deterministic_across_runs_and_seeds():
-    """No RNG in a label => same inputs give the same provenance."""
-    def causes_of(seed, ticks=30):
+    """No RNG in a label => a given seed reproduces its own labels exactly.
+
+    HORIZON NOTE (measured, after Arena re-verified 4cdc0b7): this test used to
+    assert cross-seed identity at 30 ticks and passed. Arena showed that was
+    luck -- seed 7 and seed 13 agree only through tick 33 and diverge at tick 34,
+    where seed 7 emits a 9th event seed 13 does not. An earlier version of the
+    contract comment repeated that overclaim.
+
+    So the property is asserted in its true form:
+      per-seed reproducibility -> holds at ANY horizon (30/34/100/200/400)
+      cross-seed identity      -> holds only while the trajectories coincide,
+                                  which is NOT a property of causes, it is a
+                                  property of the run. Pinned as a narrow,
+                                  explicitly-scoped fact so the 33/34 boundary
+                                  cannot silently drift.
+    """
+    def causes_of(seed, ticks):
         world = build_genesis_world()
         world.timestamp = "0001-01-01T00:00:00"
         engine = SimulationEngine(seed=seed, use_arbitration=False)
         for _ in range(ticks):
             engine.step(world)
-        return [e.causes for e in world.event_log]
+        return [tuple(e.causes) for e in world.event_log]
 
-    assert causes_of(7) == causes_of(7), "same seed must reproduce causes exactly"
-    # labels are derived from tick/actor/action_type, so they are also stable
-    # across seeds -- they are provenance, not a random branch marker
-    assert causes_of(7) == causes_of(13)
+    # 1. per-seed reproducibility: the real invariant, at horizons past the
+    #    cross-seed boundary so it cannot be an artifact of a short run
+    for horizon in (30, 34, 100, 200, 400):
+        assert causes_of(7, horizon) == causes_of(7, horizon), (
+            f"seed 7 must reproduce its own causes exactly at {horizon} ticks"
+        )
+
+    # 2. cross-seed agreement is horizon-scoped, pinned so the boundary is
+    #    visible in the test suite rather than only in a GitHub comment
+    assert causes_of(7, 33) == causes_of(13, 33), (
+        "cross-seed causes agreed through tick 33; if this now fails the "
+        "trajectories changed and the 33/34 boundary below needs re-measuring"
+    )
+    assert causes_of(7, 34) != causes_of(13, 34), (
+        "cross-seed causes diverged at tick 34; if this now fails the "
+        "trajectories changed and the 33/34 boundary above needs re-measuring"
+    )
+
+    # 3. the pure-function property: a label is a deterministic function of
+    #    (tick, actor, action) only -- no RNG, no run-dependent salt
+    world, _ = _world(6)
+    for event in world.event_log:
+        tick = event.tick
+        actor = event.participants[0]
+        for cause in event.causes:
+            head = f"tick-{tick}-{actor}-"
+            assert cause.startswith(head), (
+                f"{event.id}: cause {cause!r} must be built from "
+                f"(tick={tick}, actor={actor}, action=...) as {head!r}"
+            )
+            assert cause[len(head):], (
+                f"{event.id}: cause {cause!r} has an empty action component"
+            )
 
 
 def test_e_causes_are_load_bearing_for_replay_signature():

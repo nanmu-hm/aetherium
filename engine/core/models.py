@@ -285,9 +285,17 @@ class Event:
     #      always non-empty for engine-written events.
     #
     # Because the labels are derived from tick/actor/action_type and contain no
-    # RNG, they are reproducible: measured identical across two runs of seed 7
-    # AND identical between seed 7 and seed 13. They are stable provenance,
-    # which is exactly what they are for.
+    # RNG, a given seed reproduces its own labels exactly at ANY horizon
+    # (measured: seed 7 identical at 30 / 34 / 100 / 200 / 400 ticks).
+    #
+    # Cross-seed identity is a DIFFERENT and much weaker claim, and an earlier
+    # version of this comment overstated it. Measured boundary (Arena, while
+    # re-verifying 4cdc0b7): seed 7 and seed 13 produce identical causes through
+    # tick 33 and diverge at tick 34, because at that point seed 7 emits a 9th
+    # event that seed 13 does not. So cross-seed causes agree only while the two
+    # TRAJECTORIES coincide -- the labels track the run, they are not a
+    # seed-independent constant. They are stable provenance, which is exactly
+    # what they are for, but "stable" means per-seed reproducible.
     # ---------------------------------------------------------------------
     causes: list[str]
     facts: list[str]
