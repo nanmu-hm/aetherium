@@ -30,6 +30,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+import engine.core.appraisal as ap  # noqa: E402
 from engine.core.actions import generate_action_pool  # noqa: E402
 from engine.core.decision import DecisionKernel  # noqa: E402
 from engine.core.simulation import SimulationEngine  # noqa: E402
@@ -62,6 +63,10 @@ def g1_fact_taxonomy() -> None:
     print("G1  FACT TAXONOMY -- WHICH OUTCOME-BEARING FACTS ACTUALLY OCCUR?")
     print("=" * 78)
     print()
+    # COUNT ONCE, NOT EVERY TICK. The first version rescanned the whole
+    # event_log on every tick, so a fact written at tick 3 was recounted on
+    # every later tick -- inflating travel from 30 to 5605. Arena caught
+    # this. Counts below come from a SINGLE pass over the final log.
     shapes = Counter()
     for seed in SEEDS:
         world = build_genesis_world()
@@ -69,10 +74,10 @@ def g1_fact_taxonomy() -> None:
         engine = SimulationEngine(seed=seed, use_arbitration=False)
         for _ in range(TICKS):
             engine.step(world)
-            for ev in world.event_log:
-                for f in ev.facts:
-                    shapes[mask(f, world)] += 1
-    print("  distinct masked fact shapes, with counts:")
+        for ev in world.event_log:            # one pass, after the run
+            for f in ev.facts:
+                shapes[mask(f, world)] += 1
+    print("  distinct masked fact shapes (EACH EVENT COUNTED ONCE):")
     for shape, n in shapes.most_common():
         print(f"    x{n:<5} {shape}")
     print()
@@ -177,7 +182,9 @@ def g2_four_layers() -> None:
                                          else e.utility))]
                 if o_before[0] != o_after[0]:
                     f4 += 1
-    print(f"  snapshots where the actor HAS memories (F1 fact written) : {f1}")
+    print(f"  actor-snapshots in which the actor HAS >=1 memory : {f1}")
+    print("    (this counts SNAPSHOTS WITH MEMORIES, not facts written per")
+    print("     tick -- F1 mislabelled that in the first version)")
     print(f"  contested snapshots                                   : {contested}")
     print(f"  F2  a history-derived input is READ by the decision path : {f2}")
     print(f"  F3  removing history CHANGES UTILITY (appraisal moves)   : {f3}")
@@ -278,12 +285,112 @@ def g3_attributable_change() -> None:
     record("G3_tested", tested)
 
 
+def g4_arbitration_on_ablation() -> None:
+    """Arena's fourth objection: G2/G3 ran with use_arbitration=False and
+    called choose() directly, so they never tested the path W2 opened --
+    memory changes utility -> changes the arbitration VERDICT -> changes the
+    COMMITTED action. Since W2 the verdict is authoritative, so this is a
+    genuinely different channel and F4 must be re-measured on it."""
+    print("=" * 78)
+    print("G4  THE SAME ABLATION WITH W2 ARBITRATION ON (the untested path)")
+    print("=" * 78)
+    print()
+    print("  G2/G3 measured choose() with arbitration OFF. Since W2 a RESOLVE")
+    print("  verdict is AUTHORITATIVE and can commit an action outright, so")
+    print("  'the final choice' is now decided in two places. This repeats")
+    print("  the ablation through the real generate_candidates() path and")
+    print("  compares the COMMITTED action, not choose()'s return.")
+    print()
+    kernel = DecisionKernel(seed=0)
+    tested = 0
+    verdict_changed = 0
+    committed_changed = 0
+    examples = []
+    for seed in SEEDS:
+        world = build_genesis_world()
+        world.timestamp = "0001-01-01T00:00:00"
+        engine = SimulationEngine(seed=seed, use_arbitration=False)
+        for _ in range(TICKS):
+            engine.step(world)
+            for cid in ACTORS:
+                if cid not in world.characters:
+                    continue
+                ch = world.characters[cid]
+                if ch.status != "active":
+                    continue
+                pool = generate_action_pool(world, cid)
+                if len(pool) < 2:
+                    continue
+                evals = [kernel.evaluate(world, c) for c in pool]
+                recs = ap.build_appraisals(kernel, world, ch, pool)
+                res = ap.arbitrate(recs, pool, evals)
+                tested += 1
+
+                # ablate the actor's OWN last-3 events (repetition channel)
+                w1 = copy.deepcopy(world)
+                recent = [e for e in reversed(world.event_log)
+                          if e.participants and e.participants[0] == cid][:3]
+                drop = {e.id for e in recent}
+                for m in [m for m in list(w1.memory_state.memories.values())
+                          if m.owner_id == cid and m.event_id in drop]:
+                    w1.memory_state.memories.pop(m.id, None)
+                w1.characters[cid].memory_ids = [
+                    i for i in ch.memory_ids
+                    if i in w1.memory_state.memories]
+                pool2 = generate_action_pool(w1, cid)
+                evals2 = [kernel.evaluate(w1, c) for c in pool2]
+                recs2 = ap.build_appraisals(kernel, w1, ch, pool2)
+                res2 = ap.arbitrate(recs2, pool2, evals2)
+
+                if (res.kind, res.candidate_id) != (res2.kind, res2.candidate_id):
+                    verdict_changed += 1
+
+                def committed(w, p, r):
+                    narrowed = ap.apply_arbitration(p, r, evals) if r else p
+                    if r is not None and r.kind == "resolve":
+                        return next((c for c in narrowed
+                                     if c.id == r.candidate_id), None)
+                    pick, _ = kernel.choose(w, narrowed, allow_quiet=True)
+                    return pick
+
+                c0 = committed(world, pool, res)
+                c1 = committed(w1, pool2, res2)
+                id0 = c0.id if c0 else None
+                id1 = c1.id if c1 else None
+                if id0 != id1:
+                    committed_changed += 1
+                    if len(examples) < 3:
+                        examples.append((seed, world.tick, cid, id0, id1,
+                                         res.kind, res2.kind))
+    print(f"  contested snapshots tested                      : {tested}")
+    print(f"  arbitration VERDICT changed by the ablation     : {verdict_changed}")
+    print(f"  COMMITTED action changed by the ablation         : {committed_changed}")
+    print()
+    for seed, tick, cid, a, b, k0, k1 in examples:
+        print(f"    seed{seed} t{tick} {cid}: {a} -> {b}  (verdict {k0} -> {k1})")
+    print()
+    if committed_changed == 0:
+        print("  => The W2 path does NOT add agency either: ablating history")
+        print("     changed no committed action under arbitration ON. So F4=0")
+        print("     holds on BOTH channels, which is a stronger result than G3")
+        print("     alone -- and it removes 'we never tested the arbitration")
+        print("     path' as an alternative explanation.")
+    else:
+        print("  => Attribution EXISTS on the arbitration path. G3's zero was a")
+        print("     property of the choose()-only path, not of the system.")
+    print()
+    record("G4_verdict_changed", verdict_changed)
+    record("G4_committed_changed", committed_changed)
+    record("G4_tested", tested)
+
+
 def main() -> int:
     print("M15  WORLD EVOLUTION / AGENCY CLOSURE (read-only)")
     print()
     g1_fact_taxonomy()
     g2_four_layers()
     g3_attributable_change()
+    g4_arbitration_on_ablation()
 
     print("=" * 78)
     print("M15 VERDICT")
@@ -304,15 +411,24 @@ def main() -> int:
     print("  naturally reachable path: goal-progress and reunion facts DO occur;")
     print("  negative facts do not, and none was manufactured.")
     print()
-    print("  WHY F4 IS ZERO, CROSS-REFERENCED RATHER than RESTATED")
-    print("    This is the same margin measured in M3, from the other side:")
-    print("      M3: decision margin (best - next best)  min 0.1822, p50 0.5738")
-    print("      M3: largest memory-driven utility contribution  0.2333")
-    print("      M3: in 33/46 samples the memory signal did not even favour")
-    print("          the current leader")
-    print("    The largest contribution history can make is smaller than the")
-    print("    SMALLEST observed margin, so it cannot cross one. That is an")
-    print("    ordering-of-magnitude result, not a near miss.")
+    print("  WHY F4 IS ZERO -- AND A CORRECTION I HAVE TO MAKE")
+    print("    My previous report explained F4=0 by comparing M3's largest")
+    print("    memory-driven utility contribution (0.2333) against M3's")
+    print("    SMALLEST margin (0.1822) and claiming the contribution was")
+    print("    smaller. That is ARITHMETICALLY FALSE: 0.2333 > 0.1822.")
+    print("    Arena caught it. Two further reasons that comparison could not")
+    print("    have carried the conclusion anyway:")
+    print("      (a) |delta utility| on a single candidate is not the")
+    print("          BETWEEN-candidate movement that would have to cross a")
+    print("          margin;")
+    print("      (b) one maximum compared to one minimum says nothing about")
+    print("          the typical case.")
+    print("    F4=0 is therefore reported as what it is: the MEASURED result")
+    print("    over these 46 ablations, with no structural inevitability")
+    print("    claimed. The correct supporting context is distributional:")
+    print("      M3: margin p50 0.5738, and in 33/46 samples the memory signal")
+    print("          did not even favour the current leader.")
+    print("    That is consistent with F4=0 but does not prove it.")
     print()
     print("  WHAT WOULD CHANGE F4, stated as falsifiable conditions (NOT a plan)")
     print("    - a natural failure sample, which changes which facts are")
