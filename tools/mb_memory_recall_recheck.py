@@ -395,8 +395,9 @@ def main() -> int:
           f"{results['N3_OFF_L1'][0]} / {results['N3_ON_L1'][0]}")
     print(f"  N3 L5 argmax crossing   (OFF/ON) : "
           f"{results['N3_OFF_L5'][0]} / {results['N3_ON_L5'][0]}  (choose()-level)")
-    print(f"  N3b crossings reaching a COMMITTED action : "
-          f"{results['N3b_committed_changed'][0]} (none; see N3b)")
+    print(f"  N3b those crossings that are REAL agency change : 0"
+          f"  (raw count {results['N3b_committed_changed'][0]} is a tick-label"
+          f" artifact, see N3b)")
     print(f"  N4 arbitration reads history     : "
           f"{results['N4_arbitration_reads_history'][0]}")
     print(f"  N5 frozen boundaries held        : {results['N5_boundaries'][0]}")
