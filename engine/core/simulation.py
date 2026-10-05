@@ -62,16 +62,47 @@ class SimulationEngine:
             self.random.setstate(state.rng_state)
 
     def generate_candidates(self, state: WorldState) -> list[ActionCandidate]:
-        """Generate and select one plausible action per active character."""
+        """Generate and select one plausible action per active character.
+
+        Arbitration authority (contract (A)): a RESOLVE verdict NAMES the
+        action for that tick, so it is selected directly rather than handed
+        back to choose() to be re-ranked. Previously the narrowed pool kept
+        the utility runner-up alongside the verdict winner, choose() re-ran
+        its own argmax over that pair, and a verdict that disagreed with
+        utility was therefore discarded downstream -- arbitration produced a
+        semantic verdict and then lost it, so use_arbitration=True and False
+        committed identical actions on every tick measured.
+
+        RESOLVE authority also outranks the quiet-tick rule: all four
+        overriding witnesses have a negative-scoring winner, so re-ranking
+        them through choose(..., allow_quiet=True) silenced the tick instead
+        of committing the winner. Passing such a verdict through choose()
+        again would reinstate exactly that loss.
+
+        Scope, deliberately narrow: only choose() is bypassed. The action is
+        still returned into the ordinary pipeline, so resolve() still runs
+        precondition_engine.check(), the resolver, Outcome Authority, and
+        Event/Fact/Consequence commit. INERT and ABSTAIN keep their existing
+        behaviour: INERT still goes through choose() unchanged, and ABSTAIN
+        still empties the pool so choose()'s empty-pool guard returns None.
+        No float, no weight, no new field and no new scoring channel is
+        introduced here.
+        """
         selected: list[ActionCandidate] = []
         for character in state.characters.values():
             pool = generate_action_pool(state, character.id)
+            arbitration = None
             if self.use_arbitration and pool:
                 appraisals = build_appraisals(self.decision_kernel, state, character, pool)
                 evaluations = [self.decision_kernel.evaluate(state, c) for c in pool]
                 arbitration = arbitrate(appraisals, pool, evaluations)
                 pool = apply_arbitration(pool, arbitration, evaluations)
-            action, _ = self.decision_kernel.choose(state, pool, allow_quiet=True)
+            action = None
+            if arbitration is not None and arbitration.kind == "resolve":
+                action = next(
+                    (c for c in pool if c.id == arbitration.candidate_id), None)
+            if action is None:
+                action, _ = self.decision_kernel.choose(state, pool, allow_quiet=True)
             if action is not None:
                 selected.append(action)
         return selected
