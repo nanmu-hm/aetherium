@@ -103,11 +103,16 @@ def ablate(world, cid, ch, mode):
 
 
 def step_and_capture(world, seed):
-    """Run the REAL engine.step() and return what it PERSISTED."""
+    """Run the REAL engine.step(); return (SimulationResult, new events).
+
+    Two INDEPENDENT sources on purpose: SimulationResult.actions is the
+    engine's own statement of what it selected, while the returned events are
+    what it actually wrote to the log.
+    """
     engine = SimulationEngine(seed=seed, use_arbitration=True)
     before = len(world.event_log)
-    engine.step(world)
-    return world.event_log[before:]
+    result = engine.step(world)
+    return result.actions, world.event_log[before:]
 
 
 def main() -> int:
@@ -162,20 +167,28 @@ def main() -> int:
                     r_b.kind, r_b.candidate_id)
                 p2_verdict += verdict_changed
 
-                # P3/P4 REAL persisted events
+                # P3 and P4 MUST come from different sources.
+                # Arena is right that the previous version derived P3 from
+                # the event list, i.e. the same source as P4, so the two
+                # counts were not independent. P3 now reads
+                # SimulationResult.actions -- what the engine says it
+                # selected -- and P4 reads the PERSISTED event_log.
                 ev_world_a = copy.deepcopy(world)
                 ev_world_b = copy.deepcopy(world)
-                # re-ablate on the copy we are about to step
                 ev_world_b = ablate(ev_world_b, cid, ch, "all")
-                events_a = step_and_capture(ev_world_a, seed)
-                events_b = step_and_capture(ev_world_b, seed)
+                sel_a, events_a = step_and_capture(ev_world_a, seed)
+                sel_b, events_b = step_and_capture(ev_world_b, seed)
                 act_a = [e.id for e in events_a
                          if cid in (e.participants or [])]
                 act_b = [e.id for e in events_b
                          if cid in (e.participants or [])]
-                submitted_changed = bool(act_a) != bool(act_b) or (
-                    act_a != act_b)
-                p3_submitted += submitted_changed
+                # P3: the engine's own selected-action list
+                chosen_a = [f"{a.actor_id}:{a.id}" for a in sel_a
+                            if a.actor_id == cid]
+                chosen_b = [f"{a.actor_id}:{a.id}" for a in sel_b
+                            if a.actor_id == cid]
+                p3_submitted += chosen_a != chosen_b
+                # P4: the persisted events
                 p4_event += act_a != act_b
 
                 if act_a != act_b:
