@@ -55,17 +55,31 @@ def run_w2(seed: int) -> dict:
         ch = {}
         for cid, c in world.characters.items():
             pool = generate_action_pool(world, cid)
-            if len(pool) < 2:
+            if len(pool) == 0:
                 continue
             evs = [kernel.evaluate(world, c) for c in pool]
             recs = ap.build_appraisals(kernel, world, c, pool)
             verdict = ap.arbitrate(recs, pool, evs)
+            # Arena 5423617435-A follow-up: a SINGLE-candidate pool can
+            # still be committed (via choose()'s empty-after-arbitration
+            # guard), so it must be captured in per-tick state as well as
+            # previously -- just don't claim there's no verdict when the
+            # pool was genuinely single-candidate (arbitrate() is only
+            # meaningful for >=2, per M16's own framing; still record the
+            # raw top-1 utility so the single-candidate case is explained
+            # rather than elided).
             ch[cid] = {"pool_ids": [c.id for c in pool],
                        "verdict_kind": verdict.kind,
                        "verdict_candidate": verdict.candidate_id,
                        "top1": (sorted(evs, key=lambda e: e.utility,
                                        reverse=True)[0].action_id
-                                 if evs else None)}
+                                 if evs else None),
+                       # full ranked (id, utility) list so a single-
+                       # candidate / no-verdict tick is explained, not
+                       # elided (Arena 5423617435-A correction)
+                       "top1_util": [(e.action_id, e.utility) for e in
+                                     sorted(evs, key=lambda e: e.utility,
+                                            reverse=True)]}
         res = engine.step(world)
         committed = {a.actor_id: a.id for a in res.actions}
         per_tick.append({"tick": tick_before, "ch": ch,
@@ -107,19 +121,35 @@ def main() -> int:
                                              div + 6)):
             rec = out["per_tick"][i]
             refrec = ref["per_tick"][i]
+            # A (Arena correction 5423617435-A): the previous version only
+            # printed actors whose pool had >= 2 candidates, so a key
+            # single-candidate tick (e.g. t3: rui's only candidate is
+            # travel -> ridge, utility -0.015216, no arbitration verdict
+            # because the pool has a single element) showed "-" and left a
+            # gap. Now: for each committed actor, ALWAYS print the pool
+            # size, the single-candidate case explicitly, AND the full
+            # utility ranking so a "no verdict" tick is explained, not
+            # elided.
             s3 = " | ".join(
-                f"{cid}: pool{len(d['pool_ids'])} verdict="
-                f"{d['verdict_kind']}({d['verdict_candidate']}) "
-                f"top1={d['top1']} committed={rec['committed'].get(cid)}"
+                f"{cid}: pool{len(d['pool_ids'])}"
+                + (f" single-candidate {d['pool_ids'][0]} "
+                   f"(utility {d['top1_util'][0][1]:+.6f}), no verdict"
+                   if len(d["pool_ids"]) == 1 else
+                   f" verdict={d['verdict_kind']}({d['verdict_candidate']})")
+                + f" committed={rec['committed'].get(cid)}"
                 for cid, d in rec["ch"].items() if rec["committed"].get(cid))
             s1 = " | ".join(
-                f"{cid}: verdict={d['verdict_kind']} "
-                f"top1={d['top1']} "
-                f"committed={refrec['committed'].get(cid)}"
+                f"{cid}: pool{len(d['pool_ids'])}"
+                + (f" single-candidate {d['pool_ids'][0]} "
+                   f"(utility {d['top1_util'][0][1]:+.6f}), no verdict"
+                   if len(d["pool_ids"]) == 1 else
+                   f" verdict={d['verdict_kind']} "
+                   f"(top1 {d['top1_util'][0][0]})")
+                + f" committed={refrec['committed'].get(cid)}"
                 for cid, d in refrec["ch"].items()
                 if refrec["committed"].get(cid))
-            print(f"   t{rec['tick']} seed3: {s3 or '-'}")
-            print(f"        seed1: {s1 or '-'}")
+            print(f"   t{rec['tick']} seed3: {s3 or '- (no commit this tick)'}")
+            print(f"        seed1: {s1 or '- (no commit this tick)'}")
             if rec["events"]:
                 print(f"        seed3 events this tick: {rec['events']}")
     else:
@@ -220,22 +250,33 @@ def main() -> int:
           "concrete Event object's .downstream attribute:")
     print("    -> ONLY the dataclass default in engine/core/models.py:333 "
           "(field(default_factory=list))")
+    print("    CONCLUSION: this is the second case of the distinction "
+          "ChatGPT's review asked us to draw -- there is no SIMULATION-PATH "
+          "writer for Event.downstream (not 'a writer that the natural "
+          "path fails to trigger'). The single Event-construction site in "
+          "the simulation execution path (engine/core/simulation.py, "
+          "resolve(), ~line 893-913) does not pass a downstream= argument, "
+          "and no simulation-path code appends to a live Event's "
+          ".downstream. 190/190 empty in a natural run is therefore "
+          "EXPECTED.")
+    print("    CORRECTION to our own earlier wording (Arena 5423617435-C "
+          "follow-up, applied here): it is NOT true that 'the ONLY "
+          "Event(...) construction in the whole repo is that one site'. "
+          "The persistence loader (engine/persistence/codec.py, and the "
+          "persistence round-trip path) ALSO reconstructs Event objects "
+          "from serialized data (Event(**data)) -- but that path only "
+          "restores whatever value was already serialized, it does not "
+          "derive or compute a new downstream reference for a newly "
+          "created event. Accurate statement: the SIMULATION execution "
+          "path has no write logic for downstream; the LOADER can "
+          "rehydrate an externally-produced value but does not generate "
+          "one. We do not claim the loader is a 'writer' in the sense "
+          "M22's question cares about.")
     print("    -> The single Event-construction site in production "
           "(engine/core/simulation.py, resolve(), ~line 893-913) passes "
           "id/tick/timestamp/location/participants/causes/facts/"
           "action_type/action_result/consequences/intent/preconditions/"
           "observations, and does NOT pass a downstream= argument.")
-    print("    -> tests/test_causal_ledger.py is the ONLY file that "
-          "reads/writes event.downstream at all, and only to assert it "
-          "stays [] (line 461) or round-trips verbatim (line 485); it "
-          "never produces a non-empty value through the engine.")
-    print("    CONCLUSION: this is the second case of the distinction "
-          "ChatGPT's review asked us to draw -- there is no production "
-          "writer path for Event.downstream at all (not 'a writer that "
-          "the natural path fails to trigger'). The field is defined "
-          "(and its round-trip/consistency is spec'd by tests) but "
-          "never populated by engine code. 190/190 empty is therefore "
-          "EXPECTED, not a natural-operation miss.")
     print("\nAll three M22-R1 items are read-only. No engine/production/"
           "test change, no recall() wiring, no manufactured failure or "
           "event. Anchor: 0ba1699 throughout; seed-3 numbers come from "

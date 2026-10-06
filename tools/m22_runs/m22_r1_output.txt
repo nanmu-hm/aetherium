@@ -7,26 +7,26 @@ M22-R1  (read-only, anchored to 0ba1699)
    seed 3: 54 events
    first committed-action divergence tick: 3
    step-by-step around that tick (pool -> verdict -> committed -> event):
-   t2 seed3: yan: pool2 verdict=inert() top1=tick-2-yan-rest committed=tick-2-yan-rest
-        seed1: yan: verdict=inert top1=tick-2-yan-rest committed=tick-2-yan-rest
+   t2 seed3: yan: pool2 verdict=inert() committed=tick-2-yan-rest
+        seed1: yan: pool2 verdict=inert (top1 tick-2-yan-rest) committed=tick-2-yan-rest
         seed3 events this tick: ['event-2-yan-rest']
-   t3 seed3: -
-        seed1: -
+   t3 seed3: rui: pool1 single-candidate tick-3-rui-travel (utility -0.015216), no verdict committed=tick-3-rui-travel
+        seed1: - (no commit this tick)
         seed3 events this tick: ['event-3-rui-travel']
-   t4 seed3: yan: pool2 verdict=inert() top1=tick-4-yan-search-rui committed=tick-4-yan-search-rui | rui: pool2 verdict=resolve(tick-4-rui-travel) top1=tick-4-rui-rest committed=tick-4-rui-travel
-        seed1: -
+   t4 seed3: yan: pool2 verdict=inert() committed=tick-4-yan-search-rui | rui: pool2 verdict=resolve(tick-4-rui-travel) committed=tick-4-rui-travel
+        seed1: rui: pool1 single-candidate tick-4-rui-travel (utility +0.038164), no verdict committed=tick-4-rui-travel
         seed3 events this tick: ['event-4-yan-travel', 'event-4-rui-travel']
-   t5 seed3: yan: pool2 verdict=inert() top1=tick-5-yan-search-rui committed=tick-5-yan-search-rui | rui: pool2 verdict=resolve(tick-5-rui-travel) top1=tick-5-rui-rest committed=tick-5-rui-travel
-        seed1: yan: verdict=inert top1=tick-5-yan-search-rui committed=tick-5-yan-search-rui | rui: verdict=resolve top1=tick-5-rui-rest committed=tick-5-rui-travel
+   t5 seed3: yan: pool2 verdict=inert() committed=tick-5-yan-search-rui | rui: pool2 verdict=resolve(tick-5-rui-travel) committed=tick-5-rui-travel
+        seed1: yan: pool2 verdict=inert (top1 tick-5-yan-search-rui) committed=tick-5-yan-search-rui | rui: pool2 verdict=resolve (top1 tick-5-rui-rest) committed=tick-5-rui-travel
         seed3 events this tick: ['event-5-yan-travel', 'event-5-rui-travel']
-   t6 seed3: yan: pool3 verdict=inert() top1=tick-6-yan-rest committed=tick-6-yan-rest | rui: pool2 verdict=inert() top1=tick-6-rui-rest committed=tick-6-rui-rest
-        seed1: yan: verdict=inert top1=tick-6-yan-search-rui committed=tick-6-yan-search-rui | rui: verdict=resolve top1=tick-6-rui-rest committed=tick-6-rui-travel
+   t6 seed3: yan: pool3 verdict=inert() committed=tick-6-yan-rest | rui: pool2 verdict=inert() committed=tick-6-rui-rest
+        seed1: yan: pool2 verdict=inert (top1 tick-6-yan-search-rui) committed=tick-6-yan-search-rui | rui: pool2 verdict=resolve (top1 tick-6-rui-rest) committed=tick-6-rui-travel
         seed3 events this tick: ['event-6-yan-rest', 'event-6-rui-rest']
-   t7 seed3: yan: pool2 verdict=inert() top1=tick-7-yan-search-rui committed=tick-7-yan-search-rui | rui: pool2 verdict=resolve(tick-7-rui-travel) top1=tick-7-rui-rest committed=tick-7-rui-travel
-        seed1: yan: verdict=inert top1=tick-7-yan-rest committed=tick-7-yan-search-rui | rui: verdict=inert top1=tick-7-rui-rest committed=tick-7-rui-rest
+   t7 seed3: yan: pool2 verdict=inert() committed=tick-7-yan-search-rui | rui: pool2 verdict=resolve(tick-7-rui-travel) committed=tick-7-rui-travel
+        seed1: yan: pool3 verdict=inert (top1 tick-7-yan-rest) committed=tick-7-yan-search-rui | rui: pool2 verdict=inert (top1 tick-7-rui-rest) committed=tick-7-rui-rest
         seed3 events this tick: ['event-7-yan-travel', 'event-7-rui-travel']
-   t8 seed3: yan: pool3 verdict=inert() top1=tick-8-yan-search-rui committed=tick-8-yan-search-rui | rui: pool2 verdict=resolve(tick-8-rui-travel) top1=tick-8-rui-rest committed=tick-8-rui-travel
-        seed1: yan: verdict=inert top1=tick-8-yan-rest committed=tick-8-yan-rest
+   t8 seed3: yan: pool3 verdict=inert() committed=tick-8-yan-search-rui | rui: pool2 verdict=resolve(tick-8-rui-travel) committed=tick-8-rui-travel
+        seed1: yan: pool2 verdict=inert (top1 tick-8-yan-rest) committed=tick-8-yan-rest
         seed3 events this tick: ['event-8-yan-travel', 'event-8-rui-travel']
 
 [B] State->behavior strong causal witness (relationship/goal/desire delta -> later candidate/decision delta -> event), using ONLY existing readers
@@ -41,8 +41,8 @@ M22-R1  (read-only, anchored to 0ba1699)
 [C] Event.downstream writer-path audit (read-only, no filling)
     Grep across engine/ for every assignment/append to a concrete Event object's .downstream attribute:
     -> ONLY the dataclass default in engine/core/models.py:333 (field(default_factory=list))
+    CONCLUSION: this is the second case of the distinction ChatGPT's review asked us to draw -- there is no SIMULATION-PATH writer for Event.downstream (not 'a writer that the natural path fails to trigger'). The single Event-construction site in the simulation execution path (engine/core/simulation.py, resolve(), ~line 893-913) does not pass a downstream= argument, and no simulation-path code appends to a live Event's .downstream. 190/190 empty in a natural run is therefore EXPECTED.
+    CORRECTION to our own earlier wording (Arena 5423617435-C follow-up, applied here): it is NOT true that 'the ONLY Event(...) construction in the whole repo is that one site'. The persistence loader (engine/persistence/codec.py, and the persistence round-trip path) ALSO reconstructs Event objects from serialized data (Event(**data)) -- but that path only restores whatever value was already serialized, it does not derive or compute a new downstream reference for a newly created event. Accurate statement: the SIMULATION execution path has no write logic for downstream; the LOADER can rehydrate an externally-produced value but does not generate one. We do not claim the loader is a 'writer' in the sense M22's question cares about.
     -> The single Event-construction site in production (engine/core/simulation.py, resolve(), ~line 893-913) passes id/tick/timestamp/location/participants/causes/facts/action_type/action_result/consequences/intent/preconditions/observations, and does NOT pass a downstream= argument.
-    -> tests/test_causal_ledger.py is the ONLY file that reads/writes event.downstream at all, and only to assert it stays [] (line 461) or round-trips verbatim (line 485); it never produces a non-empty value through the engine.
-    CONCLUSION: this is the second case of the distinction ChatGPT's review asked us to draw -- there is no production writer path for Event.downstream at all (not 'a writer that the natural path fails to trigger'). The field is defined (and its round-trip/consistency is spec'd by tests) but never populated by engine code. 190/190 empty is therefore EXPECTED, not a natural-operation miss.
 
 All three M22-R1 items are read-only. No engine/production/test change, no recall() wiring, no manufactured failure or event. Anchor: 0ba1699 throughout; seed-3 numbers come from the same m-b-goal-directed-ab branch, not from e395abde.
