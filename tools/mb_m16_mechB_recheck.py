@@ -101,29 +101,32 @@ def main() -> int:
         print(f"     persisted-event change: {ev_a2 != ev_b2}")
         print()
 
-        # ---- B3: targeted single-reader detach. M16's `ablate(...,
-        # "all")` removed the *memory rows* whose event_id is in the
-        # actor's most-recent three linked events; that set includes
-        # event-13 (much older than the tick-41 boundary), which is why
-        # B1's recent-3 list above differs from a plain
-        # reversed(event_log)[:3]. Reproduce that exact detach here. ----
+        # ---- B3: M17's ACTUAL table row. mb_agency_channel_map.py's
+        # isolate("repetition_penalty") detaches the event links of ALL of
+        # this actor's memory rows, not just three. That is the
+        # intervention M17's "0 crossings" row was measuring, and it is
+        # a fundamentally different operation from B1/M16's row-removal:
+        # detaching all links clears the repetition window entirely
+        # (penalty returns to 0, utility rises), whereas M16's partial
+        # removal slides the window back to OLDER events, which may
+        # themselves contain the repeated action. This is the
+        # non-monotonic effect Arena flagged. ----
         w_b3 = copy.deepcopy(world)
-        detach3 = [m.event_id for m in [
-            m for m in w_b3.memory_state.memories.values()
-            if m.owner_id == cid and m.event_id
-            and m.event_id in {e.id for e in w_b3.event_log}][:3]]
+        n_detached = 0
         for m in w_b3.memory_state.memories.values():
-            if m.owner_id == cid and m.event_id in set(detach3):
+            if m.owner_id == cid:
                 m.event_id = "detached-" + m.id
+                n_detached += 1
         w_b3.characters[cid].memory_ids = [
             i for i in ch.memory_ids if i in w_b3.memory_state.memories]
+        print(f"  B3 detach ALL of actor's memory event links "
+              f"(M17's actual table row): {n_detached} rows detached")
         known = {m.event_id for m in w_b3.memory_state.memories.values()
                  if m.owner_id == cid}
         window_b3 = [e.id for e in [e for e in reversed(w_b3.event_log)
                                     if e.id in known
                                     and e.participants
                                     and e.participants[0] == cid][:3]]
-        print(f"  B3 targeted single-reader detach (M17's counterfactual):")
         print(f"     repetition recent-3 window now = {window_b3}")
         pool_b3 = generate_action_pool(w_b3, cid)
         rest3 = next((c for c in pool_b3 if c.id.endswith("-rest")), None)
