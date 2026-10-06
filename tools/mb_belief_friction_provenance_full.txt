@@ -1,0 +1,53 @@
+seed1 t5 rui:
+  0 <- belief belief-rui-event-0-rui-travel (outcome=success, confidence=0.9)
+seed1 t13 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+seed1 t40 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+seed1 t110 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-40-yan-contact_person (outcome=success, confidence=0.9)
+seed2 t13 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+seed2 t37 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+seed2 t107 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-37-yan-contact_person (outcome=success, confidence=0.9)
+seed3 t4 rui:
+  0 <- belief belief-rui-event-0-rui-travel (outcome=success, confidence=0.9)
+seed3 t13 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+seed3 t35 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+seed3 t105 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-35-yan-contact_person (outcome=success, confidence=0.9)
+seed7 t5 rui:
+  0 <- belief belief-rui-event-0-rui-travel (outcome=success, confidence=0.9)
+seed7 t13 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+seed7 t35 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+seed7 t105 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-35-yan-contact_person (outcome=success, confidence=0.9)
+seed42 t4 rui:
+  0 <- belief belief-rui-event-0-rui-travel (outcome=success, confidence=0.9)
+seed42 t13 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+seed42 t34 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+seed42 t104 yan:
+  0 <- belief belief-yan-event-0-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-13-yan-contact_person (outcome=success, confidence=0.9)
+  0 <- belief belief-yan-event-34-yan-contact_person (outcome=success, confidence=0.9)

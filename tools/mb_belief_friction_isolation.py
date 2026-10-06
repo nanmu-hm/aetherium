@@ -127,6 +127,7 @@ def main() -> int:
     phaseA: list[tuple] = []
     p1 = p2 = p3 = p4_success = p4_failure = 0
     witnesses = []
+    utility_changed_count = 0
 
     for seed in SEEDS:
         world = build_genesis_world()
@@ -179,19 +180,30 @@ def main() -> int:
                     ap.build_appraisals(kernel, wB, wB.characters[cid], pool),
                     pool, evs_b)
 
-                # P1: pool ids are derived from memory.visit_counts,
-                # which this ablation does NOT touch, so P1 must be 0 by
-                # construction -- flag it loudly if it is not, instead
-                # of quietly recording a 19 that reads like "belief
-                # changes the candidate pool".
-                pool_ids_a = [f"{c.action_type}:{','.join(c.targets)}" for c in pool]
-                pool_ids_b = [f"{c.action_type}:{','.join(c.targets)}" for c in pool]
-                p1 += pool_ids_a != pool_ids_b
-                p1_expected = 0
+                # utility_changed: at least one candidate's utility score
+                # differs between the live and neutralised pre-step
+                # evaluations -- the "input reached the utility layer"
+                # count, reported separately from P2/P3/P4 per spec.
+                utility_changed_count += any(
+                    a.utility != b.utility for a, b in zip(evs_a, evs_b))
+
+                # P1: candidate pool ids are derived from
+                # memory.visit_counts, which this ablation does NOT
+                # touch. Measured by actually generating B's pool after
+                # neutralisation (A and B pools must be paired) and
+                # comparing positionally; flag loudly if nonzero.
+                pool_a_ids = [f"{c.action_type}:{','.join(c.targets)}" for c in pool]
+                pool_b_ids = [f"{c.action_type}:{','.join(c.targets)}"
+                              for c in generate_action_pool(wB, cid)]
+                p1 += pool_a_ids != pool_b_ids
                 if p1:
-                    print(f"  !! P1 NONZERO UNEXPECTED: pool changed between "
-                          f"seed{seed} t{world.tick} {cid} "
-                          f"(A={pool_ids_a} B={pool_ids_b})")
+                    print(f"  !! P1 NONZERO: seed{seed} t{world.tick} {cid} "
+                          f"A={pool_a_ids} B={pool_b_ids}")
+
+                # P2 measured on the PRE-STEP snapshot (original world vs
+                # belief-neutralised copy, same pre-step candidate pool)
+                # -- this is the isolated verdict-layer effect of the
+                # ablation itself, per spec item 4.
                 p2 += (verdict_a.kind, verdict_a.candidate_id) != (
                     verdict_b.kind, verdict_b.candidate_id)
 
@@ -230,19 +242,30 @@ def main() -> int:
     print(f"  Phase B ran only on those {n_matched}; the rest had "
           f"no belief input and contributed 0 to P1-P4 by construction.")
     print()
-    print("  PHASE A provenance (first 3 matched snapshots shown):")
+    print("  PHASE A provenance, FULL table (every matched snapshot; "
+          "first 3 also shown inline, full table written to "
+          "tools/mb_belief_friction_provenance_full.txt):")
     shown = 0
-    for seed, tick, cid, any_m, prov in phaseA:
-        if not any_m or shown >= 3:
-            continue
-        print(f"    seed{seed} t{tick} {cid}:")
-        for cand_id, lst in prov.items():
-            for bid, outcome, conf in lst:
-                print(f"      {cand_id} <- belief {bid} "
-                      f"(outcome={outcome}, confidence={conf})")
-        shown += 1
+    with open(Path(__file__).parent / "mb_belief_friction_provenance_full.txt",
+              "w") as fh:
+        for seed, tick, cid, any_m, prov in phaseA:
+            if not any_m:
+                continue
+            fh.write(f"seed{seed} t{tick} {cid}:\n")
+            for cand_id, lst in prov.items():
+                for bid, outcome, conf in lst:
+                    fh.write(f"  {cand_id} <- belief {bid} "
+                             f"(outcome={outcome}, confidence={conf})\n")
+            if shown < 3:
+                print(f"    seed{seed} t{tick} {cid}:")
+                for cand_id, lst in prov.items():
+                    for bid, outcome, conf in lst:
+                        print(f"      {cand_id} <- belief {bid} "
+                              f"(outcome={outcome}, confidence={conf})")
+            shown += 1
     print()
     print("  THE FOUR COUNTS, NEVER BLENDED (Phase B snapshots only):")
+    print(f"    utility_changed (>=1 candidate utility differs, pre-step) : {utility_changed_count}/{n_matched}")
     print(f"    P1 candidate pool changed                        : {p1}")
     print(f"    P2 arbitration verdict changed                   : {p2}")
     print(f"    P3 SimulationResult.actions changed (actor-filtered): {p3}")
