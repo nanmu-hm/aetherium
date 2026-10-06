@@ -1,0 +1,48 @@
+========================================================================
+M22-R1  (read-only, anchored to 0ba1699)
+========================================================================
+
+[A] W2 seed-3 vs seed-1 (reference) event counts:
+   seed 1: 18 events
+   seed 3: 54 events
+   first committed-action divergence tick: 3
+   step-by-step around that tick (pool -> verdict -> committed -> event):
+   t2 seed3: yan: pool2 verdict=inert() top1=tick-2-yan-rest committed=tick-2-yan-rest
+        seed1: yan: verdict=inert top1=tick-2-yan-rest committed=tick-2-yan-rest
+        seed3 events this tick: ['event-2-yan-rest']
+   t3 seed3: -
+        seed1: -
+        seed3 events this tick: ['event-3-rui-travel']
+   t4 seed3: yan: pool2 verdict=inert() top1=tick-4-yan-search-rui committed=tick-4-yan-search-rui | rui: pool2 verdict=resolve(tick-4-rui-travel) top1=tick-4-rui-rest committed=tick-4-rui-travel
+        seed1: -
+        seed3 events this tick: ['event-4-yan-travel', 'event-4-rui-travel']
+   t5 seed3: yan: pool2 verdict=inert() top1=tick-5-yan-search-rui committed=tick-5-yan-search-rui | rui: pool2 verdict=resolve(tick-5-rui-travel) top1=tick-5-rui-rest committed=tick-5-rui-travel
+        seed1: yan: verdict=inert top1=tick-5-yan-search-rui committed=tick-5-yan-search-rui | rui: verdict=resolve top1=tick-5-rui-rest committed=tick-5-rui-travel
+        seed3 events this tick: ['event-5-yan-travel', 'event-5-rui-travel']
+   t6 seed3: yan: pool3 verdict=inert() top1=tick-6-yan-rest committed=tick-6-yan-rest | rui: pool2 verdict=inert() top1=tick-6-rui-rest committed=tick-6-rui-rest
+        seed1: yan: verdict=inert top1=tick-6-yan-search-rui committed=tick-6-yan-search-rui | rui: verdict=resolve top1=tick-6-rui-rest committed=tick-6-rui-travel
+        seed3 events this tick: ['event-6-yan-rest', 'event-6-rui-rest']
+   t7 seed3: yan: pool2 verdict=inert() top1=tick-7-yan-search-rui committed=tick-7-yan-search-rui | rui: pool2 verdict=resolve(tick-7-rui-travel) top1=tick-7-rui-rest committed=tick-7-rui-travel
+        seed1: yan: verdict=inert top1=tick-7-yan-rest committed=tick-7-yan-search-rui | rui: verdict=inert top1=tick-7-rui-rest committed=tick-7-rui-rest
+        seed3 events this tick: ['event-7-yan-travel', 'event-7-rui-travel']
+   t8 seed3: yan: pool3 verdict=inert() top1=tick-8-yan-search-rui committed=tick-8-yan-search-rui | rui: pool2 verdict=resolve(tick-8-rui-travel) top1=tick-8-rui-rest committed=tick-8-rui-travel
+        seed1: yan: verdict=inert top1=tick-8-yan-rest committed=tick-8-yan-rest
+        seed3 events this tick: ['event-8-yan-travel', 'event-8-rui-travel']
+
+[B] State->behavior strong causal witness (relationship/goal/desire delta -> later candidate/decision delta -> event), using ONLY existing readers
+    (visit_counts / repetition / find_top_evidence / belief_friction / goal-desire-emotion-relationship state reads; no recall() wiring, no manufactured sample).
+   seed 1: no later committed-action difference found in ticks 1-30 when the relationship-axis delta is rolled back tick-by-tick -> state->behavior link for THIS reader, THIS seed, THIS window: NOT PROVEN (not a measured zero of all possible windows, just this one)
+   seed 3: no later committed-action difference found in ticks 1-30 when the relationship-axis delta is rolled back tick-by-tick -> state->behavior link for THIS reader, THIS seed, THIS window: NOT PROVEN (not a measured zero of all possible windows, just this one)
+   seed 7: no later committed-action difference found in ticks 1-30 when the relationship-axis delta is rolled back tick-by-tick -> state->behavior link for THIS reader, THIS seed, THIS window: NOT PROVEN (not a measured zero of all possible windows, just this one)
+   seed 42: no later committed-action difference found in ticks 1-30 when the relationship-axis delta is rolled back tick-by-tick -> state->behavior link for THIS reader, THIS seed, THIS window: NOT PROVEN (not a measured zero of all possible windows, just this one)
+   seed 99: no later committed-action difference found in ticks 1-30 when the relationship-axis delta is rolled back tick-by-tick -> state->behavior link for THIS reader, THIS seed, THIS window: NOT PROVEN (not a measured zero of all possible windows, just this one)
+   => Across all 5 seeds x ticks 1-30, no natural witness found where rolling back ONLY the relationship-axis consequence changes a later committed action. Verdict for M22-R1 item B: NOT PROVEN / not exercised in this window (does not negate a longer or differently-scoped witness).
+
+[C] Event.downstream writer-path audit (read-only, no filling)
+    Grep across engine/ for every assignment/append to a concrete Event object's .downstream attribute:
+    -> ONLY the dataclass default in engine/core/models.py:333 (field(default_factory=list))
+    -> The single Event-construction site in production (engine/core/simulation.py, resolve(), ~line 893-913) passes id/tick/timestamp/location/participants/causes/facts/action_type/action_result/consequences/intent/preconditions/observations, and does NOT pass a downstream= argument.
+    -> tests/test_causal_ledger.py is the ONLY file that reads/writes event.downstream at all, and only to assert it stays [] (line 461) or round-trips verbatim (line 485); it never produces a non-empty value through the engine.
+    CONCLUSION: this is the second case of the distinction ChatGPT's review asked us to draw -- there is no production writer path for Event.downstream at all (not 'a writer that the natural path fails to trigger'). The field is defined (and its round-trip/consistency is spec'd by tests) but never populated by engine code. 190/190 empty is therefore EXPECTED, not a natural-operation miss.
+
+All three M22-R1 items are read-only. No engine/production/test change, no recall() wiring, no manufactured failure or event. Anchor: 0ba1699 throughout; seed-3 numbers come from the same m-b-goal-directed-ab branch, not from e395abde.
