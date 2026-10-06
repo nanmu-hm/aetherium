@@ -1,0 +1,153 @@
+========================================================================
+M24  Story-Life-Loop acceptance  (read-only, 0ba1699, W2 use_arbitration=True)
+========================================================================
+
+[seed 1] 18 persisted events over 500 ticks
+  lineage: yan @t0 (event-0-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: rui @t0 (event-0-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: yan @t1 (event-1-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 2..101
+  lineage: yan @t2 (event-2-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 3..102
+  lineage: rui @t4 (event-4-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage', 'goal:rui-1.status']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: yan @t5 (event-5-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: rui @t5 (event-5-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: yan @t6 (event-6-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: rui @t6 (event-6-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: yan @t7 (event-7-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: rui @t7 (event-7-rui-rest), changed=['character:rui.habits.rest', 'character:rui.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: yan @t8 (event-8-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 9..108
+
+[seed 3] 54 persisted events over 500 ticks
+  lineage: yan @t0 (event-0-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): DIVERGENT in actor's later committed actions, ticks 1..100
+      first divergence @t89, irreversible=True, conflict=False, state_persists=True, relationship_persists=True, goal/desire_evolved=False, natural_failure_in_window=False
+  lineage: rui @t0 (event-0-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: yan @t1 (event-1-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 2..101
+  lineage: yan @t2 (event-2-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 3..102
+  lineage: rui @t3 (event-3-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage', 'goal:rui-1.status']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 4..103
+  lineage: yan @t4 (event-4-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: rui @t4 (event-4-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: yan @t5 (event-5-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: rui @t5 (event-5-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: yan @t6 (event-6-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: rui @t6 (event-6-rui-rest), changed=['character:rui.habits.rest', 'character:rui.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: yan @t7 (event-7-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+
+[seed 7] 15 persisted events over 500 ticks
+  lineage: yan @t0 (event-0-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: rui @t0 (event-0-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: yan @t1 (event-1-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 2..101
+  lineage: rui @t4 (event-4-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage', 'goal:rui-1.status']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: yan @t5 (event-5-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: rui @t5 (event-5-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: yan @t6 (event-6-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: rui @t6 (event-6-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: yan @t7 (event-7-yan-help_person), changed=['character:rui.emotions.resentment', 'character:rui.emotions.respect', 'character:rui.human_condition.fatigue', 'character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.help_person', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.compassionate', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'goal:yan-1.status', 'relationship:rui:yan.affection', 'relationship:rui:yan.loyalty', 'relationship:rui:yan.trust']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: rui @t7 (event-7-rui-rest), changed=['character:rui.habits.rest', 'character:rui.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: yan @t13 (event-13-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.belonging', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): DIVERGENT in actor's later committed actions, ticks 14..113
+      first divergence @t103, irreversible=True, conflict=False, state_persists=True, relationship_persists=True, goal/desire_evolved=False, natural_failure_in_window=False
+  lineage: rui @t39 (event-39-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 40..139
+
+[seed 42] 22 persisted events over 500 ticks
+  lineage: yan @t0 (event-0-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): DIVERGENT in actor's later committed actions, ticks 1..100
+      first divergence @t67, irreversible=True, conflict=False, state_persists=True, relationship_persists=True, goal/desire_evolved=False, natural_failure_in_window=False
+  lineage: rui @t0 (event-0-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: yan @t1 (event-1-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 2..101
+  lineage: yan @t2 (event-2-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 3..102
+  lineage: rui @t3 (event-3-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage', 'goal:rui-1.status']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 4..103
+  lineage: yan @t4 (event-4-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: rui @t4 (event-4-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: yan @t5 (event-5-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: rui @t5 (event-5-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: yan @t6 (event-6-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: rui @t6 (event-6-rui-rest), changed=['character:rui.habits.rest', 'character:rui.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: yan @t7 (event-7-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+
+[seed 99] 18 persisted events over 500 ticks
+  lineage: yan @t0 (event-0-yan-contact_person), changed=['character:rui.emotions.hope', 'character:rui.emotions.resentment', 'character:yan.emotions.joy', 'character:yan.emotions.love', 'character:yan.habits.contact_person', 'character:yan.human_condition.desires.reconciliation', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.loyal', 'character:yan.identity_beliefs.reliable', 'goal:yan-1.current_stage', 'relationship:yan:rui.affection', 'relationship:yan:rui.trust']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: rui @t0 (event-0-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 1..100
+  lineage: yan @t1 (event-1-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 2..101
+  lineage: yan @t2 (event-2-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 3..102
+  lineage: rui @t4 (event-4-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.habits.travel', 'character:rui.human_condition.desires.curiosity', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location', 'goal:rui-1.current_stage', 'goal:rui-1.status']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 5..104
+  lineage: yan @t5 (event-5-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: rui @t5 (event-5-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 6..105
+  lineage: yan @t6 (event-6-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: rui @t6 (event-6-rui-travel), changed=['character:rui.emotions.hope', 'character:rui.emotions.joy', 'character:rui.human_condition.desires.freedom', 'character:rui.human_condition.fatigue', 'character:rui.identity_beliefs.capable', 'character:rui.identity_beliefs.independent', 'character:rui.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 7..106
+  lineage: yan @t7 (event-7-yan-travel), changed=['character:yan.emotions.hope', 'character:yan.emotions.joy', 'character:yan.human_condition.fatigue', 'character:yan.identity_beliefs.capable', 'character:yan.identity_beliefs.independent', 'character:yan.location']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: rui @t7 (event-7-rui-rest), changed=['character:rui.habits.rest', 'character:rui.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 8..107
+  lineage: yan @t8 (event-8-yan-rest), changed=['character:yan.habits.rest', 'character:yan.human_condition.fatigue']
+    counterfactual undo+rerun (same seed): NO DIVERGENCE in actor's later committed actions, ticks 9..108
+
+[Phase C] Story-level evidence inventory (reported, never manufactured)
+  consequence-bearing lineages audited (Phase A): 60
+  with a confirmed agency witness (Phase B): 3/60
+    seed 3 / yan @t0 -> diverges @t89 (irreversible, no conflict observed, no natural failure in window)
+    seed 7 / yan @t13 -> diverges @t103 (irreversible, no conflict observed, no natural failure in window)
+    seed 42 / yan @t0 -> diverges @t67 (irreversible, no conflict observed, no natural failure in window)
+
+[Spec's 5 required questions]
+  1. 一次选择是否改变了该人物的未来: YES (3/60 audited lineages show a later committed-action divergence)
+  2. 改变是否持续多个 tick: YES for 3 of 3
+  3. 关系/欲望/目标变化是否重新进入后续决策: YES for 3 of 3
+  4. 自然产生 conflict / irreversible consequence: conflict-observed=0, irreversible-observed=3
+  5. 最短缺的机制环节: 见 verdict 下说明，不强行补齐。
+
+STORY-LIFE-LOOP VERDICT: PARTIAL
+  rule: PROVEN needs >=1 agency witness + persistent divergence + observed conflict; PARTIAL = >=1 agency witness without all three; NOT PROVEN = no agency witness in this window/seed set at all.
