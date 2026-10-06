@@ -47,6 +47,20 @@ def step_and_capture(world, seed):
     return res, world.event_log[before:]
 
 
+def step_with_evidence_off(world, seed):
+    """Step with find_top_evidence neutralised for the WHOLE step, matching
+    Arena's paired-replay counterfactual. The restoration happens only
+    after the step returns, so the B side never sees live evidence."""
+    before = len(world.event_log)
+    saved = ap.find_top_evidence
+    ap.find_top_evidence = lambda *a, **k: None
+    try:
+        res = SimulationEngine(seed=seed, use_arbitration=True).step(world)
+    finally:
+        ap.find_top_evidence = saved
+    return res, world.event_log[before:]
+
+
 def main() -> int:
     kernel = DecisionKernel(seed=0)
     orig = ap.find_top_evidence
@@ -100,10 +114,15 @@ def main() -> int:
                 recs_a = ap.build_appraisals(kernel, world, ch, pool)
                 verdict_a = ap.arbitrate(recs_a, pool, evs_a)
 
-                # B: neutralise find_top_evidence only
+                # B: neutralise find_top_evidence ONLY FOR THE DURATION OF
+                # BOTH steps (Arena's 6007220401 correction: the original
+                # tool restored the patch before engine.step(), so the B
+                # step ran with live evidence again and P4 was under-
+                # measured).
                 w_b = copy.deepcopy(world)
                 ch_b = w_b.characters[cid]
                 pool_b = generate_action_pool(w_b, cid)
+                # P2 comparison: kernel-only, patch active for B only
                 ap.find_top_evidence = lambda *a, **k: None
                 try:
                     evs_b = [kernel.evaluate(w_b, c) for c in pool_b]
@@ -112,23 +131,34 @@ def main() -> int:
                 finally:
                     ap.find_top_evidence = orig
 
-                p1 += [c.id for c in pool] != [c.id for c in pool_b]
-
+                # P3/P4 via real steps, patch active for B's whole step
                 res_a, ev_a = step_and_capture(copy.deepcopy(world), seed)
-                res_b, ev_b = step_and_capture(copy.deepcopy(w_b), seed)
-                chosen_a = [f"{a.actor_id}:{a.id}" for a in res_a.actions]
-                chosen_b = [f"{a.actor_id}:{a.id}" for a in res_b.actions]
+                res_b, ev_b = step_with_evidence_off(copy.deepcopy(w_b), seed)
+
+                p1 += [c.id for c in pool] != [c.id for c in pool_b]
+                chosen_a = [f"{a.actor_id}:{a.id}" for a in res_a.actions
+                            if a.actor_id == cid]
+                chosen_b = [f"{a.actor_id}:{a.id}" for a in res_b.actions
+                            if a.actor_id == cid]
                 p3 += chosen_a != chosen_b
-                p4 += [e.id for e in ev_a] != [e.id for e in ev_b]
+                # P4 must also be filtered to THIS actor's events, otherwise
+                # one witness snapshot that flips a DIFFERENT actor's event
+                # (e.g. the world's rui-parallel pick) gets miscounted as
+                # an independent crossing for cid.
+                ev_a_cid = [e.id for e in ev_a if cid in (e.participants or [])]
+                ev_b_cid = [e.id for e in ev_b if cid in (e.participants or [])]
+                p4 += ev_a_cid != ev_b_cid
                 p2 += (verdict_a.kind, verdict_a.candidate_id) != (
                     verdict_b.kind, verdict_b.candidate_id)
 
-                if [e.id for e in ev_a] != [e.id for e in ev_b]:
-                    cand = next(c for c in pool if (fp := focal_pair(c))
-                                and fp in live_pairs)
-                    ev_record = orig(world, cid, ap.candidate_focal_target(cand, world))
+                if ev_a_cid != ev_b_cid:
+                    cand = next((c for c in pool if (fp := focal_pair(c))
+                                 and fp in live_pairs), None)
+                    ev_record = (orig(world, cid,
+                                      ap.candidate_focal_target(cand, world))
+                                 if cand else None)
                     details.append((seed, world.tick, cid,
-                                    [e.id for e in ev_a], [e.id for e in ev_b],
+                                    ev_a_cid, ev_b_cid,
                                     ev_record.past_event_id if ev_record else None,
                                     ev_record.current_relevance if ev_record else None))
 
