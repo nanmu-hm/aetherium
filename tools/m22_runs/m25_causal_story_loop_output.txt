@@ -1,0 +1,100 @@
+========================================================================
+M25  Causal Story Loop Audit  (read-only, anchored 0ba1699)
+========================================================================
+
+[seed 3] witness yan (event-0-yan-contact_person)
+  consequence fields this event actually writes:
+    relationship:yan:rui.trust: 48 -> 50.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=['event-105-yan-contact_person', 'event-134-yan-contact_person', 'event-76-yan-contact_person']
+    relationship:yan:rui.affection: 72 -> 73.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.fatigue: 0.0 -> 3.0
+      CROSSED: w30=[2, 6, 7, 8, 10, 12, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28] w50=[2, 6, 7, 8, 10, 12, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 47, 48] new-cf-events=['event-10-rui-travel', 'event-10-yan-travel', 'event-11-rui-rest', 'event-111-yan-contact_person']
+    character:yan.emotions.joy: 0.0 -> 3.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.emotions.love: 0.0 -> 2.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.loyal: 0.0 -> 0.08
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.reliable: 0.0 -> 0.08
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    goal:yan-1.current_stage: 0 -> 1
+      CROSSED: w30=[2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 28, 29] w50=[2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49] new-cf-events=['event-10-yan-contact_person', 'event-100-yan-contact_person', 'event-101-yan-contact_person', 'event-102-yan-contact_person']
+    character:rui.emotions.hope: 0.0 -> 1.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:rui.emotions.resentment: 0.0 -> 1.5
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.habits.contact_person: 0.0 -> 0.1
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.desires.reconciliation: 71.5 -> 26.5
+      CROSSED: w30=[6, 7] w50=[6, 7] new-cf-events=['event-6-yan-travel']
+  (tested 12 individual consequence fields for this witness, each singly-pinned)
+
+[seed 42] witness yan (event-0-yan-contact_person)
+  consequence fields this event actually writes:
+    relationship:yan:rui.trust: 48 -> 50.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=['event-119-yan-contact_person', 'event-61-yan-contact_person', 'event-90-yan-contact_person']
+    relationship:yan:rui.affection: 72 -> 73.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.fatigue: 0.0 -> 3.0
+      CROSSED: w30=[2, 7, 8, 9, 10, 11, 13, 14, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] w50=[2, 7, 8, 9, 10, 11, 13, 14, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46] new-cf-events=['event-10-rui-travel', 'event-10-yan-travel', 'event-11-rui-rest', 'event-11-yan-travel']
+    character:yan.emotions.joy: 0.0 -> 3.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.emotions.love: 0.0 -> 2.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.loyal: 0.0 -> 0.08
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.reliable: 0.0 -> 0.08
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    goal:yan-1.current_stage: 0 -> 1
+      CROSSED: w30=[2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] w50=[2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49] new-cf-events=['event-10-yan-contact_person', 'event-100-yan-contact_person', 'event-101-yan-contact_person', 'event-102-yan-contact_person']
+    character:rui.emotions.hope: 0.0 -> 1.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:rui.emotions.resentment: 0.0 -> 1.5
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.habits.contact_person: 0.0 -> 0.1
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.desires.reconciliation: 71.5 -> 26.5
+      CROSSED: w30=[9, 10, 11, 12, 14, 15] w50=[9, 10, 11, 12, 14, 15, 43, 44, 45] new-cf-events=['event-10-yan-travel', 'event-11-rui-travel', 'event-11-yan-help_person', 'event-12-yan-travel']
+  (tested 12 individual consequence fields for this witness, each singly-pinned)
+
+[seed 7] witness yan (event-13-yan-contact_person)
+  consequence fields this event actually writes:
+    relationship:yan:rui.trust: 50.0 -> 52.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=['event-125-yan-contact_person', 'event-96-yan-contact_person']
+    relationship:yan:rui.affection: 73.0 -> 74.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.fatigue: 0.0 -> 3.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.emotions.joy: 4.495572987941699 -> 7.495572987941699
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.emotions.love: 2.2981650753873604 -> 4.29816507538736
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.loyal: 0.08 -> 0.15360000000000001
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.identity_beliefs.reliable: 0.15360000000000001 -> 0.221312
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:rui.emotions.hope: 5.982692819551761 -> 6.982692819551761
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:rui.emotions.resentment: 1.2309320184327222 -> 2.730932018432722
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.habits.contact_person: 0.1 -> 0.19
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.desires.reconciliation: 45.94 -> 1.9399999999999977
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+    character:yan.human_condition.desires.belonging: 43.0 -> 33.0
+      NO-CROSSING: w30=[] w50=[] new-cf-events=[]
+  (tested 12 individual consequence fields for this witness, each singly-pinned)
+
+[Verdict rollup across all 3 witnesses x their consequence fields]
+  fields with a 30-tick future-action crossing: 6/36
+    seed 3 / yan / ('character', 'yan', 'human_condition.fatigue') -> ticks [2, 6, 7, 8, 10, 12, 14, 16, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28] (pre_value=0.0)
+    seed 3 / yan / ('goal', 'yan-1', 'current_stage') -> ticks [2, 3, 4, 5, 6, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24, 25, 26, 28, 29] (pre_value=0)
+    seed 3 / yan / ('character', 'yan', 'human_condition.desires.reconciliation') -> ticks [6, 7] (pre_value=70)
+    seed 42 / yan / ('character', 'yan', 'human_condition.fatigue') -> ticks [2, 7, 8, 9, 10, 11, 13, 14, 16, 17, 18, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] (pre_value=0.0)
+    seed 42 / yan / ('goal', 'yan-1', 'current_stage') -> ticks [2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] (pre_value=0)
+    seed 42 / yan / ('character', 'yan', 'human_condition.desires.reconciliation') -> ticks [9, 10, 11, 12, 14, 15] (pre_value=70)
+  fields with only a 50-tick (not 30) crossing: 0/36
+
+CAUSAL-STORY-LOOP VERDICT: CAUSAL-STORY-LOOP PROVEN
+  rule: PROVEN = >=1 natural witness field whose SINGLE-field counterfactual pins it and reproduces a 30-tick future committed-action/event crossing; PARTIAL = no 30-tick crossing but a 50-tick one exists; NOT PROVEN = no natural lineage / no crossing at any window.
