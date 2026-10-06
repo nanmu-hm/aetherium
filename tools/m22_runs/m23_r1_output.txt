@@ -1,0 +1,22 @@
+========================================================================
+M23-R1  corrected State Persistence -> Future Agency (read-only, 0ba1699)
+========================================================================
+
+seed 1: 0 ticks where committed-action sets differ (desire family pinned pre-candidate-generation to the natural arm's own pre-candidate value, same tick)
+   -> desire forward-influence: NOT PROVEN in this window under the corrected method (not a whole-space zero)
+
+seed 3: 0 ticks where committed-action sets differ (desire family pinned pre-candidate-generation to the natural arm's own pre-candidate value, same tick)
+   -> desire forward-influence: NOT PROVEN in this window under the corrected method (not a whole-space zero)
+
+seed 7: 0 ticks where committed-action sets differ (desire family pinned pre-candidate-generation to the natural arm's own pre-candidate value, same tick)
+   -> desire forward-influence: NOT PROVEN in this window under the corrected method (not a whole-space zero)
+
+seed 42: 0 ticks where committed-action sets differ (desire family pinned pre-candidate-generation to the natural arm's own pre-candidate value, same tick)
+   -> desire forward-influence: NOT PROVEN in this window under the corrected method (not a whole-space zero)
+
+seed 99: 0 ticks where committed-action sets differ (desire family pinned pre-candidate-generation to the natural arm's own pre-candidate value, same tick)
+   -> desire forward-influence: NOT PROVEN in this window under the corrected method (not a whole-space zero)
+
+[METHOD] Natural arm: one full engine.step() run, committed actions taken directly from SimulationResult (no re-derivation). Neutral arm: identical world/seed/tick count, desires pinned to the natural arm's pre-candidate-generation value for the SAME tick, pinned at the boundary _settle_emotions() -> generate_candidates() crosses (simulation.py:1194-1195), engine.step()'s own internal order otherwise untouched. Desire field list covers every key a live reader consumes: ['reconciliation', 'belonging', 'freedom', 'curiosity', 'responsibility']. Key-existence artifact eliminated (Fix 3: .get()-semantics, never create/delete a key the natural arm did not have at that tick).
+
+All read-only. No engine/production/test/weight change, no recall() wiring, no new field/reader, no downstream write, no manufactured failure or event. Anchor: 0ba1699.
