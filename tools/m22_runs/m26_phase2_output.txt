@@ -1,0 +1,43 @@
+========================================================================
+M26 Phase-2  Narrative Emergence Audit  (read-only, anchored 0ba1699)
+========================================================================
+
+[seed 3] 54 events / 1000 ticks, 54 committed actions, silent=970 ticks (0.97), top action type=travel (repetition ratio=0.35)
+  success/failure/blocked = 54/0/0
+  causal chain links (2-5 tick re-action gaps) = 2 (ratio=0.04)
+  relationship fields in nonzero state: 6; goal stage progress total: 4
+  per-actor committed action counts: {'yan': 29, 'rui': 25}
+
+[seed 42] 22 events / 1000 ticks, 22 committed actions, silent=986 ticks (0.99), top action type=travel (repetition ratio=0.32)
+  success/failure/blocked = 22/0/0
+  causal chain links (2-5 tick re-action gaps) = 3 (ratio=0.14)
+  relationship fields in nonzero state: 6; goal stage progress total: 4
+  per-actor committed action counts: {'yan': 13, 'rui': 9}
+
+[seed 1] 18 events / 1000 ticks, 18 committed actions, silent=986 ticks (0.99), top action type=travel (repetition ratio=0.28)
+  success/failure/blocked = 18/0/0
+  causal chain links (2-5 tick re-action gaps) = 3 (ratio=0.18)
+  relationship fields in nonzero state: 6; goal stage progress total: 3
+  per-actor committed action counts: {'yan': 12, 'rui': 6}
+
+[seed 7] 15 events / 1000 ticks, 15 committed actions, silent=989 ticks (0.99), top action type=travel (repetition ratio=0.33)
+  success/failure/blocked = 15/0/0
+  causal chain links (2-5 tick re-action gaps) = 2 (ratio=0.14)
+  relationship fields in nonzero state: 6; goal stage progress total: 4
+  per-actor committed action counts: {'yan': 9, 'rui': 6}
+
+[seed 99] 18 events / 1000 ticks, 18 committed actions, silent=986 ticks (0.99), top action type=travel (repetition ratio=0.28)
+  success/failure/blocked = 18/0/0
+  causal chain links (2-5 tick re-action gaps) = 3 (ratio=0.18)
+  relationship fields in nonzero state: 6; goal stage progress total: 3
+  per-actor committed action counts: {'yan': 12, 'rui': 6}
+
+[Verdict]
+  seed 3: NOT MET  (chain_ratio=0.04, silent_ratio=0.97, failure=0, blocked=0, repetition=0.35)
+  seed 42: NOT MET  (chain_ratio=0.14, silent_ratio=0.99, failure=0, blocked=0, repetition=0.32)
+  seed 1: NOT MET  (chain_ratio=0.18, silent_ratio=0.99, failure=0, blocked=0, repetition=0.28)
+  seed 7: NOT MET  (chain_ratio=0.14, silent_ratio=0.99, failure=0, blocked=0, repetition=0.33)
+  seed 99: NOT MET  (chain_ratio=0.18, silent_ratio=0.99, failure=0, blocked=0, repetition=0.28)
+
+[Strict spec read: does ANY seed reach narrative-emergence threshold?]
+  NARRATIVE-EMERGENCE NOT MET (all 5 seeds: short-chain / high-silence / no-natural-failure pattern; no seed shows continuous causal story structure). M25-R1's 4 causal crossings do NOT substitute for this judgment (spec item 4).
