@@ -1,0 +1,142 @@
+========================================================================
+M27  Natural-Regime Bottleneck Audit  (read-only, anchored 0ba1699)
+========================================================================
+
+[seed 1] total persisted events: 18
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=12  rui=6
+    quiet_gate        rui=994  yan=988
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-free-travel-pairs=0, best streak=0, sample free-travel dests=[]
+    rui: free-travel-commits=5, search-commits=0, consec-free-travel-pairs=2, best streak=3, sample free-travel dests=['tick-0-rui-travel', 'tick-4-rui-travel', 'tick-5-rui-travel', 'tick-6-rui-travel', 'tick-38-rui-travel']
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.451 min=0.061 max=1.046 frac<=0=0.000
+    rui: n=4 mean=0.361 min=0.004 max=1.211 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=988 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=994 mean=-0.448 min=-0.499 max=-0.013 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 9, 'prev_committed': 'tick-8-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 5, 'dest': 'tick-5-rui-travel', 'prev': 'tick-4-rui-travel', 'cur': 'tick-5-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 6, 'dest': 'tick-6-rui-travel', 'prev': 'tick-5-rui-travel', 'cur': 'tick-6-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 6, 'dest': 'tick-6-yan-search-rui', 'prev': 'tick-5-yan-search-rui', 'cur': 'tick-6-yan-search-rui'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 7, 'dest': 'tick-7-yan-search-rui', 'prev': 'tick-6-yan-search-rui', 'cur': 'tick-7-yan-search-rui'}
+
+[seed 3] total persisted events: 54
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=29  rui=25
+    quiet_gate        rui=975  yan=971
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=15, consec-free-travel-pairs=0, best streak=0, sample free-travel dests=[]
+    rui: free-travel-commits=19, search-commits=0, consec-free-travel-pairs=12, best streak=3, sample free-travel dests=['tick-0-rui-travel', 'tick-3-rui-travel', 'tick-4-rui-travel', 'tick-5-rui-travel', 'tick-7-rui-travel', 'tick-8-rui-travel', 'tick-9-rui-travel', 'tick-11-rui-travel']
+  C. selection_score stats (committed actions only):
+    yan: n=25 mean=0.318 min=0.003 max=1.259 frac<=0=0.000
+    rui: n=8 mean=0.300 min=0.007 max=1.177 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=971 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=975 mean=-0.467 min=-0.500 max=-0.308 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=4, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=2 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 4, 'dest': 'tick-4-rui-travel', 'prev': 'tick-3-rui-travel', 'cur': 'tick-4-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 5, 'dest': 'tick-5-rui-travel', 'prev': 'tick-4-rui-travel', 'cur': 'tick-5-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 8, 'dest': 'tick-8-rui-travel', 'prev': 'tick-7-rui-travel', 'cur': 'tick-8-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 5, 'dest': 'tick-5-yan-search-rui', 'prev': 'tick-4-yan-search-rui', 'cur': 'tick-5-yan-search-rui'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 8, 'dest': 'tick-8-yan-search-rui', 'prev': 'tick-7-yan-search-rui', 'cur': 'tick-8-yan-search-rui'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 9, 'dest': 'tick-9-yan-search-rui', 'prev': 'tick-8-yan-search-rui', 'cur': 'tick-9-yan-search-rui'}
+
+[seed 7] total persisted events: 15
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=9  rui=6
+    quiet_gate        rui=994  yan=991
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=3, consec-free-travel-pairs=0, best streak=0, sample free-travel dests=[]
+    rui: free-travel-commits=5, search-commits=0, consec-free-travel-pairs=2, best streak=3, sample free-travel dests=['tick-0-rui-travel', 'tick-4-rui-travel', 'tick-5-rui-travel', 'tick-6-rui-travel', 'tick-39-rui-travel']
+  C. selection_score stats (committed actions only):
+    yan: n=5 mean=0.618 min=0.039 max=1.134 frac<=0=0.000
+    rui: n=4 mean=0.359 min=0.055 max=1.180 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=991 mean=-0.200 min=-0.241 max=-0.042 all<=0=True
+    rui: n=994 mean=-0.447 min=-0.493 max=-0.016 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 2, 'prev_committed': 'tick-1-yan-search-rui', 'cur_cause': 'quiet_gate', 'cur_pool0': 2, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 8, 'prev_committed': 'tick-7-yan-help', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 14, 'prev_committed': 'tick-13-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 5, 'dest': 'tick-5-rui-travel', 'prev': 'tick-4-rui-travel', 'cur': 'tick-5-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 6, 'dest': 'tick-6-rui-travel', 'prev': 'tick-5-rui-travel', 'cur': 'tick-6-rui-travel'}
+
+[seed 42] total persisted events: 22
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=13  rui=9
+    quiet_gate        rui=991  yan=987
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-free-travel-pairs=0, best streak=0, sample free-travel dests=[]
+    rui: free-travel-commits=7, search-commits=0, consec-free-travel-pairs=4, best streak=3, sample free-travel dests=['tick-0-rui-travel', 'tick-3-rui-travel', 'tick-4-rui-travel', 'tick-5-rui-travel', 'tick-7-rui-travel', 'tick-8-rui-travel', 'tick-9-rui-travel']
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.364 min=0.014 max=1.092 frac<=0=0.000
+    rui: n=4 mean=0.372 min=0.004 max=1.241 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=987 mean=-0.200 min=-0.232 max=-0.200 all<=0=True
+    rui: n=991 mean=-0.457 min=-0.479 max=-0.308 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=2 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 11, 'prev_committed': 'tick-10-yan-help', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 4, 'dest': 'tick-4-rui-travel', 'prev': 'tick-3-rui-travel', 'cur': 'tick-4-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 5, 'dest': 'tick-5-rui-travel', 'prev': 'tick-4-rui-travel', 'cur': 'tick-5-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 8, 'dest': 'tick-8-rui-travel', 'prev': 'tick-7-rui-travel', 'cur': 'tick-8-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 5, 'dest': 'tick-5-yan-search-rui', 'prev': 'tick-4-yan-search-rui', 'cur': 'tick-5-yan-search-rui'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 6, 'dest': 'tick-6-yan-search-rui', 'prev': 'tick-5-yan-search-rui', 'cur': 'tick-6-yan-search-rui'}
+
+[seed 99] total persisted events: 18
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=12  rui=6
+    quiet_gate        rui=994  yan=988
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-free-travel-pairs=0, best streak=0, sample free-travel dests=[]
+    rui: free-travel-commits=5, search-commits=0, consec-free-travel-pairs=2, best streak=3, sample free-travel dests=['tick-0-rui-travel', 'tick-4-rui-travel', 'tick-5-rui-travel', 'tick-6-rui-travel', 'tick-38-rui-travel']
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.421 min=0.010 max=1.035 frac<=0=0.000
+    rui: n=4 mean=0.367 min=0.037 max=1.267 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=988 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=994 mean=-0.448 min=-0.499 max=-0.012 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 9, 'prev_committed': 'tick-8-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 5, 'dest': 'tick-5-rui-travel', 'prev': 'tick-4-rui-travel', 'cur': 'tick-5-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'rui', 'tick': 6, 'dest': 'tick-6-rui-travel', 'prev': 'tick-5-rui-travel', 'cur': 'tick-6-rui-travel'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 6, 'dest': 'tick-6-yan-search-rui', 'prev': 'tick-5-yan-search-rui', 'cur': 'tick-6-yan-search-rui'}
+    {'type': 'travel_repeat_same_dest', 'actor': 'yan', 'tick': 7, 'dest': 'tick-7-yan-search-rui', 'prev': 'tick-6-yan-search-rui', 'cur': 'tick-7-yan-search-rui'}
+
+[Cross-seed rollup: which silent-cause dominates?]
+  seed 1: empty_pool=0.000 quiet_gate=0.991 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 3: empty_pool=0.000 quiet_gate=0.973 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 7: empty_pool=0.000 quiet_gate=0.993 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 42: empty_pool=0.000 quiet_gate=0.989 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 99: empty_pool=0.000 quiet_gate=0.991 arbitration_abstain=0.000 silent_sel_all<=0=True
+
+[VERDICT]
+  REGIME-LIMITED (quiet-gate-dominated, confirmed at the selection_score level): candidate pools are rarely empty -- arbitration is INERT almost always (pool passes through unchanged), and the decision layer's choose(allow_quiet=True) actively REJECTS the best available candidate because its selection_score is <= 0 on the silent ticks (verified: every captured silent-tick selection_score is at-or-below zero, all 5 seeds x both actors). This is the existing, documented quiet-gate mechanic (decision.py:238, choose()'s only None-return branch for a nonempty pool) running as designed, not a broken or silently cut-off state chain. Separately, when quiet-gate DOES let an action through, the committed action is disproportionately FREE travel (no search target) plus search-driven travel -- freedom/curiosity pressure (actions.py:159-161) is a standing, always-on motive, unlike contact/help which need a 20+ relationship-pressure threshold to even enter the pool; this explains the travel-repetition observed in M26 without invoking any broken reader. M26's 'no natural failure/conflict' follows from the same gate: the ticks that would commit high-stakes actions (contact/help) are overwhelmingly the quiet-rejected ones, so they rarely produce real relationship tension or failed outcomes. This is a regime/parameter property of the existing selection_score<=0 threshold under the current desire/fatigue levels, not evidence of a mechanism being silently cut off.
