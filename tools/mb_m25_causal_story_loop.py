@@ -1,41 +1,47 @@
-"""M25 -- Causal Story Loop Audit (read-only, anchored 0ba1699).
+"""M25-R1 -- one-shot consequence-rollback retest of M25's 6 positive
+results + M26 (Narrative Emergence / Story Quality Audit).
 
-Spec: ChatGPT PR#10 6013357680. Targets the 3 confirmed M24 witnesses
-(seed3@t89 / seed42@t67 / seed7@t103, all yan, contactPerson event
-consequence rollback) and asks, field by field: which SINGLE
-consequence field, when pinned back to its immediately-preceding
-natural value for the SAME actor at the TRUE production boundary
-(right after the witness tick's step() returns, before the next
-tick's generate_candidates() reads it -- no manual _settle_emotions()
-pass, per Arena's M23-R1 recheck finding), reproduces that witness's
-future committed-action / persisted-event crossing?
+Spec sources:
+- ChatGPT PR#10 6014735499 (M25 裁定 + M26 规格)
+- Arena independent M25 recheck (on-platform, 12 min before M26):
+  found M25's delivery tool re-pinned the target field EVERY tick after
+  onset, not a one-shot undo of the witness event's consequence;
+  under a stricter one-shot method, goal.current_stage crossings
+  (seeds 3/42) disappear; only fatigue + desires.reconciliation
+  (seeds 3/42) survive as genuine 30-tick action/event crossings
+  (4/36, matching Arena's independent 4/36).
 
-Folds in Arena's three M23-R1/M24 corrections so they don't repeat
-here:
-1. No extra _settle_emotions() decay pass -- both arms use plain
-   engine.step() only.
-2. Every consequence field in the witness's own event is tested,
-   individually, not just desire (M23-R1's "9 families NOT PROVEN"
-   was desire-only re-verified).
-3. Divergence reported as the ACTUAL tick set over a 30/50-tick
-   window, not a boolean "irreversible" flag.
+M25-R1 part 1: re-run all 6 of M25's "CROSSED" fields (plus seed 7's
+12 fields for completeness) under the corrected ONE-SHOT method:
+undo the target field ONCE at the witness tick's step() exit
+(restoring it to its pre-witness-step natural value), then let it
+evolve naturally on every subsequent tick -- no re-pinning, no
+suppression of later natural writes to that same field. Report
+30/50-tick divergence sets + new actor-participating events for each.
 
-No production/test/weight/interface change. No recall() wiring. No
-manufactured failure.
+M25-R1 part 2 = M26 first phase (Narrative Emergence / Story Quality
+Audit, per 6014735499): 3 confirmed witnesses (seeds 3/42, fatigue +
+reconciliation, one-shot method) extended to a 1000-tick window.
+Record per-tick goal/desire/state/relationship + committed action +
+event/consequence; check whether actions form continuous
+cause->effect->re-action chains (not isolated events); look for
+narrative shapes (pursuit/avoidance/reunion/separation/escalation);
+report natural failure/conflict occurrence (record as NOT OBSERVED
+if 0, never manufacture).
 
-Consequence field naming (verified against live engine data, seed 42
-tick 0):
-  target_type == "relationship": target_id "yan:rui", field "trust" /
-    "affection" -- lives on world.relationships["yan:rui"].<field>
-  target_type == "character": target_id "yan", field is the FULL
-    dotted path already, e.g. "human_condition.fatigue",
-    "emotions.joy", "identity_beliefs.loyal", "habits.contact_person",
-    "human_condition.desires.reconciliation", "location" -- set on
-    world.characters[yan].<dotted path>.
-  target_type == "goal": target_id "yan-1", field "current_stage" --
-    not exercised by the 3 witnesses (only yan:trust/affection,
-    yan.* character fields actually appear on those specific events),
-    but handled for completeness.
+Anchor 0ba1699; read-only; production HELD; recall() HELD; no
+weight/test/production change.
+
+METHOD NOTE (M25-R1's own method correction, self-caught, same
+failure class as M23/M25's original hold/refresh bug): M25's pin_one()
+re-pinned the field every tick after onset -- i.e. it suppressed the
+field's own subsequent natural drift, so a "crossing" could reflect
+"the field was frozen" rather than "the field's single consequence
+naturally propagated forward." This tool fixes that: pin fires EXACTLY
+ONCE, at the moment the witness tick's step() has just returned (after
+its consequences have landed, before the next tick's reader runs),
+and is never re-applied -- subsequent ticks see the field evolve
+naturally from that restored value.
 """
 from __future__ import annotations
 
