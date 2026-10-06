@@ -1,0 +1,146 @@
+========================================================================
+M27  Natural-Regime Bottleneck Audit  (read-only, anchored 0ba1699)
+========================================================================
+
+[seed 1] total persisted events: 18
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=12  rui=6
+    quiet_gate        rui=994  yan=988
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-same-dest-pairs=0, best streak=0, free-travel dest sequence (first 12)=[]
+    rui: free-travel-commits=5, search-commits=0, consec-same-dest-pairs=0, best streak=3, free-travel dest sequence (first 12)=['old_road', 'ridge', 'old_road', 'ridge', 'old_road']
+  B2. contact/help candidate tracking (does quiet-gate really explain their absence?):
+    yan: contact-present-ticks=4, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=4, help-committed=0
+    rui: contact-present-ticks=0, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=0, help-committed=0
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.451 min=0.061 max=1.046 frac<=0=0.000
+    rui: n=4 mean=0.361 min=0.004 max=1.211 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=988 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=994 mean=-0.448 min=-0.499 max=-0.013 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 39, 'prev_committed': 'tick-38-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 9, 'prev_committed': 'tick-8-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 14, 'prev_committed': 'tick-13-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+
+[seed 3] total persisted events: 54
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=29  rui=25
+    quiet_gate        rui=975  yan=971
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=15, consec-same-dest-pairs=0, best streak=0, free-travel dest sequence (first 12)=[]
+    rui: free-travel-commits=19, search-commits=0, consec-same-dest-pairs=0, best streak=3, free-travel dest sequence (first 12)=['old_road', 'ridge', 'old_road', 'ridge', 'old_road', 'ridge', 'old_road', 'ridge', 'old_road', 'ridge', 'old_road', 'ridge']
+  B2. contact/help candidate tracking (does quiet-gate really explain their absence?):
+    yan: contact-present-ticks=6, help-present-ticks=2, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=4, help-committed=2
+    rui: contact-present-ticks=0, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=0, help-committed=0
+  C. selection_score stats (committed actions only):
+    yan: n=25 mean=0.318 min=0.003 max=1.259 frac<=0=0.000
+    rui: n=8 mean=0.300 min=0.007 max=1.177 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=971 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=975 mean=-0.467 min=-0.500 max=-0.308 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=4, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=2 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 27, 'prev_committed': 'tick-26-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 29, 'prev_committed': 'tick-28-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 98, 'prev_committed': 'tick-97-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+
+[seed 7] total persisted events: 15
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=9  rui=6
+    quiet_gate        rui=994  yan=991
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=3, consec-same-dest-pairs=0, best streak=0, free-travel dest sequence (first 12)=[]
+    rui: free-travel-commits=5, search-commits=0, consec-same-dest-pairs=0, best streak=3, free-travel dest sequence (first 12)=['old_road', 'ridge', 'old_road', 'ridge', 'old_road']
+  B2. contact/help candidate tracking (does quiet-gate really explain their absence?):
+    yan: contact-present-ticks=4, help-present-ticks=1, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=4, help-committed=1
+    rui: contact-present-ticks=0, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=0, help-committed=0
+  C. selection_score stats (committed actions only):
+    yan: n=5 mean=0.618 min=0.039 max=1.134 frac<=0=0.000
+    rui: n=4 mean=0.359 min=0.055 max=1.180 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=991 mean=-0.200 min=-0.241 max=-0.042 all<=0=True
+    rui: n=994 mean=-0.447 min=-0.493 max=-0.016 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 40, 'prev_committed': 'tick-39-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 2, 'prev_committed': 'tick-1-yan-search-rui', 'cur_cause': 'quiet_gate', 'cur_pool0': 2, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 8, 'prev_committed': 'tick-7-yan-help', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 14, 'prev_committed': 'tick-13-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+
+[seed 42] total persisted events: 22
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=13  rui=9
+    quiet_gate        rui=991  yan=987
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-same-dest-pairs=0, best streak=0, free-travel dest sequence (first 12)=[]
+    rui: free-travel-commits=7, search-commits=0, consec-same-dest-pairs=0, best streak=3, free-travel dest sequence (first 12)=['old_road', 'ridge', 'old_road', 'ridge', 'old_road', 'ridge', 'old_road']
+  B2. contact/help candidate tracking (does quiet-gate really explain their absence?):
+    yan: contact-present-ticks=4, help-present-ticks=1, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=4, help-committed=1
+    rui: contact-present-ticks=0, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=0, help-committed=0
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.364 min=0.014 max=1.092 frac<=0=0.000
+    rui: n=4 mean=0.372 min=0.004 max=1.241 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=987 mean=-0.200 min=-0.232 max=-0.200 all<=0=True
+    rui: n=991 mean=-0.457 min=-0.479 max=-0.308 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=2 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 11, 'prev_committed': 'tick-10-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 11, 'prev_committed': 'tick-10-yan-help', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 14, 'prev_committed': 'tick-13-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+
+[seed 99] total persisted events: 18
+  A. silent-cause matrix (tick count per actor, out of 1000):
+    committed         yan=12  rui=6
+    quiet_gate        rui=994  yan=988
+  B. travel attribution (free-travel vs search-driven):
+    yan: free-travel-commits=0, search-commits=5, consec-same-dest-pairs=0, best streak=0, free-travel dest sequence (first 12)=[]
+    rui: free-travel-commits=5, search-commits=0, consec-same-dest-pairs=0, best streak=3, free-travel dest sequence (first 12)=['old_road', 'ridge', 'old_road', 'ridge', 'old_road']
+  B2. contact/help candidate tracking (does quiet-gate really explain their absence?):
+    yan: contact-present-ticks=4, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=4, help-committed=0
+    rui: contact-present-ticks=0, help-present-ticks=0, contact-on-silent-ticks=0, help-on-silent-ticks=0, contact-committed=0, help-committed=0
+  C. selection_score stats (committed actions only):
+    yan: n=10 mean=0.421 min=0.010 max=1.035 frac<=0=0.000
+    rui: n=4 mean=0.367 min=0.037 max=1.267 frac<=0=0.000
+  C2. selection_score on SILENT ticks (quiet-gate proof):
+    yan: n=988 mean=-0.200 min=-0.236 max=-0.200 all<=0=True
+    rui: n=994 mean=-0.448 min=-0.499 max=-0.012 all<=0=True
+  C. pool-size stats (candidate generation, pre-arbitration):
+    yan: min=1 median=1.0 max=3, committed-actions-from-single-candidate-pool=0 (of 1000)
+    rui: min=1 median=1.0 max=2, committed-actions-from-single-candidate-pool=3 (of 1000)
+  D. real traces:
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 1, 'prev_committed': 'tick-0-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 8, 'prev_committed': 'tick-7-rui-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'rui', 'tick': 39, 'prev_committed': 'tick-38-rui-travel', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 3, 'prev_committed': 'tick-2-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 9, 'prev_committed': 'tick-8-yan-rest', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+    {'type': 'active_to_silent', 'actor': 'yan', 'tick': 14, 'prev_committed': 'tick-13-yan-contact', 'cur_cause': 'quiet_gate', 'cur_pool0': 1, 'cur_arb': 'inert'}
+
+[Cross-seed rollup: which silent-cause dominates?]
+  seed 1: empty_pool=0.000 quiet_gate=0.991 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 3: empty_pool=0.000 quiet_gate=0.973 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 7: empty_pool=0.000 quiet_gate=0.993 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 42: empty_pool=0.000 quiet_gate=0.989 arbitration_abstain=0.000 silent_sel_all<=0=True
+  seed 99: empty_pool=0.000 quiet_gate=0.991 arbitration_abstain=0.000 silent_sel_all<=0=True
+
+[VERDICT]
+  REGIME-LIMITED (silent-tick near-cause): the overwhelming majority of silent ticks across all 5 seeds x both actors trace to choose(allow_quiet=True)'s selection_score<=0 rejection path (decision.py:238), with every captured silent-tick selection_score at-or-below zero (pre-step probe values, ~1e-4 drift vs. true step-time values, disclosed above). Candidate pools are never empty; arbitration is INERT (pool passes through unchanged) on the near-universal majority of ticks -- ABSTAIN never empties a pool in this window. This is NOT evidence of a mechanism being silently cut off in the sense of an empty/ABSTAIN path; it is evidence the existing quiet-gate mechanic is the dominant direct cause of the silence observed. CAVEAT (per independent review, M27-R1): this verdict does NOT establish that candidate-generation gating (co-location / relationship-pressure / distress conditions at actions.py:97-157) is irrelevant to overall behavior sparseness -- contact/help candidates simply rarely enter the pool under the current co-location/desire levels, which is a separate, unmeasured contribution distinct from the quiet-gate itself. Similarly, whether rui's free-travel destinations genuinely repeat (vs. alternate across a small location set like old_road/ridge) was re-checked this revision via the real ActionCandidate.targets field (Section B dest sequence); see the actual destination sequence printed above per seed -- do not assert 'same-destination repetition' unless that sequence actually shows it. M26's 'no natural failure/conflict' remains a NOT-OBSERVED registration for this window; this audit does not newly measure conflict and does not claim the quiet-gate is the proven sole cause of its absence. Bottom line: the near-cause of the 97-99% silence is the quiet-gate running as designed under a regime where selection_score sits stably at ~-0.2 (yan) / ~-0.45 (rui); whether the deeper 'why is selection_score stably negative' question (desire initial levels, fatigue recovery rate, candidate-generation gating thresholds) is the next calibration question -- out of scope for this read-only audit, flagged for a future regime-experiment step, not pre-registered here.

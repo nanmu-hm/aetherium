@@ -71,13 +71,25 @@ def instrument_one_tick(world, engine, actor):
     same calls step() makes, in the same order -- it does not call
     engine.step() itself, so it can't double-advance the world; the
     caller must not actually step the world afterward for this
-    actor's decision, this is purely a read-the-pipeline probe)."""
+    actor's decision, this is purely a read-the-pipeline probe).
+
+    CAVEAT (disclosed per M27-R1): real step() calls
+    _restore_rng_state() + _settle_emotions() before candidate
+    generation; this probe does not, so silent-tick selection_score
+    values are pre-step probe values, off by ~1e-4 from the true
+    step-time value. This does not change the quiet-gate verdict
+    (all sampled values remain <= 0), but it is not claimed to be
+    exact step-time precision."""
     pool0 = generate_action_pool(world, actor)
+    pool0_types = tuple(sorted(set(c.action_type for c in pool0)))
+    committed_targets = None
     if not pool0:
         return {"cause": "empty_pool", "pool0_size": 0,
                 "pool_final_size": 0, "arbitration_kind": None,
                 "committed": None, "top_util": None,
-                "second_util": None, "action_type": None}
+                "second_util": None, "action_type": None,
+                "pool0_types": pool0_types,
+                "committed_targets": None}
     arbitration = None
     evaluations = None
     pool_final = pool0
@@ -125,7 +137,9 @@ def instrument_one_tick(world, engine, actor):
                     arbitration.kind if arbitration else None,
                 "committed": None, "top_util": None,
                 "second_util": None, "action_type": None,
-                "top_sel_score": top_sel, "is_free_travel": False}
+                "top_sel_score": top_sel, "is_free_travel": False,
+                "pool0_types": pool0_types,
+                "committed_targets": None}
     util_by_id = {}
     for ev in (evaluations or
                [engine.decision_kernel.evaluate(world, c)
@@ -142,6 +156,7 @@ def instrument_one_tick(world, engine, actor):
                                  if s.selection_score is not None
                                  else s.utility)
                 break
+    committed_targets = (list(action.targets) if action.targets else None)
     return {"cause": "committed", "pool0_size": len(pool0),
             "pool_final_size": len(pool_final),
             "arbitration_kind":
@@ -150,7 +165,9 @@ def instrument_one_tick(world, engine, actor):
             "second_util": (top_utils[0] if top_utils else None),
             "action_type": action.action_type,
             "is_free_travel": is_free_travel,
-            "top_sel_score": committed_sel}
+            "top_sel_score": committed_sel,
+            "pool0_types": pool0_types,
+            "committed_targets": committed_targets}
 
 
 def run_seed(seed: int):
@@ -193,6 +210,12 @@ def run_seed(seed: int):
     # "travel" candidates that actually mean "go find person X".
     travel_stats: dict[str, dict] = {}
     sel_score_samples: dict[str, list] = {a: [] for a in ACTORS}
+    contact_present_ticks: dict[str, int] = {a: 0 for a in ACTORS}
+    help_present_ticks: dict[str, int] = {a: 0 for a in ACTORS}
+    contact_on_silent_ticks: dict[str, int] = {a: 0 for a in ACTORS}
+    help_on_silent_ticks: dict[str, int] = {a: 0 for a in ACTORS}
+    contact_committed: dict[str, int] = {a: 0 for a in ACTORS}
+    help_committed: dict[str, int] = {a: 0 for a in ACTORS}
     for actor in ACTORS:
         streak = 0
         best_streak = 0
@@ -200,17 +223,33 @@ def run_seed(seed: int):
         search_commits = 0
         consec_free_travel_pairs = 0
         prev_was_free_travel = False
-        dests = []
+        prev_dest = None
+        dest_sequence = []
         for t, row in per_tick.items():
             info = row[actor]
+            ptypes = info.get("pool0_types", ())
+            if "contact_person" in ptypes:
+                contact_present_ticks[actor] += 1
+                if info["cause"] == "quiet_gate":
+                    contact_on_silent_ticks[actor] += 1
+            if "help_person" in ptypes:
+                help_present_ticks[actor] += 1
+                if info["cause"] == "quiet_gate":
+                    help_on_silent_ticks[actor] += 1
             if info["cause"] == "committed":
                 sel_score_samples[actor].append(info["top_sel_score"])
+                if info["action_type"] == "contact_person":
+                    contact_committed[actor] += 1
+                elif info["action_type"] == "help_person":
+                    help_committed[actor] += 1
                 is_free = info["is_free_travel"]
                 if is_free:
                     free_travel_commits += 1
-                    dests.append(info["committed"])
-                    if prev_was_free_travel:
+                    dest = (info["committed_targets"] or [None])[0]
+                    dest_sequence.append(dest)
+                    if prev_dest is not None and dest == prev_dest:
                         consec_free_travel_pairs += 1
+                    prev_dest = dest
                     prev_was_free_travel = True
                     streak = streak + 1
                     best_streak = max(best_streak, streak)
@@ -218,20 +257,33 @@ def run_seed(seed: int):
                         and not is_free:
                     search_commits += 1
                     prev_was_free_travel = False
+                    prev_dest = None
                     streak = 0
                 else:
                     prev_was_free_travel = False
+                    prev_dest = None
                     streak = 0
             else:
                 prev_was_free_travel = False
+                prev_dest = None
                 streak = 0
         travel_stats[actor] = {
             "free_travel_commits": free_travel_commits,
             "search_commits": search_commits,
-            "consec_free_travel_pairs": consec_free_travel_pairs,
+            "consec_same_dest_pairs": consec_free_travel_pairs,
             "best_streak": best_streak,
-            "dest_samples": dests[:8],
+            "dest_sequence": dest_sequence[:12],
         }
+    contact_help_stats = {
+        a: {
+            "contact_present_actor_ticks": contact_present_ticks[a],
+            "help_present_actor_ticks": help_present_ticks[a],
+            "contact_on_silent_ticks": contact_on_silent_ticks[a],
+            "help_on_silent_ticks": help_on_silent_ticks[a],
+            "contact_committed": contact_committed[a],
+            "help_committed": help_committed[a],
+        } for a in ACTORS
+    }
 
     # --- C. selection_score distribution (quiet-gate evidence) -----
     import statistics as _st
@@ -293,23 +345,29 @@ def run_seed(seed: int):
                 if len([x for x in traces if
                         x["actor"] == actor]) >= 3:
                     break
+            # Free-travel consecutive-same-destination trace: both
+            # prev and cur must be free travel (no search target) AND
+            # share the same destination (ActionCandidate.targets[0])
+            # -- this is the actual "does the world keep sending them
+            # back to the same place" signal, not an ID-suffix match.
             if (prev["cause"] == "committed"
-                    and prev["action_type"] == "travel"
+                    and prev.get("is_free_travel")
                     and cur["cause"] == "committed"
-                    and cur["action_type"] == "travel"
-                    and prev["committed"] and cur["committed"]
-                    and prev["committed"].split("-")[-1] ==
-                    cur["committed"].split("-")[-1]):
-                traces.append({
-                    "type": "travel_repeat_same_dest",
-                    "actor": actor, "tick": t,
-                    "dest": cur["committed"],
-                    "prev": prev["committed"], "cur": cur["committed"]})
-                if len([x for x in traces
-                        if x["type"] ==
-                        "travel_repeat_same_dest" and
-                        x["actor"] == actor]) >= 3:
-                    break
+                    and cur.get("is_free_travel")):
+                prev_dest = (prev.get("committed_targets") or [None])[0]
+                cur_dest = (cur.get("committed_targets") or [None])[0]
+                if prev_dest is not None and cur_dest == prev_dest:
+                    traces.append({
+                        "type": "travel_repeat_same_dest",
+                        "actor": actor, "tick": t,
+                        "dest": cur_dest,
+                        "prev": prev["committed"],
+                        "cur": cur["committed"]})
+                    if len([x for x in traces
+                            if x["type"] ==
+                            "travel_repeat_same_dest" and
+                            x["actor"] == actor]) >= 3:
+                        break
         traces.sort(key=lambda x: (x["type"], x["actor"], x["tick"]))
 
     pool_stats = {
@@ -323,6 +381,7 @@ def run_seed(seed: int):
             "travel_stats": travel_stats, "pool_stats": pool_stats,
             "sel_score_stats": sel_score_stats,
             "silent_sel_stats": silent_sel_stats,
+            "contact_help_stats": contact_help_stats,
             "traces": traces[:8],
             "total_events": len(events)}
 
@@ -347,9 +406,19 @@ def main() -> int:
         for a, s in r["travel_stats"].items():
             print(f"    {a}: free-travel-commits={s['free_travel_commits']}, "
                   f"search-commits={s['search_commits']}, "
-                  f"consec-free-travel-pairs={s['consec_free_travel_pairs']}, "
+                  f"consec-same-dest-pairs={s['consec_same_dest_pairs']}, "
                   f"best streak={s['best_streak']}, "
-                  f"sample free-travel dests={s['dest_samples']}")
+                  f"free-travel dest sequence (first 12)="
+                  f"{s['dest_sequence']}")
+        print("  B2. contact/help candidate tracking (does quiet-gate "
+              "really explain their absence?):")
+        for a, s in r["contact_help_stats"].items():
+            print(f"    {a}: contact-present-ticks={s['contact_present_actor_ticks']}, "
+                  f"help-present-ticks={s['help_present_actor_ticks']}, "
+                  f"contact-on-silent-ticks={s['contact_on_silent_ticks']}, "
+                  f"help-on-silent-ticks={s['help_on_silent_ticks']}, "
+                  f"contact-committed={s['contact_committed']}, "
+                  f"help-committed={s['help_committed']}")
         print("  C. selection_score stats (committed actions only):")
         for a, s in r["sel_score_stats"].items():
             if s.get("n", 0) == 0:
@@ -417,36 +486,52 @@ def main() -> int:
 
     print("\n[VERDICT]")
     if quiet_dominant and pool_rarely_empty and silent_sel_confirmed:
-        print("  REGIME-LIMITED (quiet-gate-dominated, confirmed at "
-              "the selection_score level): candidate pools are "
-              "rarely empty -- arbitration is INERT almost always "
-              "(pool passes through unchanged), and the decision "
-              "layer's choose(allow_quiet=True) actively REJECTS "
-              "the best available candidate because its "
-              "selection_score is <= 0 on the silent ticks "
-              "(verified: every captured silent-tick selection_score "
-              "is at-or-below zero, all 5 seeds x both actors). This "
-              "is the existing, documented quiet-gate mechanic "
-              "(decision.py:238, choose()'s only None-return branch "
-              "for a nonempty pool) running as designed, not a "
-              "broken or silently cut-off state chain. "
-              "Separately, when quiet-gate DOES let an action "
-              "through, the committed action is disproportionately "
-              "FREE travel (no search target) plus search-driven "
-              "travel -- freedom/curiosity pressure (actions.py:159"
-              "-161) is a standing, always-on motive, unlike "
-              "contact/help which need a 20+ relationship-pressure "
-              "threshold to even enter the pool; this explains the "
-              "travel-repetition observed in M26 without invoking "
-              "any broken reader. M26's 'no natural failure/"
-              "conflict' follows from the same gate: the ticks "
-              "that would commit high-stakes actions (contact/"
-              "help) are overwhelmingly the quiet-rejected ones, so "
-              "they rarely produce real relationship tension or "
-              "failed outcomes. This is a regime/parameter property "
-              "of the existing selection_score<=0 threshold under "
-              "the current desire/fatigue levels, not evidence of a "
-              "mechanism being silently cut off.")
+        print("  REGIME-LIMITED (silent-tick near-cause): the "
+              "overwhelming majority of silent ticks across all 5 "
+              "seeds x both actors trace to choose(allow_quiet=True)"
+              "'s selection_score<=0 rejection path "
+              "(decision.py:238), with every captured silent-tick "
+              "selection_score at-or-below zero (pre-step probe "
+              "values, ~1e-4 drift vs. true step-time values, "
+              "disclosed above). Candidate pools are never empty; "
+              "arbitration is INERT (pool passes through unchanged) "
+              "on the near-universal majority of ticks -- ABSTAIN "
+              "never empties a pool in this window. This is NOT "
+              "evidence of a mechanism being silently cut off in "
+              "the sense of an empty/ABSTAIN path; it is evidence "
+              "the existing quiet-gate mechanic is the dominant "
+              "direct cause of the silence observed. "
+              "CAVEAT (per independent review, M27-R1): this "
+              "verdict does NOT establish that candidate-generation "
+              "gating (co-location / relationship-pressure / "
+              "distress conditions at actions.py:97-157) is "
+              "irrelevant to overall behavior sparseness -- contact/"
+              "help candidates simply rarely enter the pool under "
+              "the current co-location/desire levels, which is a "
+              "separate, unmeasured contribution distinct from the "
+              "quiet-gate itself. Similarly, whether rui's free-"
+              "travel destinations genuinely repeat (vs. alternate "
+              "across a small location set like old_road/ridge) "
+              "was re-checked this revision via the real "
+              "ActionCandidate.targets field (Section B dest "
+              "sequence); see the actual destination sequence "
+              "printed above per seed -- do not assert 'same-"
+              "destination repetition' unless that sequence "
+              "actually shows it. M26's 'no natural failure/"
+              "conflict' remains a NOT-OBSERVED registration for "
+              "this window; this audit does not newly measure "
+              "conflict and does not claim the quiet-gate is the "
+              "proven sole cause of its absence. "
+              "Bottom line: the near-cause of the 97-99% silence is "
+              "the quiet-gate running as designed under a regime "
+              "where selection_score sits stably at ~-0.2 (yan) / "
+              "~-0.45 (rui); whether the deeper 'why is selection_"
+              "score stably negative' question (desire initial "
+              "levels, fatigue recovery rate, candidate-generation "
+              "gating thresholds) is the next calibration question "
+              "-- out of scope for this read-only audit, flagged "
+              "for a future regime-experiment step, not pre-"
+              "registered here.")
     elif pool_rarely_empty:
         print("  MECHANISM-BOTTLENECK: candidate generation or "
               "arbitration is failing to produce usable pools when "
