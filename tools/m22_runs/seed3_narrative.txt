@@ -1,0 +1,13 @@
+t   0  contact_person           yan/rui              -> success
+t   0  travel                   rui/old_road         -> success
+t   1  search_person            yan/old_road/rui     -> success
+t   2  rest                     yan                  -> success
+t   3  travel                   rui/ridge            -> success
+t   4  search_person            yan/ridge/rui        -> success
+t   4  rest                     rui                  -> success
+t  13  contact_person           yan/rui              -> success
+t  33  travel                   rui/old_road         -> success
+t  34  search_person            yan/old_road/rui     -> success
+t  35  contact_person           yan/rui              -> success
+t  36  rest                     yan                  -> success
+t 105  contact_person           yan/rui              -> success

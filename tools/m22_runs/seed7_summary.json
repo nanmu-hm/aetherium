@@ -1,0 +1,904 @@
+{
+  "seed": 7,
+  "mode_arb_0": {
+    "per_tick_actions": [
+      [
+        1,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        1,
+        "rui",
+        "travel",
+        "old_road"
+      ],
+      [
+        2,
+        "yan",
+        "travel",
+        "old_road"
+      ],
+      [
+        5,
+        "rui",
+        "travel",
+        "ridge"
+      ],
+      [
+        6,
+        "yan",
+        "travel",
+        "ridge"
+      ],
+      [
+        6,
+        "rui",
+        "rest",
+        ""
+      ],
+      [
+        7,
+        "yan",
+        "rest",
+        ""
+      ],
+      [
+        14,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        34,
+        "rui",
+        "travel",
+        "old_road"
+      ],
+      [
+        35,
+        "yan",
+        "travel",
+        "old_road"
+      ],
+      [
+        36,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        37,
+        "yan",
+        "rest",
+        ""
+      ],
+      [
+        106,
+        "yan",
+        "contact_person",
+        "rui"
+      ]
+    ],
+    "events_by_tick": {
+      "0": [
+        "Event(id='event-0-yan-contact_person', tick=0, timestamp='0001-01-01T00:00:00', location='river_town', participants=['yan', 'rui'], causes=['tick-0-yan-contact'], facts=['Yan speaks with Rui at river_town.', \"Yan advances the goal 'help an old friend' to stage 2/2: help the old friend.\"], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=48, new_value=50.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=72, new_value=73.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=0.0, new_value=2.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.0, new_value=0.08, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.0, new_value=0.08, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='goal', target_id='yan-1', field='current_stage', old_value=0, new_value=1, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.0, new_value=1.0, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.0, new_value=1.5, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=71.5, new_value=26.5, reason='event success satisfies reconciliation pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: river_town', 'co_located: rui', 'rel(yan->rui): trust=50.000,affection=73.000,resentment=0.000,fear=0.000', 'desires: reconciliation=70.000'], downstream=[])",
+        "Event(id='event-0-rui-travel', tick=0, timestamp='0001-01-01T00:00:00', location='old_road', participants=['rui', 'old_road'], causes=['tick-0-rui-travel'], facts=['Rui travels from river_town to old_road.', \"Rui advances the goal 'leave town' to stage 2/2: continue toward freedom.\"], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='river_town', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=1.0, new_value=4.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='current_stage', old_value=0, new_value=1, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.travel', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=80.0, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.curiosity', old_value=39.05, new_value=0.0, reason='event success satisfies curiosity pressure', kind='event_transition')], intent='explore beyond the familiar: old_road', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: old_road', 'co_located: none', 'rel(rui->old_road): none', 'desires: curiosity=35.000,freedom=80.000'], downstream=[])"
+      ],
+      "1": [
+        "Event(id='event-1-yan-travel', tick=1, timestamp='0001-01-02T00:00:00', location='old_road', participants=['yan', 'old_road', 'rui'], causes=['tick-1-yan-search-rui'], facts=['Yan travels from river_town to old_road.', 'Yan finds Rui at old_road.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='river_town', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=3.0, new_value=11.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=2.7, new_value=5.7, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was river_town', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->old_road): none', 'desires: belonging=4.000,reconciliation=26.500'], downstream=[])"
+      ],
+      "4": [
+        "Event(id='event-4-rui-travel', tick=4, timestamp='0001-01-05T00:00:00', location='ridge', participants=['rui', 'ridge'], causes=['tick-4-rui-travel'], facts=['Rui travels from old_road to ridge.', 'Rui achieves the goal: leave town.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='old_road', new_value='ridge', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=2.0, new_value=10.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=1.9683000000000002, new_value=4.9683, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=2.8655718400000003, new_value=5.86557184, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='current_stage', old_value=1, new_value=2, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='status', old_value='active', new_value='achieved', reason='goal fulfilled by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.travel', old_value=0.1, new_value=0.19, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=1.5, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.curiosity', old_value=10.150000000000002, new_value=0.0, reason='event success satisfies curiosity pressure', kind='event_transition')], intent='explore beyond the familiar: ridge', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: ridge', 'co_located: none', 'rel(rui->ridge): none', 'desires: curiosity=12.150'], downstream=[])"
+      ],
+      "5": [
+        "Event(id='event-5-yan-travel', tick=5, timestamp='0001-01-06T00:00:00', location='ridge', participants=['yan', 'ridge', 'rui'], causes=['tick-5-yan-search-rui'], facts=['Yan travels from old_road to ridge.', 'Yan finds Rui at ridge.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='old_road', new_value='ridge', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=5.0, new_value=13.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=3.7397700000000005, new_value=6.73977, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=2.1491788799999996, new_value=5.149178879999999, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was old_road', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'rel(yan->ridge): none', 'desires: belonging=16.000,reconciliation=32.500'], downstream=[])",
+        "Event(id='event-5-rui-rest', tick=5, timestamp='0001-01-06T00:00:00', location='ridge', participants=['rui'], causes=['tick-5-rui-rest'], facts=['Rui rests at ridge.'], action_type='rest', action_result=ActionResult(status='success', reason='rest completed', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=10.0, new_value=0.0, reason='physical cost/recovery from rest', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.rest', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='rest and recover from current pressures', preconditions=['declared: current location permits rest', 'gate: satisfied'], observations=['location: ridge', 'co_located: yan', 'desires: none'], downstream=[])"
+      ],
+      "6": [
+        "Event(id='event-6-yan-rest', tick=6, timestamp='0001-01-07T00:00:00', location='ridge', participants=['yan'], causes=['tick-6-yan-rest'], facts=['Yan rests at ridge.'], action_type='rest', action_result=ActionResult(status='success', reason='rest completed', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=13.0, new_value=0.0, reason='physical cost/recovery from rest', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.rest', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='rest and recover from current pressures', preconditions=['declared: current location permits rest', 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'desires: belonging=19.000,reconciliation=34.000'], downstream=[])"
+      ],
+      "13": [
+        "Event(id='event-13-yan-contact_person', tick=13, timestamp='0001-01-14T00:00:00', location='ridge', participants=['yan', 'rui'], causes=['tick-13-yan-contact'], facts=['Yan speaks with Rui at ridge.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=50.0, new_value=52.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=73.0, new_value=74.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=2.9012499879417, new_value=5.9012499879417, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=1.4390967743619698, new_value=3.43909677436197, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=2.7694963964296377, new_value=3.7694963964296377, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.5839418349837221, new_value=2.083941834983722, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.1, new_value=0.19, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=45.94, new_value=1.9399999999999977, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=43.0, new_value=33.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'rel(yan->rui): trust=52.000,affection=74.000,resentment=0.000,fear=0.000', 'desires: belonging=40.000,reconciliation=44.500'], downstream=[])"
+      ],
+      "33": [
+        "Event(id='event-33-rui-travel', tick=33, timestamp='0001-02-03T00:00:00', location='old_road', participants=['rui', 'old_road'], causes=['tick-33-rui-travel'], facts=['Rui travels from ridge to old_road.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='ridge', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=0.2340133240652852, new_value=3.2340133240652853, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.7112788243094732, new_value=3.711278824309473, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=42.0, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition')], intent='explore beyond the familiar: old_road', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: old_road', 'co_located: none', 'rel(rui->old_road): none', 'desires: freedom=42.000'], downstream=[])"
+      ],
+      "34": [
+        "Event(id='event-34-yan-travel', tick=34, timestamp='0001-02-04T00:00:00', location='old_road', participants=['yan', 'old_road', 'rui'], causes=['tick-34-yan-search-rui'], facts=['Yan travels from ridge to old_road.', 'Yan finds Rui at old_road.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='ridge', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.6457088082929302, new_value=3.6457088082929303, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=0.4587593960154459, new_value=3.458759396015446, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was ridge', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->old_road): none', 'desires: belonging=93.000,reconciliation=30.740'], downstream=[])"
+      ],
+      "35": [
+        "Event(id='event-35-yan-contact_person', tick=35, timestamp='0001-02-05T00:00:00', location='old_road', participants=['yan', 'rui'], causes=['tick-35-yan-contact'], facts=['Yan speaks with Rui at old_road.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=52.0, new_value=54.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=74.0, new_value=75.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=8.0, new_value=11.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=3.281137927463637, new_value=6.281137927463638, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=1.9703616324253637, new_value=3.9703616324253637, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=3.1412263968955383, new_value=4.141226396895538, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.4221924487784538, new_value=1.9221924487784539, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.19, new_value=0.271, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=33.56000000000001, new_value=0.0, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=99.0, new_value=89.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->rui): trust=54.000,affection=75.000,resentment=0.000,fear=0.000', 'desires: belonging=96.000,reconciliation=32.180'], downstream=[])"
+      ],
+      "36": [
+        "Event(id='event-36-yan-rest', tick=36, timestamp='0001-02-06T00:00:00', location='old_road', participants=['yan'], causes=['tick-36-yan-rest'], facts=['Yan rests at old_road.'], action_type='rest', action_result=ActionResult(status='success', reason='rest completed', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=11.0, new_value=0.0, reason='physical cost/recovery from rest', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.rest', old_value=0.1, new_value=0.19, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='rest and recover from current pressures', preconditions=['declared: current location permits rest', 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'desires: belonging=89.000'], downstream=[])"
+      ],
+      "105": [
+        "Event(id='event-105-yan-contact_person', tick=105, timestamp='0001-04-16T00:00:00', location='old_road', participants=['yan', 'rui'], causes=['tick-105-yan-contact'], facts=['Yan speaks with Rui at old_road.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=54.0, new_value=56.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=75.0, new_value=76.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.003935627539973493, new_value=3.0039356275399736, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=0.674765958043271, new_value=2.674765958043271, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.01208584131685116, new_value=1.0120858413168512, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.011956477903959695, new_value=1.5119564779039596, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.271, new_value=0.34390000000000004, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=96.53999999999995, new_value=54.53999999999995, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=100.0, new_value=90.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->rui): trust=56.000,affection=76.000,resentment=0.000,fear=0.000', 'desires: belonging=100.000,reconciliation=95.220'], downstream=[])"
+      ]
+    },
+    "checkpoints": {
+      "100": {
+        "tick": 100,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "hope": 0.02,
+            "joy": 0.0,
+            "resentment": 0.02
+          },
+          "yan": {
+            "hope": 0.02,
+            "joy": 0.01,
+            "love": 0.79
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.27,
+            "rest": 0.19
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.22,
+            "independent": 0.22
+          },
+          "yan": {
+            "capable": 0.22,
+            "independent": 0.22,
+            "loyal": 0.22,
+            "reliable": 0.22
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "active",
+              "stage": "1/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T44/A65/R0.0",
+          "yan:rui:T54.0/A75.0/R0.0"
+        ],
+        "belief_rows": 18
+      },
+      "250": {
+        "tick": 250,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.07
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "rest": 0.19
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.22,
+            "independent": 0.22
+          },
+          "yan": {
+            "capable": 0.22,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.28
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "active",
+              "stage": "1/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T44/A65/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 20
+      },
+      "500": {
+        "tick": 500,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "rest": 0.19
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.22,
+            "independent": 0.22
+          },
+          "yan": {
+            "capable": 0.22,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.28
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "active",
+              "stage": "1/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T44/A65/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 20
+      },
+      "750": {
+        "tick": 750,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "rest": 0.19
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.22,
+            "independent": 0.22
+          },
+          "yan": {
+            "capable": 0.22,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.28
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "active",
+              "stage": "1/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T44/A65/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 20
+      },
+      "1000": {
+        "tick": 1000,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "rest": 0.19
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.22,
+            "independent": 0.22
+          },
+          "yan": {
+            "capable": 0.22,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.28
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "active",
+              "stage": "1/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T44/A65/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 20
+      }
+    }
+  },
+  "mode_arb_1": {
+    "per_tick_actions": [
+      [
+        1,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        1,
+        "rui",
+        "travel",
+        "old_road"
+      ],
+      [
+        2,
+        "yan",
+        "travel",
+        "old_road"
+      ],
+      [
+        5,
+        "rui",
+        "travel",
+        "ridge"
+      ],
+      [
+        6,
+        "yan",
+        "travel",
+        "ridge"
+      ],
+      [
+        6,
+        "rui",
+        "travel",
+        "old_road"
+      ],
+      [
+        7,
+        "yan",
+        "rest",
+        ""
+      ],
+      [
+        7,
+        "rui",
+        "travel",
+        "ridge"
+      ],
+      [
+        8,
+        "yan",
+        "help_person",
+        "rui"
+      ],
+      [
+        8,
+        "rui",
+        "rest",
+        ""
+      ],
+      [
+        14,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        40,
+        "rui",
+        "travel",
+        "old_road"
+      ],
+      [
+        41,
+        "yan",
+        "travel",
+        "old_road"
+      ],
+      [
+        42,
+        "yan",
+        "contact_person",
+        "rui"
+      ],
+      [
+        112,
+        "yan",
+        "contact_person",
+        "rui"
+      ]
+    ],
+    "events_by_tick": {
+      "0": [
+        "Event(id='event-0-yan-contact_person', tick=0, timestamp='0001-01-01T00:00:00', location='river_town', participants=['yan', 'rui'], causes=['tick-0-yan-contact'], facts=['Yan speaks with Rui at river_town.', \"Yan advances the goal 'help an old friend' to stage 2/2: help the old friend.\"], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=48, new_value=50.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=72, new_value=73.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=0.0, new_value=2.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.0, new_value=0.08, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.0, new_value=0.08, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='goal', target_id='yan-1', field='current_stage', old_value=0, new_value=1, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.0, new_value=1.0, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.0, new_value=1.5, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=71.5, new_value=26.5, reason='event success satisfies reconciliation pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: river_town', 'co_located: rui', 'rel(yan->rui): trust=50.000,affection=73.000,resentment=0.000,fear=0.000', 'desires: reconciliation=70.000'], downstream=[])",
+        "Event(id='event-0-rui-travel', tick=0, timestamp='0001-01-01T00:00:00', location='old_road', participants=['rui', 'old_road'], causes=['tick-0-rui-travel'], facts=['Rui travels from river_town to old_road.', \"Rui advances the goal 'leave town' to stage 2/2: continue toward freedom.\"], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='river_town', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=1.0, new_value=4.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='current_stage', old_value=0, new_value=1, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.travel', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=80.0, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.curiosity', old_value=39.05, new_value=0.0, reason='event success satisfies curiosity pressure', kind='event_transition')], intent='explore beyond the familiar: old_road', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: old_road', 'co_located: none', 'rel(rui->old_road): none', 'desires: curiosity=35.000,freedom=80.000'], downstream=[])"
+      ],
+      "1": [
+        "Event(id='event-1-yan-travel', tick=1, timestamp='0001-01-02T00:00:00', location='old_road', participants=['yan', 'old_road', 'rui'], causes=['tick-1-yan-search-rui'], facts=['Yan travels from river_town to old_road.', 'Yan finds Rui at old_road.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='river_town', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=3.0, new_value=11.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=2.7, new_value=5.7, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=0.0, new_value=3.0, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.0, new_value=0.08, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was river_town', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->old_road): none', 'desires: belonging=4.000,reconciliation=26.500'], downstream=[])"
+      ],
+      "4": [
+        "Event(id='event-4-rui-travel', tick=4, timestamp='0001-01-05T00:00:00', location='ridge', participants=['rui', 'ridge'], causes=['tick-4-rui-travel'], facts=['Rui travels from old_road to ridge.', 'Rui achieves the goal: leave town.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='old_road', new_value='ridge', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=2.0, new_value=10.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=1.9683000000000002, new_value=4.9683, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=2.8655718400000003, new_value=5.86557184, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='current_stage', old_value=1, new_value=2, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='goal', target_id='rui-1', field='status', old_value='active', new_value='achieved', reason='goal fulfilled by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.travel', old_value=0.1, new_value=0.19, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=1.5, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.curiosity', old_value=10.150000000000002, new_value=0.0, reason='event success satisfies curiosity pressure', kind='event_transition')], intent='explore beyond the familiar: ridge', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: ridge', 'co_located: none', 'rel(rui->ridge): none', 'desires: curiosity=12.150'], downstream=[])"
+      ],
+      "5": [
+        "Event(id='event-5-yan-travel', tick=5, timestamp='0001-01-06T00:00:00', location='ridge', participants=['yan', 'ridge', 'rui'], causes=['tick-5-yan-search-rui'], facts=['Yan travels from old_road to ridge.', 'Yan finds Rui at ridge.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='old_road', new_value='ridge', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=5.0, new_value=13.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=3.7397700000000005, new_value=6.73977, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=2.1491788799999996, new_value=5.149178879999999, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was old_road', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'rel(yan->ridge): none', 'desires: belonging=16.000,reconciliation=32.500'], downstream=[])",
+        "Event(id='event-5-rui-travel', tick=5, timestamp='0001-01-06T00:00:00', location='old_road', participants=['rui', 'old_road'], causes=['tick-5-rui-travel'], facts=['Rui travels from ridge to old_road.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='ridge', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=10.0, new_value=18.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=4.47147, new_value=7.47147, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=5.396326092800001, new_value=8.3963260928, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition')], intent='explore beyond the familiar: old_road', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: old_road', 'co_located: none', 'rel(rui->old_road): none', 'desires: none'], downstream=[])"
+      ],
+      "6": [
+        "Event(id='event-6-yan-rest', tick=6, timestamp='0001-01-07T00:00:00', location='ridge', participants=['yan'], causes=['tick-6-yan-rest'], facts=['Yan rests at ridge.'], action_type='rest', action_result=ActionResult(status='success', reason='rest completed', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=13.0, new_value=0.0, reason='physical cost/recovery from rest', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.rest', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='rest and recover from current pressures', preconditions=['declared: current location permits rest', 'gate: satisfied'], observations=['location: ridge', 'co_located: none', 'desires: belonging=19.000,reconciliation=34.000'], downstream=[])",
+        "Event(id='event-6-rui-travel', tick=6, timestamp='0001-01-07T00:00:00', location='ridge', participants=['rui', 'ridge'], causes=['tick-6-rui-travel'], facts=['Rui travels from old_road to ridge.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='old_road', new_value='ridge', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=18.0, new_value=26.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=6.724323, new_value=9.724323, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=7.724620005376001, new_value=10.724620005376, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=1.5, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition')], intent='explore beyond the familiar: ridge', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: ridge', 'co_located: yan', 'rel(rui->ridge): none', 'desires: none'], downstream=[])"
+      ],
+      "7": [
+        "Event(id='event-7-yan-help_person', tick=7, timestamp='0001-01-08T00:00:00', location='ridge', participants=['yan', 'rui'], causes=['tick-7-yan-help'], facts=['Yan successfully helps Rui.', 'Yan achieves the goal: help an old friend.'], action_type='help_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='rui:yan', field='trust', old_value=44, new_value=49.0, reason='successful help received', kind='event_transition'), Consequence(target_type='relationship', target_id='rui:yan', field='affection', old_value=65, new_value=67.0, reason='successful help received', kind='event_transition'), Consequence(target_type='relationship', target_id='rui:yan', field='loyalty', old_value=55, new_value=58.0, reason='successful help received', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=5.0, reason='physical cost/recovery from help_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=26.0, new_value=11.0, reason=\"successful help addresses the target's fatigue\", kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=5.4592137, new_value=8.4592137, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=1.6751831869995115, new_value=2.6751831869995115, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=4.358265004032, new_value=6.358265004032, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.compassionate', old_value=0.0, new_value=0.08, reason='self-concept updated by success help_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success help_person', kind='event_transition'), Consequence(target_type='goal', target_id='yan-1', field='current_stage', old_value=1, new_value=2, reason='goal stage advanced by a world-state condition', kind='event_transition'), Consequence(target_type='goal', target_id='yan-1', field='status', old_value='active', new_value='achieved', reason='goal fulfilled by a world-state condition', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.respect', old_value=0.0, new_value=1.0, reason='personality-shaped reaction to help_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.902551305911355, new_value=1.902551305911355, reason='personality-shaped reaction to help_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.help_person', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='help Rui because their condition looks difficult', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'rel(yan->rui): trust=50.000,affection=73.000,resentment=0.000,fear=0.000', 'desires: belonging=22.000,reconciliation=35.500'], downstream=[])",
+        "Event(id='event-7-rui-rest', tick=7, timestamp='0001-01-08T00:00:00', location='ridge', participants=['rui'], causes=['tick-7-rui-rest'], facts=['Rui rests at ridge.'], action_type='rest', action_result=ActionResult(status='success', reason='rest completed', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=11.0, new_value=0.0, reason='physical cost/recovery from rest', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='habits.rest', old_value=0.0, new_value=0.1, reason='procedural learning from experienced value 1.0', kind='event_transition')], intent='rest and recover from current pressures', preconditions=['declared: current location permits rest', 'gate: satisfied'], observations=['location: ridge', 'co_located: yan', 'desires: none'], downstream=[])"
+      ],
+      "13": [
+        "Event(id='event-13-yan-contact_person', tick=13, timestamp='0001-01-14T00:00:00', location='ridge', participants=['yan', 'rui'], causes=['tick-13-yan-contact'], facts=['Yan speaks with Rui at ridge.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=50.0, new_value=52.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=73.0, new_value=74.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=4.495572987941699, new_value=7.495572987941699, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=2.2981650753873604, new_value=4.29816507538736, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.08, new_value=0.15360000000000001, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=5.982692819551761, new_value=6.982692819551761, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=1.2309320184327222, new_value=2.730932018432722, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.1, new_value=0.19, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=45.94, new_value=1.9399999999999977, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=43.0, new_value=33.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: ridge', 'co_located: rui', 'rel(yan->rui): trust=52.000,affection=74.000,resentment=0.000,fear=0.000', 'desires: belonging=40.000,reconciliation=44.500,responsibility=23.000'], downstream=[])"
+      ],
+      "39": [
+        "Event(id='event-39-rui-travel', tick=39, timestamp='0001-02-09T00:00:00', location='old_road', participants=['rui', 'old_road'], causes=['tick-39-rui-travel'], facts=['Rui travels from ridge to old_road.'], action_type='travel', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='rui', field='location', old_value='ridge', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.joy', old_value=0.30051225493558503, new_value=3.300512254935585, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.7989258034660155, new_value=3.7989258034660156, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.independent', old_value=0.28360704000000003, new_value=0.34091847680000004, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='identity_beliefs.capable', old_value=0.28360704000000003, new_value=0.34091847680000004, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='human_condition.desires.freedom', old_value=48.0, new_value=0.0, reason='event success satisfies freedom pressure', kind='event_transition')], intent='explore beyond the familiar: old_road', preconditions=['declared: destination is a place the actor can reach', 'gate: satisfied'], observations=['location: old_road', 'co_located: none', 'rel(rui->old_road): none', 'desires: freedom=48.000'], downstream=[])"
+      ],
+      "40": [
+        "Event(id='event-40-yan-travel', tick=40, timestamp='0001-02-10T00:00:00', location='old_road', participants=['yan', 'old_road', 'rui'], causes=['tick-40-yan-search-rui'], facts=['Yan travels from ridge to old_road.', 'Yan finds Rui at old_road.'], action_type='search_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='character', target_id='yan', field='location', old_value='ridge', new_value='old_road', reason='travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=8.0, reason='physical cost/recovery from travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.43586559793590096, new_value=3.435865597935901, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.hope', old_value=0.40582325244997924, new_value=3.4058232524499794, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.independent', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.capable', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success travel', kind='event_transition')], intent='search for Rui; last remembered location was ridge', preconditions=[\"declared: search is based on Rui's remembered or uncertain location\", 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->old_road): none', 'desires: belonging=100.000,reconciliation=39.380,responsibility=100.000'], downstream=[])"
+      ],
+      "41": [
+        "Event(id='event-41-yan-contact_person', tick=41, timestamp='0001-02-11T00:00:00', location='old_road', participants=['yan', 'rui'], causes=['tick-41-yan-contact'], facts=['Yan speaks with Rui at old_road.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=52.0, new_value=54.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=74.0, new_value=75.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=8.0, new_value=11.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=3.092279038142311, new_value=6.092279038142311, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=2.115496594541889, new_value=4.115496594541889, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.15360000000000001, new_value=0.221312, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=3.2154108000536357, new_value=4.215410800053636, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.357959134066808, new_value=1.857959134066808, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.19, new_value=0.271, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=42.199999999999996, new_value=0.0, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=100.0, new_value=90.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->rui): trust=54.000,affection=75.000,resentment=0.000,fear=0.000', 'desires: belonging=100.000,reconciliation=40.820,responsibility=100.000'], downstream=[])"
+      ],
+      "111": [
+        "Event(id='event-111-yan-contact_person', tick=111, timestamp='0001-04-22T00:00:00', location='old_road', participants=['yan', 'rui'], causes=['tick-111-yan-contact'], facts=['Yan speaks with Rui at old_road.'], action_type='contact_person', action_result=ActionResult(status='success', reason='action succeeded', probability=1.0), consequences=[Consequence(target_type='relationship', target_id='yan:rui', field='trust', old_value=54.0, new_value=56.0, reason='successful contact', kind='event_transition'), Consequence(target_type='relationship', target_id='yan:rui', field='affection', old_value=75.0, new_value=76.0, reason='successful contact', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.fatigue', old_value=0.0, new_value=3.0, reason='physical cost/recovery from contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.joy', old_value=0.003817292573512731, new_value=3.0038172925735127, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='emotions.love', old_value=0.6994317544680434, new_value=2.6994317544680433, reason='emotional response to success', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.loyal', old_value=0.221312, new_value=0.28360704000000003, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='identity_beliefs.reliable', old_value=0.28360704000000003, new_value=0.34091847680000004, reason='self-concept updated by success contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.hope', old_value=0.012302342623185485, new_value=1.0123023426231854, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='rui', field='emotions.resentment', old_value=0.011556931953950394, new_value=1.5115569319539504, reason='personality-shaped reaction to contact_person', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='habits.contact_person', old_value=0.271, new_value=0.34390000000000004, reason='procedural learning from experienced value 1.0', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.reconciliation', old_value=96.53999999999995, new_value=54.53999999999995, reason='event success satisfies reconciliation pressure', kind='event_transition'), Consequence(target_type='character', target_id='yan', field='human_condition.desires.belonging', old_value=100.0, new_value=90.0, reason='event success satisfies belonging pressure', kind='event_transition')], intent='address an important relationship', preconditions=['declared: target is at the same location', 'gate: satisfied'], observations=['location: old_road', 'co_located: rui', 'rel(yan->rui): trust=56.000,affection=76.000,resentment=0.000,fear=0.000', 'desires: belonging=100.000,reconciliation=95.220,responsibility=100.000'], downstream=[])"
+      ]
+    },
+    "checkpoints": {
+      "100": {
+        "tick": 100,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "fear": 0.0,
+            "hope": 0.03,
+            "joy": 0.01,
+            "resentment": 0.03,
+            "respect": 0.02,
+            "sorrow": 0.0
+          },
+          "yan": {
+            "hope": 0.02,
+            "joy": 0.01,
+            "love": 0.95
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.27,
+            "help_person": 0.1,
+            "rest": 0.1
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.34,
+            "independent": 0.34
+          },
+          "yan": {
+            "capable": 0.22,
+            "compassionate": 0.08,
+            "independent": 0.22,
+            "loyal": 0.22,
+            "reliable": 0.28
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T49.0/A67.0/R0.0",
+          "yan:rui:T54.0/A75.0/R0.0"
+        ],
+        "belief_rows": 21
+      },
+      "250": {
+        "tick": 250,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "fear": 0.0,
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0,
+            "respect": 0.0,
+            "sorrow": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.08
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "help_person": 0.1,
+            "rest": 0.1
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.34,
+            "independent": 0.34
+          },
+          "yan": {
+            "capable": 0.22,
+            "compassionate": 0.08,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.34
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T49.0/A67.0/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 23
+      },
+      "500": {
+        "tick": 500,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "fear": 0.0,
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0,
+            "respect": 0.0,
+            "sorrow": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "help_person": 0.1,
+            "rest": 0.1
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.34,
+            "independent": 0.34
+          },
+          "yan": {
+            "capable": 0.22,
+            "compassionate": 0.08,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.34
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T49.0/A67.0/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 23
+      },
+      "750": {
+        "tick": 750,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "fear": 0.0,
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0,
+            "respect": 0.0,
+            "sorrow": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "help_person": 0.1,
+            "rest": 0.1
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.34,
+            "independent": 0.34
+          },
+          "yan": {
+            "capable": 0.22,
+            "compassionate": 0.08,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.34
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T49.0/A67.0/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 23
+      },
+      "1000": {
+        "tick": 1000,
+        "locations": {
+          "rui": "old_road",
+          "yan": "old_road"
+        },
+        "emotions": {
+          "rui": {
+            "fear": 0.0,
+            "hope": 0.0,
+            "joy": 0.0,
+            "resentment": 0.0,
+            "respect": 0.0,
+            "sorrow": 0.0
+          },
+          "yan": {
+            "hope": 0.0,
+            "joy": 0.0,
+            "love": 0.0
+          }
+        },
+        "habits": {
+          "rui": {
+            "rest": 0.1,
+            "travel": 0.19
+          },
+          "yan": {
+            "contact_person": 0.34,
+            "help_person": 0.1,
+            "rest": 0.1
+          }
+        },
+        "identity_beliefs": {
+          "rui": {
+            "capable": 0.34,
+            "independent": 0.34
+          },
+          "yan": {
+            "capable": 0.22,
+            "compassionate": 0.08,
+            "independent": 0.22,
+            "loyal": 0.28,
+            "reliable": 0.34
+          }
+        },
+        "goals": {
+          "rui": [
+            {
+              "id": "rui-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ],
+          "yan": [
+            {
+              "id": "yan-1",
+              "status": "achieved",
+              "stage": "2/2"
+            }
+          ]
+        },
+        "relationship_axes": [
+          "rui:yan:T49.0/A67.0/R0.0",
+          "yan:rui:T56.0/A76.0/R0.0"
+        ],
+        "belief_rows": 23
+      }
+    }
+  }
+}

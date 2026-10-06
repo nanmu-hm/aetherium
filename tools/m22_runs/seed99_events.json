@@ -1,0 +1,1077 @@
+[
+  {
+    "id": "event-0-yan-contact_person",
+    "tick": 0,
+    "type": "contact_person",
+    "participants": [
+      "yan",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "trust",
+        "old_value": 48,
+        "new_value": 50.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "affection",
+        "old_value": 72,
+        "new_value": 73.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "physical cost/recovery from contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.love",
+        "old_value": 0.0,
+        "new_value": 2.0,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.loyal",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.reliable",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "goal",
+        "target_id": "yan-1",
+        "field": "current_stage",
+        "old_value": 0,
+        "new_value": 1,
+        "reason": "goal stage advanced by a world-state condition",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 0.0,
+        "new_value": 1.0,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.resentment",
+        "old_value": 0.0,
+        "new_value": 1.5,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "habits.contact_person",
+        "old_value": 0.0,
+        "new_value": 0.1,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.reconciliation",
+        "old_value": 71.5,
+        "new_value": 26.5,
+        "reason": "event success satisfies reconciliation pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-0-yan-contact"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-0-rui-travel",
+    "tick": 0,
+    "type": "travel",
+    "participants": [
+      "rui",
+      "old_road"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "location",
+        "old_value": "river_town",
+        "new_value": "old_road",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 8.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.joy",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 1.0,
+        "new_value": 4.0,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "goal",
+        "target_id": "rui-1",
+        "field": "current_stage",
+        "old_value": 0,
+        "new_value": 1,
+        "reason": "goal stage advanced by a world-state condition",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "habits.travel",
+        "old_value": 0.0,
+        "new_value": 0.1,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.desires.freedom",
+        "old_value": 80.0,
+        "new_value": 0.0,
+        "reason": "event success satisfies freedom pressure",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.desires.curiosity",
+        "old_value": 39.05,
+        "new_value": 0.0,
+        "reason": "event success satisfies curiosity pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-0-rui-travel"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-1-yan-travel",
+    "tick": 1,
+    "type": "search_person",
+    "participants": [
+      "yan",
+      "old_road",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "location",
+        "old_value": "river_town",
+        "new_value": "old_road",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 3.0,
+        "new_value": 11.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 2.7,
+        "new_value": 5.7,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.hope",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.0,
+        "new_value": 0.08,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-1-yan-search-rui"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-2-yan-rest",
+    "tick": 2,
+    "type": "rest",
+    "participants": [
+      "yan"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 11.0,
+        "new_value": 0.0,
+        "reason": "physical cost/recovery from rest",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "habits.rest",
+        "old_value": 0.0,
+        "new_value": 0.1,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-2-yan-rest"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-4-rui-travel",
+    "tick": 4,
+    "type": "travel",
+    "participants": [
+      "rui",
+      "ridge"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "location",
+        "old_value": "old_road",
+        "new_value": "ridge",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.fatigue",
+        "old_value": 2.0,
+        "new_value": 10.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.joy",
+        "old_value": 1.9683000000000002,
+        "new_value": 4.9683,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 2.8655718400000003,
+        "new_value": 5.86557184,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "goal",
+        "target_id": "rui-1",
+        "field": "current_stage",
+        "old_value": 1,
+        "new_value": 2,
+        "reason": "goal stage advanced by a world-state condition",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "goal",
+        "target_id": "rui-1",
+        "field": "status",
+        "old_value": "active",
+        "new_value": "achieved",
+        "reason": "goal fulfilled by a world-state condition",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "habits.travel",
+        "old_value": 0.1,
+        "new_value": 0.19,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.desires.freedom",
+        "old_value": 1.5,
+        "new_value": 0.0,
+        "reason": "event success satisfies freedom pressure",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.desires.curiosity",
+        "old_value": 10.150000000000002,
+        "new_value": 0.0,
+        "reason": "event success satisfies curiosity pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-4-rui-travel"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-5-yan-travel",
+    "tick": 5,
+    "type": "search_person",
+    "participants": [
+      "yan",
+      "ridge",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "location",
+        "old_value": "old_road",
+        "new_value": "ridge",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 8.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 3.7397700000000005,
+        "new_value": 6.73977,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.hope",
+        "old_value": 2.1491788799999996,
+        "new_value": 5.149178879999999,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-5-yan-search-rui"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-5-rui-rest",
+    "tick": 5,
+    "type": "rest",
+    "participants": [
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.fatigue",
+        "old_value": 10.0,
+        "new_value": 0.0,
+        "reason": "physical cost/recovery from rest",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "habits.rest",
+        "old_value": 0.0,
+        "new_value": 0.1,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-5-rui-rest"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-13-yan-contact_person",
+    "tick": 13,
+    "type": "contact_person",
+    "participants": [
+      "yan",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "trust",
+        "old_value": 50.0,
+        "new_value": 52.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "affection",
+        "old_value": 73.0,
+        "new_value": 74.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "physical cost/recovery from contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 2.9012499879417,
+        "new_value": 5.9012499879417,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.love",
+        "old_value": 1.4390967743619698,
+        "new_value": 3.43909677436197,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.loyal",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.reliable",
+        "old_value": 0.08,
+        "new_value": 0.15360000000000001,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 2.7694963964296377,
+        "new_value": 3.7694963964296377,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.resentment",
+        "old_value": 0.5839418349837221,
+        "new_value": 2.083941834983722,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "habits.contact_person",
+        "old_value": 0.1,
+        "new_value": 0.19,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.reconciliation",
+        "old_value": 45.94,
+        "new_value": 1.9399999999999977,
+        "reason": "event success satisfies reconciliation pressure",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.belonging",
+        "old_value": 43.0,
+        "new_value": 33.0,
+        "reason": "event success satisfies belonging pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-13-yan-contact"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-34-rui-travel",
+    "tick": 34,
+    "type": "travel",
+    "participants": [
+      "rui",
+      "old_road"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "location",
+        "old_value": "ridge",
+        "new_value": "old_road",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 8.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.joy",
+        "old_value": 0.21061199165875666,
+        "new_value": 3.2106119916587565,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 0.6543765183647153,
+        "new_value": 3.654376518364715,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "human_condition.desires.freedom",
+        "old_value": 43.5,
+        "new_value": 0.0,
+        "reason": "event success satisfies freedom pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-34-rui-travel"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-35-yan-travel",
+    "tick": 35,
+    "type": "search_person",
+    "participants": [
+      "yan",
+      "old_road",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "location",
+        "old_value": "ridge",
+        "new_value": "old_road",
+        "reason": "travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 8.0,
+        "reason": "physical cost/recovery from travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 0.5811379274636372,
+        "new_value": 3.5811379274636375,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.hope",
+        "old_value": 0.42205864433421025,
+        "new_value": 3.4220586443342103,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.independent",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.capable",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success travel",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-35-yan-search-rui"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-36-yan-contact_person",
+    "tick": 36,
+    "type": "contact_person",
+    "participants": [
+      "yan",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "trust",
+        "old_value": 52.0,
+        "new_value": 54.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "affection",
+        "old_value": 74.0,
+        "new_value": 75.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 8.0,
+        "new_value": 11.0,
+        "reason": "physical cost/recovery from contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 3.2230241347172734,
+        "new_value": 6.2230241347172734,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.love",
+        "old_value": 1.9211025916147295,
+        "new_value": 3.9211025916147295,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.loyal",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.reliable",
+        "old_value": 0.15360000000000001,
+        "new_value": 0.221312,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 3.0930642851438948,
+        "new_value": 4.093064285143894,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.resentment",
+        "old_value": 0.392638977363962,
+        "new_value": 1.892638977363962,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "habits.contact_person",
+        "old_value": 0.19,
+        "new_value": 0.271,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.reconciliation",
+        "old_value": 35.00000000000001,
+        "new_value": 0.0,
+        "reason": "event success satisfies reconciliation pressure",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.belonging",
+        "old_value": 100.0,
+        "new_value": 90.0,
+        "reason": "event success satisfies belonging pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-36-yan-contact"
+    ],
+    "downstream": []
+  },
+  {
+    "id": "event-106-yan-contact_person",
+    "tick": 106,
+    "type": "contact_person",
+    "participants": [
+      "yan",
+      "rui"
+    ],
+    "outcome": "success",
+    "consequences": [
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "trust",
+        "old_value": 54.0,
+        "new_value": 56.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "relationship",
+        "target_id": "yan:rui",
+        "field": "affection",
+        "old_value": 75.0,
+        "new_value": 76.0,
+        "reason": "successful contact",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.fatigue",
+        "old_value": 0.0,
+        "new_value": 3.0,
+        "reason": "physical cost/recovery from contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.joy",
+        "old_value": 0.0038992146724602873,
+        "new_value": 3.0038992146724603,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "emotions.love",
+        "old_value": 0.6663943468546507,
+        "new_value": 2.6663943468546507,
+        "reason": "emotional response to success",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.loyal",
+        "old_value": 0.221312,
+        "new_value": 0.28360704000000003,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "identity_beliefs.reliable",
+        "old_value": 0.221312,
+        "new_value": 0.28360704000000003,
+        "reason": "self-concept updated by success contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.hope",
+        "old_value": 0.01194528400741471,
+        "new_value": 1.0119452840074148,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "rui",
+        "field": "emotions.resentment",
+        "old_value": 0.011772648533400439,
+        "new_value": 1.5117726485334004,
+        "reason": "personality-shaped reaction to contact_person",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "habits.contact_person",
+        "old_value": 0.271,
+        "new_value": 0.34390000000000004,
+        "reason": "procedural learning from experienced value 1.0",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.reconciliation",
+        "old_value": 96.53999999999995,
+        "new_value": 54.53999999999995,
+        "reason": "event success satisfies reconciliation pressure",
+        "kind": "event_transition"
+      },
+      {
+        "target_type": "character",
+        "target_id": "yan",
+        "field": "human_condition.desires.belonging",
+        "old_value": 100.0,
+        "new_value": 90.0,
+        "reason": "event success satisfies belonging pressure",
+        "kind": "event_transition"
+      }
+    ],
+    "causes": [
+      "tick-106-yan-contact"
+    ],
+    "downstream": []
+  }
+]
