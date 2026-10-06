@@ -1,0 +1,65 @@
+========================================================================
+M25-R1  one-shot consequence-rollback retest + M26 part 1
+(read-only, anchored 0ba1699)
+========================================================================
+
+[Part 1: seed 3] yan (event-0-yan-contact_person)
+  relationship:yan:rui.trust: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  relationship:yan:rui.affection: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.fatigue: CROSSED w30=[2] w50=[2] new-cf-ev30=[]
+  character:yan.emotions.joy: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.emotions.love: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.loyal: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.reliable: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  goal:yan-1.current_stage: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.hope: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.resentment: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.habits.contact_person: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.desires.reconciliation: CROSSED w30=[6, 7] w50=[6, 7] new-cf-ev30=['event-6-yan-travel']
+
+[Part 1: seed 42] yan (event-0-yan-contact_person)
+  relationship:yan:rui.trust: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  relationship:yan:rui.affection: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.fatigue: CROSSED w30=[2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29] w50=[2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49] new-cf-ev30=['event-10-yan-travel', 'event-11-yan-rest', 'event-12-yan-travel', 'event-13-yan-travel']
+  character:yan.emotions.joy: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.emotions.love: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.loyal: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.reliable: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  goal:yan-1.current_stage: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.hope: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.resentment: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.habits.contact_person: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.desires.reconciliation: CROSSED w30=[9, 10, 11, 12, 14, 15] w50=[9, 10, 11, 12, 14, 15, 43, 44, 45] new-cf-ev30=['event-10-yan-travel', 'event-11-yan-help_person', 'event-12-yan-travel', 'event-14-yan-rest']
+
+[Part 1: seed 7] yan (event-13-yan-contact_person)
+  relationship:yan:rui.trust: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  relationship:yan:rui.affection: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.fatigue: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.emotions.joy: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.emotions.love: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.loyal: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.identity_beliefs.reliable: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.hope: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:rui.emotions.resentment: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.habits.contact_person: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.desires.reconciliation: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+  character:yan.human_condition.desires.belonging: NO-CROSSING w30=[] w50=[] new-cf-ev30=[]
+
+[Part 1 rollup] one-shot 30-tick crossings: 4/36
+  seed 3 yan ('character', 'yan', 'human_condition.fatigue'): ticks [2], new-cf-ev30=[]
+  seed 3 yan ('character', 'yan', 'human_condition.desires.reconciliation'): ticks [6, 7], new-cf-ev30=['event-6-yan-travel']
+  seed 42 yan ('character', 'yan', 'human_condition.fatigue'): ticks [2, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29], new-cf-ev30=['event-10-yan-travel', 'event-11-yan-rest', 'event-12-yan-travel', 'event-13-yan-travel']
+  seed 42 yan ('character', 'yan', 'human_condition.desires.reconciliation'): ticks [9, 10, 11, 12, 14, 15], new-cf-ev30=['event-10-yan-travel', 'event-11-yan-help_person', 'event-12-yan-travel', 'event-14-yan-rest']
+
+[Part 2: M26 narrative window, 1000 ticks, natural arm]
+
+  seed 3 / yan (('character', 'yan', 'human_condition.desires.reconciliation') survivor): 29 committed actions over 1000 ticks, 54 events, natural failure=0 (NOT OBSERVED if 0), causal-chain-links (2-5 tick re-action gaps)=1, ratio=0.04
+
+  seed 3 / yan (('character', 'yan', 'human_condition.fatigue') survivor): 29 committed actions over 1000 ticks, 54 events, natural failure=0 (NOT OBSERVED if 0), causal-chain-links (2-5 tick re-action gaps)=1, ratio=0.04
+
+  seed 42 / yan (('character', 'yan', 'human_condition.desires.reconciliation') survivor): 13 committed actions over 1000 ticks, 22 events, natural failure=0 (NOT OBSERVED if 0), causal-chain-links (2-5 tick re-action gaps)=2, ratio=0.17
+
+  seed 42 / yan (('character', 'yan', 'human_condition.fatigue') survivor): 13 committed actions over 1000 ticks, 22 events, natural failure=0 (NOT OBSERVED if 0), causal-chain-links (2-5 tick re-action gaps)=2, ratio=0.17
+
+M25-R1 VERDICT: CAUSAL-STORY-LOOP PROVEN (one-shot)
+M26 STATUS: narrative window observed; story quality judgment DEFERRED to owner/three-party discussion per 6014735499 ('只有当审计显示缺口能被明确定位时，才进入下一轮设计 intervention')
