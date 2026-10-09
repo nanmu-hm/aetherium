@@ -35,14 +35,21 @@ Five read-only checks, per v6 section references:
      +8.0, FAILURE_PRESSURE_MAP) vs actual capped delta.
   5. P1 dynamic counterfactual   (v6 s4 P1)
      Fixed candidate pool + all other inputs identical; mutate ONLY
-     the copy's desire_carriers; probe DecisionKernel.evaluate()
-     selection score. Expect score invariant. (Static grep was
-     already A1 = 0 carrier refs in decision.py.)
+     the copy's desire_carriers. Two probes:
+       5a. DecisionKernel.evaluate() .utility (does not cover
+           choose()/arbitration; static grep confirmed 0 carrier
+           refs in decision.py A1).
+       5b. DecisionKernel.choose() — compare chosen id,
+           selection_score, and quiet-gate output (closes the
+           v6 s4 selection_score gap).
+  6. P2 dynamic counterfactual  (v6 s4 P2)
+     Belonging-only threshold fixture: reconciliation/emotion
+     zeroed, belonging=80; only carrier lifecycle differs
+     (ACTIVE vs CONSUMED). Re-runs the real generate_action_pool()
+     on each copy. Proves candidate-generation gate only.
 
-P2 dynamic counterfactual is listed in the spec as the next step
-after these five; it requires constructing a belonging-only
-threshold fixture and is reported here as PENDING-SCOPED (built in
-a follow-up arm) to keep this run focused and not over-claim.
+  P2 and P1 (5a+5b) are all implemented as independent arms in this
+  tool and executed on every run — they are not PENDING.
 
 Nothing here modifies production code or test files. All world
 copies are in-memory; original world objects are never mutated.
