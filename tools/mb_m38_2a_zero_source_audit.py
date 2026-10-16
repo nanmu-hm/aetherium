@@ -2,24 +2,39 @@
 
 Anchored 0ba1699, executed on HEAD (ref pushed with this tool).
 Spec: PR#10 6206873426 v1 -> v2 per ChatGPT 6206900412 ->
-field-completeness pass per ChatGPT 6210708558 (full 5x40 dual-arm
-JSON, hc_urgency + chosen-action semantics, expanded action/event
-canonical fields, extended static writer patterns).
+field-completeness pass per ChatGPT 6210708558 + 6211111562
+(full 5x40 dual-arm JSON, POST-STEP time semantics, expanded
+action/event canonical with full risk + consequence content,
+extended static writer patterns, selection_score NOT-COLLECTED
+correct reason).
 
 Per-seed: two INDEPENDENT genesis worlds / engines (arm-N no probe,
 arm-P read-only probe). Canonical semantic world-field +
 SimulationResult comparison. PROBE-LEAKED on any unexplained
 semantic diff.
 
+TIME SEMANTICS (ChatGPT 6211111562 / Arena 6211112448):
+The probe runs AFTER engine.step() returns. All world-state and
+per-candidate readings are POST-STEP / COMMITTED-ACTION ONLY.
+They are NOT decision-time values and must not be used as
+signal->utility/selection process evidence.
+
 All observations come from production APIs or engine.step()
 outputs. Nothing is inferred across layers:
-- per_candidate_utility: DecisionKernel.evaluate()
-- chosen_action: engine.decision_kernel.choose() re-run (read-only)
-- human_condition_urgency: engine.decision_kernel._human_condition_urgency
-- selection_score: NOT OBSERVABLE in engine.step() output (internal
-  to choose(), not returned in SimulationResult) -> NOT-COLLECTED
-- action.score (raw candidate value, separate from selection_score)
-  IS collected where it exists on ActionCandidate
+- per_candidate_utility: engine.decision_kernel.evaluate() on
+  res.actions (committed actions) using POST-STEP world
+- chosen_action: res.actions (committed actions from step()),
+  NOT a choose() re-run
+- human_condition_urgency: engine.decision_kernel.
+  _human_condition_urgency(actor, chosen_action) POST-STEP
+- selection_score: NOT-COLLECTED. Decision-time candidate pool
+  is not retained in SimulationResult (generated + consumed
+  inside step() at simulation.py:89-108). Re-deriving requires
+  re-running generate_candidates()+choose() which mutates world.
+  _choice_noise uses a local Random(stable_seed) (decision.py:214-220)
+  and does NOT consume the engine RNG.
+- action.risks: full content (list of strings, models.py:116)
+- event.consequences: full content (Consequence objects, not count)
 
 No production/test/weight change.
 """
@@ -68,7 +83,8 @@ def world_canonical(world):
     }
 
 def _action_canonical(a):
-    """ActionCandidate stable semantic fields (not just id)."""
+    """ActionCandidate stable semantic fields (not just id).
+    risks is a list of strings (models.py:116) -- include full content."""
     return {
         "id": a.id,
         "actor_id": a.actor_id,
@@ -77,18 +93,34 @@ def _action_canonical(a):
         "motivation": a.motivation,
         "confidence": round(a.confidence, 9),
         "score": round(a.score, 9),
+        "risks": list(a.risks),
         "n_risks": len(a.risks),
     }
 
+def _consequence_canonical(cq):
+    """Consequence stable semantic fields (models.py, Consequence dataclass).
+    Include full content, not just count."""
+    return {
+        "target_type": getattr(cq, "target_type", ""),
+        "target_id": getattr(cq, "target_id", ""),
+        "field": getattr(cq, "field", ""),
+        "old_value": getattr(cq, "old_value", None),
+        "new_value": getattr(cq, "new_value", None),
+        "reason": getattr(cq, "reason", ""),
+    }
+
 def _event_canonical(e):
-    """Event stable semantic fields (not just id/type/tick)."""
+    """Event stable semantic fields (not just id/type/tick).
+    consequences: full content (Consequence objects), not just count."""
+    cons = getattr(e, "consequences", None) or []
     return {
         "id": e.id,
         "tick": e.tick,
         "location": e.location,
         "participants": list(e.participants),
         "action_type": e.action_type,
-        "n_consequences": len(getattr(e, "consequences", []) or []),
+        "consequences": [_consequence_canonical(cq) for cq in cons],
+        "n_consequences": len(cons),
     }
 
 def result_canonical(res):
@@ -107,25 +139,40 @@ def result_canonical(res):
 def probe_metrics(world, res, engine, actor_id=ACTOR):
     """Read-only per-tick probe metrics.
 
-    Every field is sourced from a production API or engine.step()
-    output -- nothing is inferred across layers.
+    TIME SEMANTICS (ChatGPT 6211111562 item 3 / Arena 6211112448):
+    This probe runs AFTER engine.step() returns, so all world-state
+    readings reflect the POST-STEP state. Fields are labeled
+    POST-STEP explicitly:
 
-    - n_desires / n_desires_active: world.memory_state.desires
-    - memory_urgency: computed here (same formula as
+    - n_desires / n_desires_active: POST-STEP world.memory_state.desires
+    - memory_urgency: POST-STEP, computed here (same formula as
       decision.py:167), read-only
-    - human_condition_urgency: engine.decision_kernel.
-      _human_condition_urgency(actor, chosen_action) -- the
-      ACTUAL chosen action from this tick's step()
-    - per_candidate_utility: engine.decision_kernel.evaluate()
-      on each committed action (same kernel instance the engine
-      uses internally; read-only)
-    - chosen_action: the first action in res.actions that belongs
-      to the ACTOR (res.actions is the engine's output for all
-      characters this tick); if the actor had no action this tick
-      (quiet arm), chosen_action = None
-    - selection_score: NOT-COLLECTED (internal to choose(), not
-      exposed in SimulationResult; cannot be re-derived without
-      re-running choose() which would change RNG state)
+    - human_condition_urgency: POST-STEP, computed via
+      engine.decision_kernel._human_condition_urgency(actor,
+      chosen_action) on the actor state AFTER step. NOT the
+      decision-time value. Labeled POST-STEP / COMMITTED-ACTION ONLY.
+    - per_candidate_utility: POST-STEP, re-evaluated via
+      engine.decision_kernel.evaluate(world, a) on res.actions
+      (committed actions) using the POST-STEP world. NOT the
+      original decision-time candidate pool. Labeled POST-STEP /
+      COMMITTED-ACTION ONLY.
+    - chosen_action_id/type/score: the first action in res.actions
+      belonging to the ACTOR. `score` is the raw ActionCandidate
+      value (models.py:122), NOT selection_score.
+    - selection_score: NOT-COLLECTED. It is computed inside
+      DecisionKernel.choose() (decision.py:236) and is not exposed
+      in SimulationResult. The decision-time candidate pool is not
+      retained in SimulationResult, so it cannot be re-derived
+      post-step without re-running the full generate_candidates()
+      + choose() pipeline, which would consume RNG state and mutate
+      world state. Correct reason per source: decision.py:214-220
+      _choice_noise uses a local Random(stable_seed) -- it does NOT
+      consume the engine's RNG. The actual reason selection_score
+      is NOT-COLLECTED is that the decision-time candidate pool is
+      not retained in SimulationResult (it is generated and
+      consumed inside step() at simulation.py:89-108).
+
+    No world mutation. All reads are pure.
     """
     ms = world.memory_state
     actor = world.characters[actor_id]
@@ -141,6 +188,7 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
     chosen_action = actor_actions[0] if actor_actions else None
 
     # hc_urgency for the ACTUAL chosen action (or 0.0 if none)
+    # NOTE: POST-STEP value, not decision-time
     if chosen_action is not None:
         hc_urg = engine.decision_kernel._human_condition_urgency(
             actor, chosen_action)
@@ -148,6 +196,8 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
         hc_urg = 0.0  # no action -> no urgency to report
 
     # per-candidate utility using the engine's own kernel instance
+    # NOTE: POST-STEP re-evaluation on committed actions, not the
+    # original decision-time candidate pool
     per_cand = []
     for a in res.actions:
         ev = engine.decision_kernel.evaluate(world, a)
@@ -159,6 +209,7 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
         })
 
     return {
+        "time_semantics": "POST-STEP / COMMITTED-ACTION ONLY",
         "n_desires": len(ms.desires),
         "n_desires_active": sum(
             1 for d in ms.desires.values()
@@ -170,8 +221,12 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
             chosen_action.action_type if chosen_action else None),
         "chosen_action_score": (
             round(chosen_action.score, 9) if chosen_action else None),
-        "selection_score": "NOT-COLLECTED (internal to choose(), "
-                            "not exposed in SimulationResult)",
+        "selection_score": (
+            "NOT-COLLECTED: decision-time candidate pool not retained "
+            "in SimulationResult; re-deriving requires re-running "
+            "generate_candidates()+choose() which mutates world/RNG. "
+            "Raw candidate score (models.py:122) is NOT selection_score."
+        ),
         "per_candidate_utility": per_cand,
         "actor_location": actor.location,
     }
@@ -215,14 +270,50 @@ def main():
             "seeds": SEEDS,
             "ticks": TICKS,
             "arm_N": "no probe (pure natural flow)",
-            "arm_P": "read-only probe (probe_metrics)",
+            "arm_P": "read-only probe (probe_metrics, POST-STEP)",
+            "time_semantics": (
+                "PROBE RUNS AFTER engine.step() RETURNS. All "
+                "world-state and per-candidate readings are "
+                "POST-STEP / COMMITTED-ACTION ONLY. They are NOT "
+                "decision-time values. Do NOT use them as "
+                "signal->utility/selection process evidence."),
             "selection_score_note": (
-                "NOT-COLLECTED: selection_score is computed inside "
-                "DecisionKernel.choose() and is not exposed in "
-                "SimulationResult. It cannot be re-derived without "
-                "re-running choose(), which would consume RNG state. "
-                "Per-candidate utility IS collected via "
-                "engine.decision_kernel.evaluate()."),
+                "NOT-COLLECTED: decision-time candidate pool is "
+                "not retained in SimulationResult (generated and "
+                "consumed inside step() at simulation.py:89-108). "
+                "Re-deriving requires re-running "
+                "generate_candidates()+choose() which mutates "
+                "world state. _choice_noise uses a local "
+                "Random(stable_seed) (decision.py:214-220) and "
+                "does NOT consume the engine RNG. Per-candidate "
+                "utility IS collected via "
+                "engine.decision_kernel.evaluate() on committed "
+                "actions (POST-STEP)."),
+            "field_source_table": {
+                "n_desires": "POST-STEP world.memory_state.desires",
+                "n_desires_active": "POST-STEP world.memory_state.desires",
+                "memory_urgency": (
+                    "POST-STEP, probe-computed (decision.py:167 "
+                    "formula), read-only"),
+                "human_condition_urgency": (
+                    "POST-STEP, "
+                    "engine.decision_kernel._human_condition_"
+                    "urgency(actor, chosen_action); NOT "
+                    "decision-time value"),
+                "per_candidate_utility": (
+                    "POST-STEP, "
+                    "engine.decision_kernel.evaluate(world, a) on "
+                    "res.actions (committed); NOT the original "
+                    "decision-time candidate pool"),
+                "chosen_action_id/type/score": (
+                    "res.actions (committed from step()); "
+                    "score = raw ActionCandidate value "
+                    "(models.py:122), NOT selection_score"),
+                "selection_score": "NOT-COLLECTED (see note above)",
+                "action.risks": "full content (models.py:116)",
+                "event.consequences": (
+                    "full content (Consequence dataclass, not count)"),
+            },
         },
     }
 
