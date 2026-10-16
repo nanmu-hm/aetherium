@@ -18,6 +18,7 @@ from types import SimpleNamespace
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+from engine.core.decision import DecisionKernel
 from engine.core.simulation import SimulationEngine
 from engine.genesis import build_genesis_world
 
@@ -54,11 +55,19 @@ def world_canonical(world):
     }
 
 def result_canonical(res):
+    """Canonical semantic projection of SimulationResult.
+    Includes landed-event semantic content (id/type/tick) so a
+    reviewer can verify the full event trail, not just a count."""
+    landed = [
+        {"id": e.id, "type": e.action_type, "tick": e.tick}
+        for e in res.events
+    ]
     return {
         "tick": res.tick,
         "n_actions": len(res.actions),
         "action_ids": tuple(a.id for a in res.actions),
         "n_events": len(res.events),
+        "landed_events": landed,
         "n_validation_errors": len(res.validation_errors),
     }
 
@@ -71,11 +80,25 @@ def probe_metrics(world, res, actor_id=ACTOR):
          if d.owner_id == actor_id and d.status == "active"),
         default=0.0,
     )
+    # per-candidate evaluate() utility (2A dynamic audit; read-only)
+    dk = DecisionKernel(
+        seed=world.simulation_seed
+        if world.simulation_seed is not None else 1)
+    per_cand = []
+    for a in res.actions:
+        ev = dk.evaluate(world, a)
+        per_cand.append({
+            "action_id": a.id,
+            "action_type": a.action_type,
+            "utility": round(ev.utility, 9),
+        })
     return {
         "n_desires": len(ms.desires),
-        "n_desires_active": sum(1 for d in ms.desires.values()
-                                 if d.owner_id == actor_id and d.status == "active"),
+        "n_desires_active": sum(
+            1 for d in ms.desires.values()
+            if d.owner_id == actor_id and d.status == "active"),
         "memory_urgency": round(mem_urg, 9),
+        "per_candidate_utility": per_cand,
         "actor_location": actor.location,
     }
 
@@ -109,6 +132,7 @@ def compare_arms(off_recs, on_recs):
     return leaked
 
 def main():
+    import subprocess, os
     out = {"seeds": {}, "flags": {"PROBE-LEAKED": []}}
     for seed in SEEDS:
         off = run_arm(seed, probe=False)
@@ -133,16 +157,37 @@ def main():
         }
         if leaked:
             out["flags"]["PROBE-LEAKED"].append(seed)
-    # static audit summary (grep results recorded separately in report)
-    out["static_audit"] = {
-        "add_desire_callers_engine_scripts": 0,
-        "direct_dict_write": 0,
-        "Desire_constructor_sites": [
-            "codec.py:120 (deserialize-only)",
-        ],
-        "advance_desires_creates": False,
-        "note": "grep full repo; production zero runtime write sites",
-    }
+
+    # Static audit: run grep in real time (not hardcoded summary),
+    # record the exact commands and hits so an independent reviewer
+    # can reproduce them verbatim.
+    root = str(Path(__file__).resolve().parent.parent)
+    static = {}
+
+    def _grep(pattern, paths):
+        cmd = ["grep", "-rn", pattern, *paths]
+        try:
+            r = subprocess.run(cmd, capture_output=True, text=True,
+                                cwd=root, timeout=30)
+            hits = [l for l in r.stdout.splitlines() if l.strip()]
+        except Exception as e:
+            hits = [f"grep-error: {e}"]
+        return {"cmd": " ".join(cmd), "hits": hits, "count": len(hits)}
+
+    static["add_desire_callers"] = _grep(
+        "add_desire", ["engine/", "scripts/"])
+    static["direct_dict_write"] = _grep(
+        r"memory_state\.desires\[", ["engine/", "scripts/"])
+    static["Desire_constructor"] = _grep(
+        r"Desire(", ["engine/", "scripts/"])
+    out["static_audit"] = static
+    out["static_audit_note"] = (
+        "Commands run in real time against repo root at run-start; "
+        "hits are recorded verbatim. codec.py:120 is expected to "
+        "appear in Desire_constructor (deserialize-only, not a "
+        "runtime writer). advance_desires/mark_desire do not create "
+        "new Desire objects — verified by reading kernel.py:269-283.")
+
     print(json.dumps(out, indent=2, default=str))
 
 if __name__ == "__main__":
