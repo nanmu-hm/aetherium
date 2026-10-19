@@ -27,12 +27,21 @@ outputs. Nothing is inferred across layers:
   NOT a choose() re-run
 - human_condition_urgency: engine.decision_kernel.
   _human_condition_urgency(actor, chosen_action) POST-STEP
-- selection_score: NOT-COLLECTED. Decision-time candidate pool
-  is not retained in SimulationResult (generated + consumed
-  inside step() at simulation.py:89-108). Re-deriving requires
-  re-running generate_candidates()+choose() which mutates world.
-  _choice_noise uses a local Random(stable_seed) (decision.py:214-220)
-  and does NOT consume the engine RNG.
+- selection_score: NOT-COLLECTED. The decision-time candidate pool
+  and the computed selection_score are not retained in
+  SimulationResult (the pool is generated and consumed inside
+  step() at simulation.py:89-108; only committed actions are
+  returned in res.actions). Recomputing post-step produces a
+  different pool because the world has already advanced; it does
+  not recover the historical decision-time value. Note:
+  generate_action_pool() (actions.py:87) and DecisionKernel.choose()
+  are both read-only with respect to world state (all appends are
+  local lists; _choice_noise uses a local Random(stable_seed),
+  decision.py:214-220). The actual barrier to faithful
+  decision-time capture is that step() itself advances world state
+  and cannot be replayed; a pre-step observation (generate pool
+  before step, read selection_score from a read-only choose()
+  call, then step) is the correct pattern (SV1 5b precedent).
 - action.risks: full content (list of strings, models.py:116)
 - event.consequences: full content (Consequence objects, not count)
 
@@ -158,19 +167,21 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
       COMMITTED-ACTION ONLY.
     - chosen_action_id/type/score: the first action in res.actions
       belonging to the ACTOR. `score` is the raw ActionCandidate
-      value (models.py:122), NOT selection_score.
-    - selection_score: NOT-COLLECTED. It is computed inside
-      DecisionKernel.choose() (decision.py:236) and is not exposed
-      in SimulationResult. The decision-time candidate pool is not
-      retained in SimulationResult, so it cannot be re-derived
-      post-step without re-running the full generate_candidates()
-      + choose() pipeline, which would consume RNG state and mutate
-      world state. Correct reason per source: decision.py:214-220
-      _choice_noise uses a local Random(stable_seed) -- it does NOT
-      consume the engine's RNG. The actual reason selection_score
-      is NOT-COLLECTED is that the decision-time candidate pool is
-      not retained in SimulationResult (it is generated and
-      consumed inside step() at simulation.py:89-108).
+      value (models.py:123), NOT selection_score.
+    - selection_score: NOT-COLLECTED. The decision-time candidate
+      pool and the computed selection_score are not retained in
+      SimulationResult (pool generated + consumed inside step()
+      at simulation.py:89-108; only committed actions returned
+      in res.actions). Post-step recomputation produces a
+      different pool because the world has advanced; it does not
+      recover the historical value. generate_action_pool()
+      (actions.py:87) and DecisionKernel.choose() are both
+      read-only w.r.t. world state (all appends are local lists;
+      _choice_noise uses a local Random(stable_seed),
+      decision.py:214-220). The actual barrier is that step()
+      itself advances world state and cannot be replayed; the
+      correct decision-time capture pattern is pre-step
+      observation (SV1 5b precedent).
 
     No world mutation. All reads are pure.
     """
@@ -222,10 +233,17 @@ def probe_metrics(world, res, engine, actor_id=ACTOR):
         "chosen_action_score": (
             round(chosen_action.score, 9) if chosen_action else None),
         "selection_score": (
-            "NOT-COLLECTED: decision-time candidate pool not retained "
-            "in SimulationResult; re-deriving requires re-running "
-            "generate_candidates()+choose() which mutates world/RNG. "
-            "Raw candidate score (models.py:122) is NOT selection_score."
+            "NOT-COLLECTED: decision-time candidate pool and "
+            "selection_score are not retained in SimulationResult "
+            "(pool generated + consumed inside step() at "
+            "simulation.py:89-108). Post-step recomputation "
+            "produces a different pool (world advanced); it does "
+            "not recover the historical value. generate_action_pool() "
+            "(actions.py:87) and choose() are read-only w.r.t. "
+            "world state; the barrier is that step() advances world "
+            "state and cannot be replayed. Correct decision-time "
+            "capture pattern: pre-step observation (SV1 5b). Raw "
+            "candidate score (models.py:123) is NOT selection_score."
         ),
         "per_candidate_utility": per_cand,
         "actor_location": actor.location,
@@ -278,14 +296,20 @@ def main():
                 "decision-time values. Do NOT use them as "
                 "signal->utility/selection process evidence."),
             "selection_score_note": (
-                "NOT-COLLECTED: decision-time candidate pool is "
-                "not retained in SimulationResult (generated and "
-                "consumed inside step() at simulation.py:89-108). "
-                "Re-deriving requires re-running "
-                "generate_candidates()+choose() which mutates "
-                "world state. _choice_noise uses a local "
-                "Random(stable_seed) (decision.py:214-220) and "
-                "does NOT consume the engine RNG. Per-candidate "
+                "NOT-COLLECTED: decision-time candidate pool and "
+                "selection_score are not retained in SimulationResult "
+                "(pool generated + consumed inside step() at "
+                "simulation.py:89-108; only committed actions in "
+                "res.actions). Post-step recomputation produces a "
+                "different pool (world advanced); does not recover "
+                "the historical value. generate_action_pool() "
+                "(actions.py:87) and choose() are read-only w.r.t. "
+                "world state; _choice_noise uses a local "
+                "Random(stable_seed) (decision.py:214-220) and does "
+                "NOT consume the engine RNG. The barrier is that "
+                "step() advances world state and cannot be replayed; "
+                "correct decision-time capture = pre-step "
+                "observation (SV1 5b precedent). Per-candidate "
                 "utility IS collected via "
                 "engine.decision_kernel.evaluate() on committed "
                 "actions (POST-STEP)."),
@@ -308,7 +332,7 @@ def main():
                 "chosen_action_id/type/score": (
                     "res.actions (committed from step()); "
                     "score = raw ActionCandidate value "
-                    "(models.py:122), NOT selection_score"),
+                    "(models.py:123), NOT selection_score"),
                 "selection_score": "NOT-COLLECTED (see note above)",
                 "action.risks": "full content (models.py:116)",
                 "event.consequences": (
@@ -352,7 +376,9 @@ def main():
         try:
             r = subprocess.run(cmd, capture_output=True, text=True,
                                 cwd=root, timeout=30)
-            hits = [l for l in r.stdout.splitlines() if l.strip()]
+            # Sort hits for cross-environment byte-stable hashing
+            # (filesystem traversal order is NOT deterministic).
+            hits = sorted(l for l in r.stdout.splitlines() if l.strip())
         except Exception as e:
             hits = [f"grep-error: {e}"]
         return {
@@ -386,6 +412,30 @@ def main():
         "they do not create new Desire objects. "
         "grep hit count != writer count; each hit must be "
         "classified as definition / read / deserialize / actual-write.")
+
+    # Cross-environment byte-stable hash: hash the env-INDEPENDENT
+    # canonical block (seeds + flags + static_audit) separately, so
+    # an expected SHA can be verified across Python versions without
+    # normalizing meta.python_version or grep traversal order.
+    # (grep hits are already sorted above; env fields stay in meta.)
+    import hashlib
+    canonical_block = {
+        "seeds": out["seeds"],
+        "flags": out["flags"],
+        "static_audit": out["static_audit"],
+    }
+    canon_bytes = json.dumps(
+        canonical_block, sort_keys=True,
+        separators=(",", ":"), default=str).encode("utf-8")
+    out["canonical_sha256"] = hashlib.sha256(canon_bytes).hexdigest()
+    out["canonical_sha256_note"] = (
+        "SHA256 of the env-INDEPENDENT canonical block "
+        "(seeds+flags+static_audit, keys sorted, no spaces). "
+        "Verify across environments WITHOUT normalizing "
+        "python_version or grep order: recompute this block hash "
+        "and compare. The full-stdout SHA still differs by env "
+        "(meta.python_version); use canonical_sha256 for "
+        "cross-env byte verification.")
 
     print(json.dumps(out, indent=2, default=str))
 
