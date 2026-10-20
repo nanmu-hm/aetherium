@@ -36,8 +36,19 @@ DESIGN (from spec v4+v4.1, per ChatGPT 6261429098 + Arena 6264564177):
 - L3 FAIL-L2b-identical-event bucket (R13b): L2b=FAIL + events
   identical at T* -> distinct from INCONCLUSIVE and OBSERVATIONAL
 - Six-function static audit + step() actual-branch check
-- 8 operational halt rules
+- 8 operational halt rules (f1d0c6c: halt-1/2/3 machine-executed
+  in-tool, halt-5/7/8 external/manual; see meta.halt_rules)
 - canonical_sha256 (env-independent block, same scheme as 2A v5)
+- L2a semantic boundary (gate C item, ChatGPT 6280949531): L2a
+  strictly tests the selection-score channel (choose() output,
+  decision.py:236). The v1 "chosen-differs OR" sub-clause was
+  removed (the per-candidate 'chosen' key did not exist on
+  candidate records; L2b handles chosen-action identity). L2a
+  PASS requires a shared same-ID candidate's selection_score to
+  differ by > 1e-9; it does NOT assert that a chosen-action
+  difference was observed. This boundary is preserved at the code
+  and JSON output level (per-candidate 'selection_score' field in
+  pre_step_pool at every tick; L2a verdict + detail in the output).
 
 INJECTION PARAMS (pre-registered, no change from v4):
   Desire(id="m38_2b_syn_<seed>", owner_id="rui",
@@ -687,22 +698,47 @@ def main():
                           "do NOT post-hoc reconcile."),
             },
             "halt_rules": {
-                "D1 (ChatGPT 6271192560 item 1)": (
-                    "Machine-executable halt checks now in-tool: "
+                "D1 (ChatGPT 6271192560 item 1, updated f1d0c6c "
+                "per Arena 6281604827 F2)": (
+                    "Machine-executable halt checks in-tool: "
                     "halt-1 (injection snapshot diff == +1, per "
-                    "seed), halt-2 (INERT mirror selection vs "
-                    "actual rui commit, all 400 arm-ticks), "
-                    "halt-3 (R12 strong form: control arm vs 2A "
-                    "v5 arm-N, rui committed + events, per seed "
-                    "x 40 ticks, re-run 2A arm-N in-process). "
-                    "Non-mechanizable conditions (halt-5 "
-                    "unknown-kind, halt-7 observer-side leak, "
-                    "halt-8 reproducibility/hash failure) are "
-                    "flagged but NOT machine-checked in-tool; "
-                    "they are external/manual verification. The "
-                    "v1 claim '8 halt rules all green' is "
+                    "seed); halt-2 (mirror purity — scans all 400 "
+                    "arm-ticks but the in-tool comparison is "
+                    "INERT-kind, type-level; Arena's full-kind "
+                    "ID-level check is an external supplement, "
+                    "0/400); halt-3 (f1d0c6c Blocker 1 form: "
+                    "in-tool comparison = world brief-field "
+                    "intersection (tick/n_memories/characters/"
+                    "locations) + result actions subset + events "
+                    "with full consequence content, vs in-process "
+                    "2A arm-N re-run; the REGISTERED FULL "
+                    "{world,result} 2A-v5 projection form is "
+                    "backed by Arena's external 0-mismatch "
+                    "x5x40 re-run, see F1 — in-tool is a "
+                    "strengthened form, not the full registered "
+                    "projection). Non-mechanizable conditions "
+                    "(halt-5 unknown-kind, halt-7 observer-side "
+                    "leak, halt-8 reproducibility/hash failure) "
+                    "are flagged but NOT machine-checked in-tool; "
+                    "they are external/manual. The v1 claim "
+                    "'8 halt rules all green' is "
                     "correction-replaced: only halt-1/2/3 are "
-                    "machine-executed; the rest are external."),
+                    "machine-executed in-tool; the rest are "
+                    "external."),
+                "F4 (ChatGPT 6280949531 item C, R6/R7 preserved, "
+                "per Arena 6281604827 F4)": (
+                    "R6: canonical-block note is imprecise — "
+                    "anchor_check is in-block via seeds (a "
+                    "superset, hash-integrity-neutral, wording "
+                    "not precise). R7: judge_l1 early-returns on "
+                    "the FIRST in-band candidate (order-dependent "
+                    "if multiple in-band candidates; not triggered "
+                    "this run, single in-band candidate at "
+                    "T*=4); L1-FAIL -> L2b INCONCLUSIVE is a "
+                    "post-v4 new mapping (documented in code, "
+                    "not triggered this run, L1 5/5 PASS). Both "
+                    "preserved verbatim, not hidden, per gate C. "
+                    "No verdict impact this run."),
             },
             "time_semantics": (
                 "Pre-step probe runs BEFORE engine.step() (Option a). "
