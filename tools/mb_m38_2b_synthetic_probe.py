@@ -172,6 +172,20 @@ def world_canonical_brief(world):
     }
 
 
+def _consequence_canonical(cq):
+    """Consequence full content (id + type + old/new), per registered L3
+    scope. D4/D5: L3 verifies event/consequence content, not just
+    event id or count."""
+    return {
+        "target_type": getattr(cq, "target_type", ""),
+        "target_id": getattr(cq, "target_id", ""),
+        "field": getattr(cq, "field", ""),
+        "old_value": getattr(cq, "old_value", None),
+        "new_value": getattr(cq, "new_value", None),
+        "reason": getattr(cq, "reason", ""),
+    }
+
+
 def result_canonical(res):
     actions = []
     for a in res.actions:
@@ -182,11 +196,13 @@ def result_canonical(res):
         })
     events = []
     for e in res.events:
+        cons = getattr(e, "consequences", None) or []
         events.append({
             "id": e.id, "tick": e.tick, "location": e.location,
             "action_type": e.action_type,
             "participants": list(e.participants),
-            "n_consequences": len(getattr(e, "consequences", []) or []),
+            "consequences": [_consequence_canonical(cq) for cq in cons],
+            "n_consequences": len(cons),
         })
     return {
         "tick": res.tick,
@@ -218,62 +234,99 @@ def compute_tstar(clean_flags, hc_series, mem_urg_series):
     return None  # no clean conduction-band tick -> INCONCLUSIVE
 
 
+def in_conduction_band(action_type, hc):
+    """Conduction band: non-travel hc < 0.64; travel 0.05 < hc < 0.64."""
+    if action_type == "travel":
+        return 0.05 < hc < 0.64
+    return hc < 0.64
+
+
 def judge_l1(control_cand, treat_cand, t_star, hc_c_at_tstar):
-    """L1 at T*: PASS iff a conduction-band candidate's utility
-    changed by the expected amount (within TOL)."""
-    # Find same-ID candidate in both arms' pools at T*
-    for c in control_cand:
-        for t_c in treat_cand:
-            if c["id"] == t_c["id"]:
-                hc = c["hc_urgency"]
-                at = c["action_type"]
-                # check if in conduction band
-                if at == "travel":
-                    in_band = 0.05 < hc < 0.64
-                else:
-                    in_band = hc < 0.64
-                if not in_band:
-                    continue
-                expected_delta = 0.35 * (0.64 - hc)
-                observed_delta = (t_c["utility"] or 0) - (c["utility"] or 0)
-                if abs(observed_delta - expected_delta) <= TOL:
-                    return "PASS", hc, expected_delta, observed_delta
-    # No conduction-band candidate passed -> INCONCLUSIVE-by-ceiling
-    return "INCONCLUSIVE-by-ceiling", None, None, None
+    """L1 at T*. Per-candidate, same-ID, conduction-band candidates only.
+    D4 (ChatGPT 6271192560 item 4): a REAL FAIL-by-mechanism branch is
+    required, distinct from INCONCLUSIVE-by-ceiling and INVALID/HALT.
+      - PASS: a conduction-band same-ID candidate's observed delta ==
+        expected 0.35*(0.64-hc) within TOL.
+      - FAIL-by-mechanism: a conduction-band same-ID candidate EXISTS
+        but its observed delta does NOT equal the expected value
+        (max() wiring broken / signal not transmitted) -> a real
+        mechanism result, NOT an anchor/injection error.
+      - INCONCLUSIVE-by-ceiling: NO conduction-band candidate exists
+        at T* (all candidates in ceiling ranges) -> signal present
+        but no transmission detectable; not a mechanism failure.
+      - INVALID/HALT is NOT an L1 verdict; it is raised by the anchor
+        check (halt-8) when the clean anchor is broken or memory_urgency
+        did not register. See run_arm / main.
+    Returns (verdict, hc_c, expected_delta, observed_delta, detail)."""
+    by_id_c = {c["id"]: c for c in control_cand}
+    seen_in_band = False
+    for cid, t_c in ((c["id"], c) for c in treat_cand):
+        c = by_id_c.get(cid)
+        if c is None:
+            continue
+        hc = c["hc_urgency"]
+        at = c["action_type"]
+        if not in_conduction_band(at, hc):
+            continue
+        seen_in_band = True
+        expected_delta = 0.35 * (0.64 - hc)
+        observed_delta = (t_c.get("utility") or 0) - (c.get("utility") or 0)
+        if abs(observed_delta - expected_delta) <= TOL:
+            return ("PASS", hc, expected_delta, observed_delta,
+                    {"candidate": cid, "action_type": at})
+        # A conduction-band candidate whose utility did NOT move the
+        # expected amount: FAIL-by-mechanism (real result).
+        return ("FAIL-by-mechanism", hc, expected_delta, observed_delta,
+                {"candidate": cid, "action_type": at})
+    if seen_in_band:
+        return ("FAIL-by-mechanism", None, None, None,
+                {"note": "conduction-band candidate present but no "
+                          "expected delta observed"})
+    # No conduction-band candidate at T* -> ceiling, not a failure.
+    return ("INCONCLUSIVE-by-ceiling", None, None, None,
+            {"note": "no conduction-band candidate at T* (ceiling)"})
 
 
 def judge_l2a(control_cand, treat_cand, t_star):
     """L2a at T*: compare the REAL selection_score (choose() output,
     decision.py:236) for same-ID candidates in the post-arbitration
-    pool. PASS iff a shared candidate's selection_score differs by >
-    TOL, or the chosen action differs. INCONCLUSIVE if no shared
+    pool. D4 (ChatGPT 6271192560 item 4): PASS iff a shared candidate's
+    selection_score differs by > TOL. INCONCLUSIVE if no shared
     candidate has a comparable (non-None) selection_score, or no
-    difference is observed."""
+    difference is observed. The L2b layer handles chosen-action
+    identity; L2a is strictly the selection-score channel (no per-
+    candidate 'chosen' key on candidates, only on the arm-level
+    pre_step record)."""
     by_id_c = {c["id"]: c for c in control_cand}
-    shared = [c["id"] for c in treat_cand if c["id"] in by_id_c]
-    for cid in shared:
+    for cid in sorted(by_id_c.keys()):
         c = by_id_c[cid]
-        t_c = next(x for x in treat_cand if x["id"] == cid)
+        t_c = next((x for x in treat_cand if x["id"] == cid), None)
+        if t_c is None:
+            continue  # not a shared candidate
         cs, ts = c.get("selection_score"), t_c.get("selection_score")
         if cs is None or ts is None:
             continue  # no real selection_score for this candidate
         if abs(cs - ts) > TOL:
-            return "PASS", cid
-        # chosen differs for this shared candidate?
-    # chosen-action difference
-    c_chosen = [c["id"] for c in control_cand if c.get("chosen") is not None]
-    t_chosen = [c["id"] for c in treat_cand if c.get("chosen") is not None]
-    return "INCONCLUSIVE", None
+            return "PASS", {"candidate": cid, "control": cs, "treat": ts}
+    return "INCONCLUSIVE", {"note": "no shared candidate with a "
+                                     "comparable selection_score"}
 
 
 def judge_l2b(control_committed, treat_committed, l1_verdict, t_star):
     """L2b at T*: per each arm's real branch.
-    PASS iff L1=PASS AND committed outcomes differ.
-    FAIL iff L1=PASS AND committed outcomes identical.
+    D4 (ChatGPT 6271192560 item 4): compare the ACTUAL engine landed
+    action IDENTITY (id + action_type + actor_id), not just action
+    type. 'committed' here is the resolved rui action at T* for each
+    arm (a dict {id, action_type, actor_id} or None for no-action).
+    PASS iff L1=PASS AND committed action identities differ.
+    FAIL iff L1=PASS AND committed action identities identical.
     INCONCLUSIVE iff L1=INCONCLUSIVE-by-ceiling (ceiling explains
-    identical commit, NOT mechanism failure)."""
+    identical commit, NOT mechanism failure) or L1=FAIL-by-mechanism
+    (the mechanism layer already failed; commit comparison is N/A)."""
     if l1_verdict.startswith("INCONCLUSIVE"):
         return "INCONCLUSIVE"
+    if l1_verdict.startswith("FAIL"):
+        return "INCONCLUSIVE"  # upstream mechanism failure; L2b N/A
     # L1 = PASS: signal reached utility
     if control_committed != treat_committed:
         return "PASS"
@@ -282,32 +335,51 @@ def judge_l2b(control_committed, treat_committed, l1_verdict, t_star):
 
 
 def judge_l3(control_events, treat_events, t_star, l2b_verdict):
-    """L3 at T*: PASS iff landed event differs, attributable.
-    FAIL-L2b-identical-event (R13b) iff L2b=FAIL AND events identical.
-    OBSERVATIONAL iff difference only at later ticks.
+    """L3 at T*: D4 (ChatGPT 6271192560 item 4): verify landed event /
+    consequence CONTENT per the registered scope (event id + type +
+    tick + consequences), not just event id.
+    PASS iff a landed event or its consequence content differs at T*.
+    FAIL-L2b-identical-event (R13b) iff L2b=FAIL AND events are
+    identical at T*.
+    OBSERVATIONAL iff events differ only at later ticks (not T*).
     INCONCLUSIVE iff L2b INCONCLUSIVE."""
     if l2b_verdict == "INCONCLUSIVE":
         return "INCONCLUSIVE"
-    c_evt = json.dumps(sorted(
-        [e["id"] for e in control_events]), sort_keys=True)
-    t_evt = json.dumps(sorted(
-        [e["id"] for e in treat_events]), sort_keys=True)
-    if l2b_verdict == "FAIL" and c_evt == t_evt:
+
+    def _content(events):
+        # content = id + type + tick + consequences (registered scope)
+        return [
+            {
+                "id": e.get("id"),
+                "action_type": e.get("action_type"),
+                "tick": e.get("tick"),
+                "consequences": e.get("consequences", []),
+            }
+            for e in events]
+
+    c_content = _content(control_events)
+    t_content = _content(treat_events)
+    c_sorted = json.dumps(sorted(c_content, key=repr), default=str)
+    t_sorted = json.dumps(sorted(t_content, key=repr), default=str)
+    if l2b_verdict == "FAIL" and c_sorted == t_sorted:
         return "FAIL-L2b-identical-event"
-    if c_evt != t_evt:
+    if c_sorted != t_sorted:
         return "PASS"
-    # events identical but L2b=PASS (commit differed but events same
-    # at T*): observational, not PASS
     return "OBSERVATIONAL"
 
 
 def run_arm(seed, inject: bool):
     """Independent genesis world + engine.
-    If inject=True: add the synthetic Desire before the first step()."""
+    If inject=True: add the synthetic Desire before the first step().
+    D1 (halt-1): injection snapshot check — record the key set
+    BEFORE and AFTER the injection; diff must be exactly +1.
+    D5: full per-tick records with all registered fields (utility,
+    selection_score, hc, kind, commit/event, consequences)."""
     world = build_genesis_world()
     world.timestamp = "0001-01-01T00:00:00"
     engine = SimulationEngine(seed=seed, use_arbitration=True)
 
+    pre_inject_keys = set(world.memory_state.desires.keys())
     if inject:
         desire = Desire(
             id=f"m38_2b_syn_{seed}",
@@ -319,22 +391,121 @@ def run_arm(seed, inject: bool):
             status="active",
         )
         world.memory_state.add_desire(desire)
+    post_inject_keys = set(world.memory_state.desires.keys())
+    injection_snapshot = {
+        "pre_keys": sorted(pre_inject_keys),
+        "post_keys": sorted(post_inject_keys),
+        "added": sorted(post_inject_keys - pre_inject_keys),
+        "removed": sorted(pre_inject_keys - post_inject_keys),
+        "halt1_ok": (
+            sorted(post_inject_keys - pre_inject_keys) ==
+            ([f"m38_2b_syn_{seed}"] if inject else [])
+            and not (pre_inject_keys - post_inject_keys)
+        ),
+    }
 
     records = []
     for t in range(TICKS):
         tick_num = t + 1
-        # Pre-step probe (Option a mirror, read-only)
         probe = pre_step_probe(world, engine, ACTOR)
-        # Single step
         res = engine.step(world)
+        # D5: rui-level committed action + landed events per tick
+        rui_committed = next(
+            (a for a in res.actions if a.actor_id == ACTOR), None)
+        rui_event_ids = [
+            e.id for e in res.events
+            if ACTOR in (e.participants or [])]
         rec = {
             "tick": tick_num,
             "pre_step": probe,
             "world": world_canonical_brief(world),
             "result": result_canonical(res),
+            "rui_committed_id": (
+                rui_committed.id if rui_committed else None),
+            "rui_committed_type": (
+                rui_committed.action_type if rui_committed else None),
+            "rui_event_ids": rui_event_ids,
         }
         records.append(rec)
-    return records
+    return records, injection_snapshot
+
+
+def halt2_mismatch(off, on, seed):
+    """D1/halt-2: mirror purity — the INERT-tick mirrored selection
+    must match the actual step() committed action for rui. Any INERT
+    tick where the mirror's chosen action differs from the real
+    commit is a probe-side leak (the 6-call pre-step sequence is not
+    faithfully reflecting the engine's actual decision path)."""
+    mismatches = []
+    for ro, rp in zip(off, on):
+        for arm_label, r in (("control", ro), ("treat", rp)):
+            pre = r["pre_step"]
+            if pre["arbitration_kind"] == "inert":
+                if (pre["chosen_type"] or None) != \
+                        (r["rui_committed_type"] or None):
+                    mismatches.append(
+                        f"{seed}/{arm_label}/t{r['tick']} "
+                        f"mirror={pre['chosen_type']} "
+                        f"commit={r['rui_committed_type']}")
+    return mismatches
+
+
+def halt3_control_leak(off_records, seed):
+    """D1/halt-3 (R12 strong form): the control arm (no injection,
+    with pre-step probe) must tick-for-tick match 2A v5 arm-N
+    (no injection, no probe) on rui committed actions + landed
+    events. If the control trajectory diverges from 2A arm-N, the
+    6-call pre-step probe is NOT pure-read and treatment results are
+    untrustworthy. Machine check: re-run 2A arm-N in-process (same
+    genesis + engine + seed, probe off) and compare. Empty = clean."""
+    mismatches = []
+    world_a = build_genesis_world()
+    world_a.timestamp = "0001-01-01T00:00:00"
+    eng_a = SimulationEngine(seed=seed, use_arbitration=True)
+    for i, ro in enumerate(off_records):
+        res_a = eng_a.step(world_a)
+        tick = i + 1
+        a_rui = next((a for a in res_a.actions if a.actor_id == ACTOR),
+                     None)
+        b_rui = next((a for a in ro["result"]["actions"]
+                      if a.get("actor_id") == ACTOR), None)
+        a_type = a_rui.action_type if a_rui else None
+        b_type = b_rui["action_type"] if b_rui else None
+        if a_type != b_type:
+            mismatches.append(
+                f"seed {seed} t{tick} 2A-arm-N commit={a_type} "
+                f"vs 2B-control commit={b_type}")
+        a_ev = sorted(e.id for e in res_a.events)
+        b_ev = sorted(e["id"] for e in ro["result"]["events"])
+        if a_ev != b_ev:
+            mismatches.append(
+                f"seed {seed} t{tick} 2A-arm-N events={a_ev} "
+                f"vs 2B-control events={b_ev}")
+    return mismatches
+
+
+def first_divergence_rui(off, on):
+    """D2/R6 registered definition: first tick where ACTOR (rui)
+    committed action identity (id) OR ACTOR's landed event ids
+    differ between control and treatment. Cross-actor mixed commits
+    are NOT included (D2 fix: the v1 version compared actions[0]
+    which could belong to a non-rui actor)."""
+    for ro, rp in zip(off, on):
+        c_rui_id = next(
+            (a["id"] for a in ro["result"]["actions"]
+             if a.get("actor_id") == ACTOR), None)
+        t_rui_id = next(
+            (a["id"] for a in rp["result"]["actions"]
+             if a.get("actor_id") == ACTOR), None)
+        c_evt = sorted(
+            e["id"] for e in ro["result"]["events"]
+            if ACTOR in (e.get("participants") or []))
+        t_evt = sorted(
+            e["id"] for e in rp["result"]["events"]
+            if ACTOR in (e.get("participants") or []))
+        if c_rui_id != t_rui_id or c_evt != t_evt:
+            return ro["tick"]
+    return None
 
 
 def arms_world_identical(off_rec, on_rec):
@@ -387,6 +558,24 @@ def main():
                           "with these values, report as halt/leak-class; "
                           "do NOT post-hoc reconcile."),
             },
+            "halt_rules": {
+                "D1 (ChatGPT 6271192560 item 1)": (
+                    "Machine-executable halt checks now in-tool: "
+                    "halt-1 (injection snapshot diff == +1, per "
+                    "seed), halt-2 (INERT mirror selection vs "
+                    "actual rui commit, all 400 arm-ticks), "
+                    "halt-3 (R12 strong form: control arm vs 2A "
+                    "v5 arm-N, rui committed + events, per seed "
+                    "x 40 ticks, re-run 2A arm-N in-process). "
+                    "Non-mechanizable conditions (halt-5 "
+                    "unknown-kind, halt-7 observer-side leak, "
+                    "halt-8 reproducibility/hash failure) are "
+                    "flagged but NOT machine-checked in-tool; "
+                    "they are external/manual verification. The "
+                    "v1 claim '8 halt rules all green' is "
+                    "correction-replaced: only halt-1/2/3 are "
+                    "machine-executed; the rest are external."),
+            },
             "time_semantics": (
                 "Pre-step probe runs BEFORE engine.step() (Option a). "
                 "All per-candidate readings are DECISION-TIME (pre-step), "
@@ -394,11 +583,33 @@ def main():
         },
     }
 
-    for seed in SEEDS:
-        off = run_arm(seed, inject=False)
-        on = run_arm(seed, inject=True)
+    per_seed_records = {}  # seed -> (off, on, injection_snapshots)
 
-        # R2: clean flags per tick
+    for seed in SEEDS:
+        off, off_snap = run_arm(seed, inject=False)
+        on, on_snap = run_arm(seed, inject=True)
+        per_seed_records[seed] = (off, on, off_snap, on_snap)
+
+        # D1/halt-1: injection snapshot check (treatment arm only)
+        if not on_snap["halt1_ok"]:
+            out["flags"]["HALT"].append(
+                f"seed {seed}: halt-1 injection snapshot diff != "
+                f"+1 ({on_snap['added']} added, {on_snap['removed']} "
+                f"removed)")
+
+        # D1/halt-2: mirror purity (INERT mirror vs actual commit)
+        h2 = halt2_mismatch(off, on, seed)
+        if h2:
+            out["flags"]["PROBE-LEAKED"].extend(h2)
+
+        # D1/halt-3: control arm vs 2A v5 arm-N (R12 strong form)
+        h3 = halt3_control_leak(off, seed)
+        if h3:
+            out["flags"]["PROBE-LEAKED"].extend(
+                [f"seed {seed}: halt-3 control-vs-2A {m}"
+                 for m in h3[:3]])
+
+        # R2: clean flags per tick (pre-step, ex-desire)
         clean = {}
         for to, tp in zip(off, on):
             clean[to["tick"]] = arms_world_identical(to, tp)
@@ -423,6 +634,20 @@ def main():
             "t_star": t_star,
             "clean_flags": {str(k): v for k, v in clean.items()},
             "anchor_check": {},
+            "injection_snapshot": on_snap,
+        }
+
+        # D4: explicitly record the tick-1 ceiling INCONCLUSIVE
+        # (all candidates travel hc=0.800 >= 0.64 at tick 1, so L1
+        # at tick 1 is INCONCLUSIVE-by-ceiling; the causal verdict
+        # anchor is T*, not tick 1).
+        seed_out["tick1_record"] = {
+            "note": ("Tick 1 is the verified clean anchor "
+                     "(arms_world_identical_ex_desire=True) but is "
+                     "ceiling-degenerate: rui's pool is a single "
+                     "travel candidate with hc=0.800 (>= 0.64), so "
+                     "no conduction-band candidate exists. L1/L2a/"
+                     "L2b/L3 verdicts are made at T*, not tick 1."),
         }
 
         if t_star is None:
@@ -433,8 +658,8 @@ def main():
                 "L3": "INCONCLUSIVE",
             }
             seed_out["note"] = (
-                "No clean conduction-band tick >=2 in full trajectory; "
-                "INCONCLUSIVE (not FAIL).")
+                "No clean conduction-band tick >=2 in full "
+                "trajectory; INCONCLUSIVE (not FAIL).")
             out["seeds"][str(seed)] = seed_out
             continue
 
@@ -454,142 +679,173 @@ def main():
         for c in off_cand:
             for t_c in on_cand:
                 if c["id"] == t_c["id"]:
-                    anchor_delta = (t_c["utility"] or 0) - (c["utility"] or 0)
+                    anchor_delta = (
+                        (t_c.get("utility") or 0)
+                        - (c.get("utility") or 0))
                     break
+        anchor_match = (
+            t_star == ANCHOR_TSTAR
+            and abs((anchor_hc or 0) - ANCHOR_HC_AT_TSTAR) < 1e-6
+            and (anchor_delta is not None
+                 and abs(anchor_delta - ANCHOR_EXPECTED_DELTA) < 1e-6)
+        )
         seed_out["anchor_check"] = {
             "t_star_computed": t_star,
             "t_star_expected": ANCHOR_TSTAR,
-            "match": t_star == ANCHOR_TSTAR,
+            "match": anchor_match,
             "hc_at_tstar": anchor_hc,
             "hc_expected": ANCHOR_HC_AT_TSTAR,
-            "hc_match": abs((anchor_hc or 0) - ANCHOR_HC_AT_TSTAR) < 1e-6,
-            "delta_observed": round(anchor_delta, 9) if anchor_delta is not None else None,
+            "delta_observed": (
+                round(anchor_delta, 9)
+                if anchor_delta is not None else None),
             "delta_expected": round(ANCHOR_EXPECTED_DELTA, 9),
-            "delta_match": (
-                abs((anchor_delta or 0) - ANCHOR_EXPECTED_DELTA) < 1e-6
-                if anchor_delta is not None else False),
         }
-        if not seed_out["anchor_check"]["match"]:
+        # D4: anchor mismatch -> HALT (not post-hoc reconcile)
+        if not anchor_match:
             out["flags"]["HALT"].append(
-                f"seed {seed}: T* computed {t_star} != expected "
-                f"{ANCHOR_TSTAR}")
+                f"seed {seed}: anchor mismatch "
+                f"(T*={t_star} vs {ANCHOR_TSTAR}, "
+                f"hc={anchor_hc} vs {ANCHOR_HC_AT_TSTAR}, "
+                f"delta={round(anchor_delta, 9) if anchor_delta is not None else None}"
+                f" vs {round(ANCHOR_EXPECTED_DELTA, 9)})")
 
-        # L1
-        l1_v, l1_hc, l1_exp, l1_obs = judge_l1(
+        # L1 (D4: 5-tuple with detail)
+        l1_v, l1_hc, l1_exp, l1_obs, l1_detail = judge_l1(
             off_cand, on_cand, t_star, anchor_hc)
-        seed_out["L1"] = {"verdict": l1_v, "hc_c": l1_hc,
-                          "expected_delta": (
-                              round(l1_exp, 9) if l1_exp else None),
-                          "observed_delta": (
-                              round(l1_obs, 9) if l1_obs is not None else None)}
+        seed_out["L1"] = {
+            "verdict": l1_v,
+            "hc_c": l1_hc,
+            "expected_delta": (
+                round(l1_exp, 9) if l1_exp is not None else None),
+            "observed_delta": (
+                round(l1_obs, 9) if l1_obs is not None else None),
+            "detail": l1_detail,
+        }
 
         # L2a (only if both arms INERT at T*)
         off_kind = off_tstar["pre_step"]["arbitration_kind"]
         on_kind = on_tstar["pre_step"]["arbitration_kind"]
         both_inert = (off_kind == "inert" and on_kind == "inert")
-        seed_out["kinds_at_tstar"] = {"control": off_kind, "treat": on_kind}
+        seed_out["kinds_at_tstar"] = {
+            "control": off_kind, "treat": on_kind}
         if both_inert:
-            l2a_v, l2a_cand = judge_l2a(off_cand, on_cand, t_star)
-            seed_out["L2a"] = {"verdict": l2a_v, "candidate": l2a_cand}
+            l2a_v, l2a_detail = judge_l2a(off_cand, on_cand, t_star)
+            seed_out["L2a"] = {"verdict": l2a_v, "detail": l2a_detail}
         else:
-            seed_out["L2a"] = {"verdict": "N/A",
-                               "note": f"not both INERT at T* "
-                                       f"(kinds: {off_kind}/{on_kind})"}
+            seed_out["L2a"] = {
+                "verdict": "N/A",
+                "detail": {"note": (
+                    f"not both INERT at T* "
+                    f"(kinds: {off_kind}/{on_kind})")},
+            }
 
-        # L2b
-        off_committed = off_tstar["pre_step"]["chosen_type"]
-        on_committed = on_tstar["pre_step"]["chosen_type"]
-        # For RESOLVE: committed = arbitration.cand_id; for INERT:
-        # chosen from post_arb; for ABSTAIN: None
-        if off_kind == "resolve":
-            off_committed = off_tstar["pre_step"]["arbitration_cand_id"]
-        elif off_kind == "abstain":
-            off_committed = None
-        if on_kind == "resolve":
-            on_committed = on_tstar["pre_step"]["arbitration_cand_id"]
-        elif on_kind == "abstain":
-            on_committed = None
+        # L2b (D4: compare actual engine landed action IDENTITY,
+        # not just action type)
+        def _committed_identity(rec, kind):
+            # RESOLVE: engine commits arbitration.candidate_id
+            if kind == "resolve":
+                cand_id = rec["pre_step"]["arbitration_cand_id"]
+                return {
+                    "id": cand_id,
+                    "resolved_by": "arbitration.candidate_id"}
+            # INERT: engine commits choose() chosen from post_arb
+            if kind == "inert":
+                chosen = next(
+                    (c for c in rec["pre_step"]["pool"]
+                     if c["id"] == rec["pre_step"]["chosen_id"]),
+                    None)
+                return {
+                    "id": rec["pre_step"]["chosen_id"],
+                    "action_type": (
+                        chosen["action_type"]
+                        if chosen else None),
+                    "resolved_by": "choose()",
+                }
+            # ABSTAIN: no committed action
+            return {"id": None, "resolved_by": "abstain (empty pool)"}
+
+        off_committed = _committed_identity(off_tstar, off_kind)
+        on_committed = _committed_identity(on_tstar, on_kind)
         seed_out["committed_at_tstar"] = {
-            "control": off_committed, "treat": on_committed,
-        }
-        l2b_v = judge_l2b(off_committed, on_committed, l1_v, t_star)
+            "control": off_committed, "treat": on_committed}
+        l2b_v = judge_l2b(
+            off_committed, on_committed, l1_v, t_star)
         seed_out["L2b"] = {"verdict": l2b_v}
 
-        # L3
-        off_events = [
-            {"id": e["id"], "action_type": e["action_type"]}
-            for e in off_tstar["result"]["events"]]
-        on_events = [
-            {"id": e["id"], "action_type": e["action_type"]}
-            for e in on_tstar["result"]["events"]]
+        # L3 (D4: verify event + consequence CONTENT, not just id)
+        off_events = off_tstar["result"]["events"]
+        on_events = on_tstar["result"]["events"]
         l3_v = judge_l3(off_events, on_events, t_star, l2b_v)
         seed_out["L3"] = {"verdict": l3_v}
 
-        # Full 40-tick trajectories
+        # D5: full 40-tick trajectories with all registered fields
         seed_out["control_all_ticks"] = [
-            {"tick": r["tick"],
-             "committed": r["result"]["actions"][0]["action_type"]
-             if r["result"]["actions"] else None,
-             "events": [e["id"] for e in r["result"]["events"]],
-             "kind": r["pre_step"]["arbitration_kind"]}
+            {
+                "tick": r["tick"],
+                "committed_id": r["rui_committed_id"],
+                "committed_type": r["rui_committed_type"],
+                "events": [e["id"] for e in r["result"]["events"]],
+                "kind": r["pre_step"]["arbitration_kind"],
+            }
             for r in off]
         seed_out["treatment_all_ticks"] = [
-            {"tick": r["tick"],
-             "committed": r["result"]["actions"][0]["action_type"]
-             if r["result"]["actions"] else None,
-             "events": [e["id"] for e in r["result"]["events"]],
-             "kind": r["pre_step"]["arbitration_kind"]}
+            {
+                "tick": r["tick"],
+                "committed_id": r["rui_committed_id"],
+                "committed_type": r["rui_committed_type"],
+                "events": [e["id"] for e in r["result"]["events"]],
+                "kind": r["pre_step"]["arbitration_kind"],
+            }
             for r in on]
+
+        # D5: full pre-step per-candidate records at T* (utility,
+        # selection_score, hc, kind) — the "full per-tick records"
+        # the registered spec requires, not just the summary.
+        seed_out["pre_step_full_at_tstar"] = {
+            "control": off_cand,
+            "treat": on_cand,
+        }
 
         out["seeds"][str(seed)] = seed_out
 
-    # Overall aggregation (R4): PASS n/5 at T*, >= 2/5 for overall PASS
+    # Overall aggregation (R4): PASS n/5 at T*, >= 2/5 for overall
+    # PASS. D4: L2a N/A, L2b INCONCLUSIVE, L3 OBSERVATIONAL /
+    # FAIL-L2b-identical-event are NOT counted as PASS.
     overall = {}
     for layer in ("L1", "L2a", "L2b", "L3"):
         passes = 0
+        determinable = 0
         for s in SEEDS:
-            v = out["seeds"][str(s)].get(
-                layer, {}).get("verdict", "INCONCLUSIVE")
+            sd = out["seeds"][str(s)]
+            v = sd.get(layer, {}).get("verdict", "INCONCLUSIVE")
+            if v in ("PASS", "FAIL", "FAIL-by-mechanism",
+                     "FAIL-L2b-identical-event"):
+                determinable += 1
             if v == "PASS":
                 passes += 1
         overall[layer] = {
-            "pass_n": passes, "total": len(SEEDS),
+            "pass_n": passes,
+            "determinable_denominator": determinable,
+            "total": len(SEEDS),
             "overall_pass": passes >= 2,
         }
     out["overall"] = overall
 
-    # R6: first-divergence scan (supplementary)
+    # D2/R6: first-divergence scan, registered actor-level definition
+    # (rui committed action id + landed events). Reproduces
+    # {1:4, 3:6, 7:4, 42:6, 99:4} at the anchor.
     first_div = {}
     for s in SEEDS:
-        co = out["seeds"][str(s)].get("control_all_ticks", [])
-        to_ = out["seeds"][str(s)].get("treatment_all_ticks", [])
-        div_t = None
-        for co_r, to_r in zip(co, to_):
-            if co_r["committed"] != to_r["committed"]:
-                div_t = co_r["tick"]
-                break
-        first_div[str(s)] = div_t
+        off_s, on_s, *_ = per_seed_records[s]
+        first_div[str(s)] = first_divergence_rui(off_s, on_s)
     out["first_divergence"] = first_div
-
-    # Halt-3: control arm trajectory vs 2A v5 arm-N (R12)
-    # Compare per-seed committed + events at all ticks against
-    # 2A v5's accepted records. Since 2A v5 ran the SAME genesis
-    # world + engine (no injection, no probe), the control arm
-    # (no injection, with probe) should have identical committed
-    # actions IF the probe is pure-read. Any divergence at a tick
-    # where 2A arm-N had the same committed action = control leak.
-    # (Full {world,result} comparison would require 2A v5 output
-    #  files; here we check the committed-action + events subset
-    #  as the machine-checkable core, per R12's "stronger form"
-    #  note that full comparison is the ideal.)
-    out["halt3_note"] = (
-        "Control arm (no injection, with pre-step probe) vs 2A v5 "
-        "arm-N (no injection, no probe): if the 6-call pre-step "
-        "sequence is pure-read, committed actions and events should "
-        "match 2A v5 arm-N tick-for-tick. Any mismatch = control-"
-        "side leak. Full {world,result} comparison is the ideal "
-        "(R12); this check covers the committed + events subset "
-        "as the machine-verifiable core.")
+    out["first_divergence_note"] = (
+        "R6 supplementary metric, D2-corrected definition: first "
+        "tick where ACTOR (rui) committed action ID or rui's landed "
+        "event IDs differ between control and treatment. Cross-actor "
+        "mixed commits are excluded. Anchor-verified expected values "
+        "{1:4, 3:6, 7:4, 42:6, 99:4}. Verdicts are still made at "
+        "T*; this field is supplementary only.")
 
     # Static audit (6 functions + step() branch + add_desire callers)
     root = str(Path(__file__).resolve().parent.parent)
@@ -643,13 +899,51 @@ def main():
         "step() branch: simulation.py:91-107 RESOLVE commit "
         ":101-103, INERT/empty fallthrough :104-105.")
 
-    # canonical_sha256 (env-independent block, per spec v4.1 R7)
+    # D3 (ChatGPT 6271192560 item 3): canonical block keys aligned with
+    # the registered names from spec v4.1 R7:
+    #   { "seeds", "flags", "static_audit", "verdicts",
+    #     "attribution" }
+    # `verdicts` = per-seed L1/L2a/L2b/L3 + overall (was `overall`).
+    # `attribution` = per-seed T* + clean flags + first_divergence
+    #   (was `first_divergence` at top level; now under `attribution`
+    #    as registered). The canonical SHA is RECOMPUTED over the
+    #    new block; it will differ from the v1 tool's 88660bf9...
+    #    (which hashed a differently-named block). The v1 SHA is NOT
+    #    reused.
+    verdicts_block = {
+        "per_seed": {
+            str(s): {
+                "L1": out["seeds"][str(s)].get("L1", {}).get(
+                    "verdict"),
+                "L2a": out["seeds"][str(s)].get("L2a", {}).get(
+                    "verdict"),
+                "L2b": out["seeds"][str(s)].get("L2b", {}).get(
+                    "verdict"),
+                "L3": out["seeds"][str(s)].get("L3", {}).get(
+                    "verdict"),
+                "t_star": out["seeds"][str(s)].get("t_star"),
+            }
+            for s in SEEDS
+        },
+        "overall": out["overall"],
+    }
+    attribution_block = {
+        "t_star_per_seed": {
+            str(s): out["seeds"][str(s)].get("t_star")
+            for s in SEEDS
+        },
+        "clean_flags_per_seed": {
+            str(s): out["seeds"][str(s)].get("clean_flags", {})
+            for s in SEEDS
+        },
+        "first_divergence": out["first_divergence"],
+    }
     canonical_block = {
         "seeds": out["seeds"],
         "flags": out["flags"],
         "static_audit": out["static_audit"],
-        "overall": out["overall"],
-        "attribution": out.get("first_divergence", {}),
+        "verdicts": verdicts_block,
+        "attribution": attribution_block,
     }
     canon_bytes = json.dumps(
         canonical_block, sort_keys=True,
@@ -657,10 +951,13 @@ def main():
     out["canonical_sha256"] = hashlib.sha256(canon_bytes).hexdigest()
     out["canonical_sha256_note"] = (
         "SHA256 of env-INDEPENDENT canonical block "
-        "(seeds+flags+static_audit+overall+attribution, keys "
-        "sorted, compact separators). meta (python_version, "
-        "anchor_check, note fields) stays OUT. Same zero-"
-        "normalization scheme as 2A v5 5b10ea17....")
+        "(seeds+flags+static_audit+verdicts+attribution, keys "
+        "sorted, compact separators). D3 (ChatGPT 6271192560 item "
+        "3): block keys aligned with registered R7 names "
+        "(verdicts, attribution); meta (python_version, "
+        "anchor_check, note fields) stays OUT. The v1 tool's "
+        "canonical_sha256 (88660bf9...) hashed a differently-named "
+        "block and is NOT reused; this is a recomputed new value.")
 
     print(json.dumps(out, indent=2, default=str))
 
