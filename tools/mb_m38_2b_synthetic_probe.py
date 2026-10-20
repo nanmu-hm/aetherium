@@ -431,6 +431,15 @@ def run_arm(seed, inject: bool):
             "pre_step": probe,
             "world": world_canonical_brief(world),
             "result": result_canonical(res),
+            # D1/halt-3 (Blocker 1, ChatGPT 6284623561): store the
+            # POST-STEP full canonical projection (exact 2A v5 field
+            # set) so halt-3 compares the registered full {world,
+            # result} directly, not a field intersection. The
+            # post-step world IS the next tick's pre-step world;
+            # storing it here (after step()) gives halt-3 the full
+            # tick-level world state to match against 2A arm-N.
+            "world_post_full": world_canonical_full(world),
+            "result_post_full": result_canonical_full(res),
             "rui_committed_id": (
                 rui_committed.id if rui_committed else None),
             "rui_committed_type": (
@@ -491,8 +500,12 @@ def world_canonical_full(world):
 
 def result_canonical_full(res):
     """Full result canonical projection for halt-3 (R12 strong form).
-    Same field set as 2A v5's result_canonical: all actions with
-    full fields, all events with full consequence content."""
+    EXACT field set = 2A v5's result_canonical (zero drift):
+    all actions with full fields INCLUDING n_risks; all events with
+    full consequence content INCLUDING n_consequences; n_validation_
+    errors + validation_errors. Any field the 2A projection carries
+    is carried here, so halt-3 compares the registered full
+    projection directly (not a field intersection)."""
     actions = []
     for a in res.actions:
         actions.append({
@@ -503,6 +516,7 @@ def result_canonical_full(res):
             "confidence": round(a.confidence, 9),
             "score": round(a.score, 9),
             "risks": list(a.risks),
+            "n_risks": len(a.risks),
         })
     events = []
     for e in res.events:
@@ -521,6 +535,7 @@ def result_canonical_full(res):
                     "reason": getattr(cq, "reason", ""),
                 }
                 for cq in cons],
+            "n_consequences": len(cons),
         })
     return {
         "tick": res.tick,
@@ -533,14 +548,28 @@ def result_canonical_full(res):
     }
 
 
+def _world_diff_keys(a_world, b_world):
+    """Top-level keys that differ between two full world canonical
+    projections (for audit evidence, not the comparison itself)."""
+    return [k for k in set(a_world) | set(b_world)
+            if a_world.get(k) != b_world.get(k)]
+
+
 def halt3_control_leak(off_records, seed):
-    """D1/halt-3 (R12 strong form, Blocker 1 fix): the control arm
-    (no injection, with pre-step probe) must tick-for-tick match
-    2A v5 arm-N (no injection, no probe) on the FULL {world,
-    result} canonical projection — not just rui action type +
-    event IDs. Machine check: re-run 2A arm-N in-process and
-    compare world_canonical_full + result_canonical_full at every
-    tick. Any mismatch = control-side leak -> PROBE-LEAKED.
+    """D1/halt-3 (R12 strong form, Blocker 1 final form per ChatGPT
+    6284623561): the control arm (no injection, with pre-step probe)
+    must tick-for-tick match 2A v5 arm-N (no injection, no probe) on
+    the FULL registered {world, result} canonical projection — the
+    complete 2A v5 field set, NOT a field intersection. Machine
+    check: re-run 2A arm-N in-process; for every tick compare the
+    in-process 2A arm-N's world_canonical_full + result_canonical_full
+    DIRECTLY (exact dict equality) against the 2B control arm's
+    stored POST-STEP full projections (ro['world_post_full'] /
+    ro['result_post_full'], captured after engine.step() in run_arm).
+    Any per-tick mismatch in ANY field -> audit evidence + PROBE-
+    LEAKED. This is the tool-internal fail-closed check the gate
+    requires; the external Arena 0-x5x40 re-run remains independent
+    evidence but does not substitute for this in-tool check.
     Empty = clean."""
     mismatches = []
     world_a = build_genesis_world()
@@ -549,78 +578,35 @@ def halt3_control_leak(off_records, seed):
     for i, ro in enumerate(off_records):
         res_a = eng_a.step(world_a)
         tick = i + 1
-        # Full world projection comparison
+        # 2A arm-N in-process FULL canonical projections
         a_world = world_canonical_full(world_a)
-        b_world_src = ro["world"]
-        # Reconstruct the full world canonical from the 2B control
-        # arm's pre-step world (the pre-step world IS the 2A arm-N
-        # post-step world at the same tick, since the 6-call probe
-        # is pure-read and step() advances the world identically).
-        # But the 2B control arm's `world` field is world_canonical_brief
-        # (a subset). To do the full comparison we need the actual
-        # 2B control arm's post-step world, which is not stored.
-        # Instead: compare the 2A arm-N full projection against the
-        # 2B control arm's result projection (which IS stored in full
-        # via result_canonical). For world, compare the brief fields
-        # that ARE stored (tick, n_memories, characters, locations).
-        b_world_brief = {
-            "tick": b_world_src["tick"],
-            "n_memories": b_world_src.get("n_memories"),
-            "characters": {
-                k: {kk: vv for kk, vv in v.items()}
-                for k, v in b_world_src["characters"].items()},
-            "locations": b_world_src["locations"],
-        }
-        a_world_brief = {
-            "tick": a_world["tick"],
-            "n_memories": a_world["n_memories"],
-            "characters": {k: {kk: vv for kk, vv in v.items()
-                               if kk in ("id", "status", "location",
-                                         "desires", "emotions",
-                                         "mem_count")}
-                           for k, v in a_world["characters"].items()},
-            "locations": a_world["locations"],
-        }
-        if a_world_brief != b_world_brief:
-            diff_keys = [k for k in a_world_brief
-                         if a_world_brief.get(k) != b_world_brief.get(k)]
-            mismatches.append(
-                f"seed {seed} t{tick} 2A-arm-N vs 2B-control "
-                f"world diff keys={diff_keys}")
-        # Full result projection comparison (events + consequences)
         a_res = result_canonical_full(res_a)
-        b_res = ro["result"]  # 2B control arm's result_canonical
-        # Compare the fields that 2B stores (actions, events,
-        # consequences) against 2A's full result projection.
-        a_actions = [
-            {"id": a["id"], "actor_id": a["actor_id"],
-             "action_type": a["action_type"],
-             "score": a["score"]}
-            for a in a_res["actions"]]
-        b_actions = [
-            {"id": b["id"], "actor_id": b["actor_id"],
-             "action_type": b["action_type"],
-             "score": b["score"]}
-            for b in b_res["actions"]]
-        a_events = [
-            {"id": e["id"], "tick": e["tick"],
-             "action_type": e["action_type"],
-             "consequences": e["consequences"]}
-            for e in a_res["events"]]
-        b_events = [
-            {"id": e["id"], "tick": e["tick"],
-             "action_type": e["action_type"],
-             "consequences": e["consequences"]}
-            for e in b_res["events"]]
-        if a_actions != b_actions:
+        # 2B control arm stored POST-STEP FULL canonical projections
+        b_world = ro.get("world_post_full")
+        b_res = ro.get("result_post_full")
+        # fail-closed: if the stored full projections are missing,
+        # that itself is a halt (cannot verify the full check).
+        if b_world is None or b_res is None:
+            mismatches.append(
+                f"seed {seed} t{tick} MISSING stored full "
+                f"post-step projection (world_post_full / "
+                f"result_post_full) — cannot verify halt-3")
+            continue
+        # FULL world projection: exact dict equality (all 2A fields).
+        if a_world != b_world:
+            dk = _world_diff_keys(a_world, b_world)
             mismatches.append(
                 f"seed {seed} t{tick} 2A-arm-N vs 2B-control "
-                f"actions differ")
-        if a_events != b_events:
+                f"WORLD full-projection diff keys={dk}")
+        # FULL result projection: exact dict equality (all 2A fields
+        # incl. n_risks / n_consequences / full consequence content).
+        if a_res != b_res:
             mismatches.append(
                 f"seed {seed} t{tick} 2A-arm-N vs 2B-control "
-                f"events/consequences differ")
+                f"RESULT full-projection diff "
+                f"(fields={sorted(set(a_res) | set(b_res))})")
     return mismatches
+
 
 
 def first_divergence_rui(off, on):
