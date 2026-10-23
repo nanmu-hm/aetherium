@@ -1,0 +1,2 @@
+POSITIVE: wrote /tmp/m39_sandbox/02d22c0a/_selftest_positive.txt OK
+NEGATIVE-OK: write to /home/ming/aetherium/.worktrees/m-b-ab/engine/core/_selftest_negative_DO_NOT_WRITE.txt blocked (SystemExit)

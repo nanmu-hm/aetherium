@@ -1,0 +1,3 @@
+subprocess_events: ["subprocess.Popen", "subprocess.Popen", "subprocess.Popen", "subprocess.Popen", "subprocess.Popen", "subprocess.Popen", "subprocess.Popen", "subprocess.Popen"]
+fcntl_events: []
+strace_forbidden: []

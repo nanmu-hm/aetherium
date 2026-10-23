@@ -1,0 +1,22 @@
+{
+  "git_after": "e6d5e5482025445363052e9c8b8a0d0a13e919c75702c5bf840e24a81192dceb",
+  "git_before": "e6d5e5482025445363052e9c8b8a0d0a13e919c75702c5bf840e24a81192dceb",
+  "git_unchanged": true,
+  "python": "3.14.4 (main, Aug 20 2026, 10:41:58) [GCC 15.2.0]",
+  "ref": "10ab9e4",
+  "run_id": "02d22c0a",
+  "seeds": [
+    1,
+    3,
+    7,
+    42,
+    99
+  ],
+  "stopped": [],
+  "strace_cmd": "strace -f -y -e trace=file,write,pwrite64,writev,pwritev,truncate,ftruncate,dup,dup2,dup3,fcntl,close,close_range,process",
+  "tick0_hash": "470fcbaa2ad611d4a62064e8a5cc182851ea2a6f5e6a58082ebd5baee5654671",
+  "ticks_per_seed": 40,
+  "write_leaks": [
+    "open /home/ming/aetherium/.worktrees/m-b-ab/engine/core/_selftest_negative_DO_NOT_WRITE.txt w"
+  ]
+}

@@ -1,0 +1,718 @@
+774376 execve("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/bin/python", ["python", "-B", "-c", "\nimport sys; sys.path.insert(0,\"/home/ming/aetherium/.worktrees/m-b-ab\")\nfrom engine.genesis import build_genesis_world\nfrom eng"...], 0x7ffc41120cf8 /* 137 vars */) = 0
+774376 readlinkat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/proc/self/exe", "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14", 4096) = 72
+774376 access("/etc/ld.so.preload", R_OK) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/glibc-hwcaps/x86-64-v3/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/glibc-hwcaps/x86-64-v3/", 0x7ffc2cb01250, 0) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/glibc-hwcaps/x86-64-v2/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/glibc-hwcaps/x86-64-v2/", 0x7ffc2cb01250, 0) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/", {st_mode=S_IFDIR|0775, st_size=4096, ...}, 0) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/glibc-hwcaps/x86-64-v3/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/glibc-hwcaps/x86-64-v3/", 0x7ffc2cb01250, 0) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/glibc-hwcaps/x86-64-v2/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/glibc-hwcaps/x86-64-v2/", 0x7ffc2cb01250, 0) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/libpthread.so.0", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 newfstatat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/", {st_mode=S_IFDIR|0755, st_size=4096, ...}, 0) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/etc/ld.so.cache", O_RDONLY|O_CLOEXEC) = 3</etc/ld.so.cache>
+774376 close(3</etc/ld.so.cache>)       = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/libpthread.so.0", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/libpthread.so.0>
+774376 close(3</usr/lib/x86_64-linux-gnu/libpthread.so.0>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/libdl.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/libdl.so.2", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/libdl.so.2", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/libdl.so.2>
+774376 close(3</usr/lib/x86_64-linux-gnu/libdl.so.2>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/libutil.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/libutil.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/libutil.so.1", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/libutil.so.1>
+774376 close(3</usr/lib/x86_64-linux-gnu/libutil.so.1>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/libm.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/libm.so.6", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/libm.so.6>
+774376 close(3</usr/lib/x86_64-linux-gnu/libm.so.6>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/librt.so.1", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/librt.so.1", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/librt.so.1>
+774376 close(3</usr/lib/x86_64-linux-gnu/librt.so.1>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/../lib/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/llama/llama-b10853/libc.so.6", O_RDONLY|O_CLOEXEC) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/libc.so.6", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/libc.so.6>
+774376 close(3</usr/lib/x86_64-linux-gnu/libc.so.6>) = 0
+774376 open("/dev/urandom", O_RDONLY|O_CLOEXEC) = 3</dev/urandom>
+774376 close(3</dev/urandom>)           = 0
+774376 open("/proc/sys/vm/overcommit_memory", O_RDONLY) = 3</proc/sys/vm/overcommit_memory>
+774376 close(3</proc/sys/vm/overcommit_memory>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/locale/locale-archive", O_RDONLY|O_CLOEXEC) = 3</usr/lib/locale/locale-archive>
+774376 close(3</usr/lib/locale/locale-archive>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache", O_RDONLY|O_CLOEXEC) = 3</usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache>
+774376 close(3</usr/lib/x86_64-linux-gnu/gconv/gconv-modules.cache>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/proc/self/maps", O_RDONLY|O_CLOEXEC) = 3</proc/774376/maps>
+774376 close(3</proc/774376/maps>)      = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/proc/self/maps", O_RDONLY) = 3</proc/774376/maps>
+774376 close(3</proc/774376/maps>)      = 0
+774376 stat("/home/ming/.local/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.local/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.local/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.local/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/hermes-agent/.hermes/bin/python", 0x7ffc2cb004e0) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/bin/python", {st_mode=S_IFREG|0755, st_size=115747328, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg", O_RDONLY) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>
+774376 fcntl(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>, F_GETFD) = 0
+774376 fcntl(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>, F_SETFD, FD_CLOEXEC) = 0
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>) = 0
+774376 readlink("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/bin/python", "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3", 4096) = 69
+774376 readlink("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3", "python3.14", 4096) = 10
+774376 readlink("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14", 0x7ffc2cafb510, 4096) = -1 EINVAL (无效的参数)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14", {st_mode=S_IFREG|0755, st_size=115747328, ...}) = 0
+774376 readlink("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14", 0x7ffc2cafb510, 4096) = -1 EINVAL (无效的参数)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14\n._pth", O_RDONLY) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/bin/python._pth", O_RDONLY) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/python3.14._pth", O_RDONLY) = -1 ENOENT (没有那个文件或目录)
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/bin/pybuilddir.txt", O_RDONLY) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python314.zip", 0x7ffc2cb003c8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/lib/python314.zip", 0x7ffc2cb004e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/lib/python314.zip", 0x7ffc2cb004e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/lib/python314.zip", 0x7ffc2cb004e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/lib/python314.zip", 0x7ffc2cb004e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/os.py", {st_mode=S_IFREG|0644, st_size=41958, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/etc/localtime", O_RDONLY|O_CLOEXEC) = 3</usr/share/zoneinfo/Asia/Phnom_Penh>
+774376 close(3</usr/share/zoneinfo/Asia/Phnom_Penh>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python314.zip", 0x7ffc2cb00d28) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python314.zip", 0x7ffc2cb010c8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cb010c8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__init__.abi3.so", 0x7ffc2cb010c8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__init__.so", 0x7ffc2cb010c8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5945, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__init__.py", {st_mode=S_IFREG|0644, st_size=5945, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/__init__.cpython-314.pyc>
+774376 fcntl(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/__init__.cpython-314.pyc>, F_GETFD) = 0x1 (flags FD_CLOEXEC)
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=16255, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/aliases.py", {st_mode=S_IFREG|0644, st_size=16255, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/aliases.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/aliases.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/aliases.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/utf_8.py", {st_mode=S_IFREG|0644, st_size=1005, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8.cpython-314.pyc>) = 0
+774376 fcntl(0</dev/null>, F_GETFD)     = 0
+774376 fcntl(1<pipe:[826979011]>, F_GETFD) = 0
+774376 fcntl(2<pipe:[826979012]>, F_GETFD) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/bin/pyvenv.cfg", 0x7ffc2cb00be8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg", {st_mode=S_IFREG|0664, st_size=184, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/pyvenv.cfg>) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>) = 0
+774376 lstat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth", {st_mode=S_IFREG|0664, st_size=95, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/utf_8_sig.py", {st_mode=S_IFREG|0644, st_size=4133, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/utf_8_sig.py", {st_mode=S_IFREG|0644, st_size=4133, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8_sig.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8_sig.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/encodings/__pycache__/utf_8_sig.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload>) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable___hermes_agent_0_0_0_finder.py", {st_mode=S_IFREG|0664, st_size=19831, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable___hermes_agent_0_0_0_finder.py", {st_mode=S_IFREG|0664, st_size=19831, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/__editable___hermes_agent_0_0_0_finder.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/__editable___hermes_agent_0_0_0_finder.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/__editable___hermes_agent_0_0_0_finder.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__future__.py", {st_mode=S_IFREG|0644, st_size=5218, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__future__.py", {st_mode=S_IFREG|0644, st_size=5218, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/__future__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/__future__.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/__future__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2caff848) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__init__.abi3.so", 0x7ffc2caff848) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__init__.so", 0x7ffc2caff848) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__init__.py", {st_mode=S_IFREG|0644, st_size=4767, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__init__.py", {st_mode=S_IFREG|0644, st_size=4767, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/warnings.py", {st_mode=S_IFREG|0644, st_size=1966, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/warnings.py", {st_mode=S_IFREG|0644, st_size=1966, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/warnings.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/warnings.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/warnings.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_py_warnings.py", {st_mode=S_IFREG|0644, st_size=30631, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_py_warnings.py", {st_mode=S_IFREG|0644, st_size=30631, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_py_warnings.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_py_warnings.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_py_warnings.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/_abc.py", {st_mode=S_IFREG|0644, st_size=1354, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/_abc.py", {st_mode=S_IFREG|0644, st_size=1354, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/_abc.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/_abc.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/importlib/__pycache__/_abc.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/types.py", {st_mode=S_IFREG|0644, st_size=11464, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/types.py", {st_mode=S_IFREG|0644, st_size=11464, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/types.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/types.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/types.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2caffd68) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__init__.abi3.so", 0x7ffc2caffd68) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__init__.so", 0x7ffc2caffd68) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__init__.py", {st_mode=S_IFREG|0644, st_size=46807, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__init__.py", {st_mode=S_IFREG|0644, st_size=46807, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/operator.py", {st_mode=S_IFREG|0644, st_size=11158, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/operator.py", {st_mode=S_IFREG|0644, st_size=11158, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/operator.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/operator.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/operator.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/glob.py", {st_mode=S_IFREG|0644, st_size=20775, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/glob.py", {st_mode=S_IFREG|0644, st_size=20775, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/glob.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/glob.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/glob.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/contextlib.py", {st_mode=S_IFREG|0644, st_size=27801, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/contextlib.py", {st_mode=S_IFREG|0644, st_size=27801, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/contextlib.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/contextlib.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/contextlib.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cafe598) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__init__.abi3.so", 0x7ffc2cafe598) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__init__.so", 0x7ffc2cafe598) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=53021, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__init__.py", {st_mode=S_IFREG|0644, st_size=53021, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/collections/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/keyword.py", {st_mode=S_IFREG|0644, st_size=1073, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/keyword.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/keyword.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/keyword.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/reprlib.py", {st_mode=S_IFREG|0644, st_size=8064, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/reprlib.py", {st_mode=S_IFREG|0644, st_size=8064, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/reprlib.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/reprlib.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/reprlib.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/functools.py", {st_mode=S_IFREG|0644, st_size=43564, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/functools.py", {st_mode=S_IFREG|0644, st_size=43564, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/functools.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/functools.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/functools.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cafed88) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__init__.abi3.so", 0x7ffc2cafed88) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__init__.so", 0x7ffc2cafed88) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__init__.py", {st_mode=S_IFREG|0644, st_size=17876, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__init__.py", {st_mode=S_IFREG|0644, st_size=17876, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/enum.py", {st_mode=S_IFREG|0644, st_size=85450, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/enum.py", {st_mode=S_IFREG|0644, st_size=85450, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/enum.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/enum.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/enum.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26855, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_compiler.py", {st_mode=S_IFREG|0644, st_size=26855, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_compiler.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_compiler.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_compiler.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_parser.py", {st_mode=S_IFREG|0644, st_size=40353, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_parser.py", {st_mode=S_IFREG|0644, st_size=40353, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_parser.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_parser.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_parser.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_constants.py", {st_mode=S_IFREG|0644, st_size=6036, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_constants.py", {st_mode=S_IFREG|0644, st_size=6036, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_constants.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_constants.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_constants.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5444, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/_casefix.py", {st_mode=S_IFREG|0644, st_size=5444, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_casefix.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_casefix.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/re/__pycache__/_casefix.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/copyreg.py", {st_mode=S_IFREG|0644, st_size=7716, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/copyreg.py", {st_mode=S_IFREG|0644, st_size=7716, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copyreg.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copyreg.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copyreg.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/fnmatch.py", {st_mode=S_IFREG|0644, st_size=6791, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/fnmatch.py", {st_mode=S_IFREG|0644, st_size=6791, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/fnmatch.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/fnmatch.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/fnmatch.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/_os.py", {st_mode=S_IFREG|0644, st_size=18161, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/_os.py", {st_mode=S_IFREG|0644, st_size=18161, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/_os.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/_os.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/pathlib/__pycache__/_os.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 lstat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth", {st_mode=S_IFREG|0664, st_size=18, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.py", {st_mode=S_IFREG|0664, st_size=5246, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.py", {st_mode=S_IFREG|0664, st_size=5246, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/_virtualenv.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/_virtualenv.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__pycache__/_virtualenv.cpython-314.pyc>) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages>) = 0
+774376 lstat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth", {st_mode=S_IFREG|0664, st_size=95, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/__editable__.hermes_agent-0.0.0.pth>) = 0
+774376 lstat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth", {st_mode=S_IFREG|0664, st_size=18, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth>
+774376 close(3</home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages/_virtualenv.pth>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/lib-dynload", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/installs/392c3da3f131e026/environments/72bafce125714fe38c4ac02b6bef6875/venv/lib/python3.14/site-packages", {st_mode=S_IFDIR|0775, st_size=12288, ...}) = 0
+774376 stat("__editable__.hermes_agent-0.0.0.finder.__path_hook__", 0x7ffc2cb005e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("", 0x7ffc2cb005e8)         = -1 ENOENT (没有那个文件或目录)
+774376 stat("__editable__.hermes_agent-0.0.0.finder.__path_hook__", 0x7ffc2cb00968) = -1 ENOENT (没有那个文件或目录)
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/aetherium/.worktrees/m-b-ab>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab>) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/linecache.py", {st_mode=S_IFREG|0644, st_size=8044, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/linecache.py", {st_mode=S_IFREG|0644, st_size=8044, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/linecache.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/linecache.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/linecache.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cb00dd8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/__init__.abi3.so", 0x7ffc2cb00dd8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/__init__.so", 0x7ffc2cb00dd8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/__init__.py", {st_mode=S_IFREG|0664, st_size=28, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/__init__.py", {st_mode=S_IFREG|0664, st_size=28, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/genesis.py", {st_mode=S_IFREG|0664, st_size=5422, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/genesis.py", {st_mode=S_IFREG|0664, st_size=5422, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/genesis.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/genesis.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/__pycache__/genesis.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cb005e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__init__.abi3.so", 0x7ffc2cb005e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__init__.so", 0x7ffc2cb005e8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__init__.py", {st_mode=S_IFREG|0664, st_size=40, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__init__.py", {st_mode=S_IFREG|0664, st_size=40, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/human_condition.py", {st_mode=S_IFREG|0664, st_size=3012, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/human_condition.py", {st_mode=S_IFREG|0664, st_size=3012, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/human_condition.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/human_condition.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/human_condition.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/dataclasses.py", {st_mode=S_IFREG|0644, st_size=71537, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/dataclasses.py", {st_mode=S_IFREG|0644, st_size=71537, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dataclasses.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dataclasses.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dataclasses.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/copy.py", {st_mode=S_IFREG|0644, st_size=8582, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/copy.py", {st_mode=S_IFREG|0644, st_size=8582, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copy.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copy.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/copy.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/weakref.py", {st_mode=S_IFREG|0644, st_size=17771, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/weakref.py", {st_mode=S_IFREG|0644, st_size=17771, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/weakref.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/weakref.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/weakref.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_weakrefset.py", {st_mode=S_IFREG|0644, st_size=3962, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_weakrefset.py", {st_mode=S_IFREG|0644, st_size=3962, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_weakrefset.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_weakrefset.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_weakrefset.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/inspect.py", {st_mode=S_IFREG|0644, st_size=127725, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/inspect.py", {st_mode=S_IFREG|0644, st_size=127725, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/inspect.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/inspect.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/inspect.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/annotationlib.py", {st_mode=S_IFREG|0644, st_size=44420, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/annotationlib.py", {st_mode=S_IFREG|0644, st_size=44420, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/annotationlib.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/annotationlib.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/annotationlib.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/ast.py", {st_mode=S_IFREG|0644, st_size=25479, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/ast.py", {st_mode=S_IFREG|0644, st_size=25479, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/ast.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/ast.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/ast.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/dis.py", {st_mode=S_IFREG|0644, st_size=45533, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/dis.py", {st_mode=S_IFREG|0644, st_size=45533, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dis.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dis.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/dis.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/opcode.py", {st_mode=S_IFREG|0644, st_size=3152, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/opcode.py", {st_mode=S_IFREG|0644, st_size=3152, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/opcode.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/opcode.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/opcode.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_opcode_metadata.py", {st_mode=S_IFREG|0644, st_size=10115, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/_opcode_metadata.py", {st_mode=S_IFREG|0644, st_size=10115, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_opcode_metadata.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_opcode_metadata.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/_opcode_metadata.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/tokenize.py", {st_mode=S_IFREG|0644, st_size=21849, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/tokenize.py", {st_mode=S_IFREG|0644, st_size=21849, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/tokenize.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/tokenize.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/tokenize.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/token.py", {st_mode=S_IFREG|0644, st_size=2584, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/token.py", {st_mode=S_IFREG|0644, st_size=2584, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/token.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/token.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/token.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/models.py", {st_mode=S_IFREG|0664, st_size=15963, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/models.py", {st_mode=S_IFREG|0664, st_size=15963, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/models.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/models.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/models.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/typing.py", {st_mode=S_IFREG|0644, st_size=136036, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/typing.py", {st_mode=S_IFREG|0644, st_size=136036, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/typing.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/typing.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/typing.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2caffdf8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__init__.abi3.so", 0x7ffc2caffdf8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__init__.so", 0x7ffc2caffdf8) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__init__.py", {st_mode=S_IFREG|0664, st_size=45, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__init__.py", {st_mode=S_IFREG|0664, st_size=45, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/memory", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/models.py", {st_mode=S_IFREG|0664, st_size=4456, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/models.py", {st_mode=S_IFREG|0664, st_size=4456, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/models.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/models.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/models.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/simulation.py", {st_mode=S_IFREG|0664, st_size=62880, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/simulation.py", {st_mode=S_IFREG|0664, st_size=62880, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/simulation.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/simulation.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/simulation.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/datetime.py", {st_mode=S_IFREG|0644, st_size=331, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/datetime.py", {st_mode=S_IFREG|0644, st_size=331, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/datetime.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/datetime.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/datetime.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/random.py", {st_mode=S_IFREG|0644, st_size=37553, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/random.py", {st_mode=S_IFREG|0644, st_size=37553, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/random.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/random.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/random.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/bisect.py", {st_mode=S_IFREG|0644, st_size=3423, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/bisect.py", {st_mode=S_IFREG|0644, st_size=3423, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/bisect.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/bisect.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/bisect.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/actions.py", {st_mode=S_IFREG|0664, st_size=16228, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/actions.py", {st_mode=S_IFREG|0664, st_size=16228, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/actions.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/actions.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/actions.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/action_types.py", {st_mode=S_IFREG|0664, st_size=1849, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/action_types.py", {st_mode=S_IFREG|0664, st_size=1849, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/action_types.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/action_types.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/action_types.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/psychology.py", {st_mode=S_IFREG|0664, st_size=4656, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/psychology.py", {st_mode=S_IFREG|0664, st_size=4656, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/psychology.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/psychology.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/psychology.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/appraisal.py", {st_mode=S_IFREG|0664, st_size=11712, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/appraisal.py", {st_mode=S_IFREG|0664, st_size=11712, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/appraisal.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/appraisal.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/appraisal.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/decision.py", {st_mode=S_IFREG|0664, st_size=15697, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/decision.py", {st_mode=S_IFREG|0664, st_size=15697, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/decision.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/decision.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/decision.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/desire_interpretation.py", {st_mode=S_IFREG|0664, st_size=7139, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/desire_interpretation.py", {st_mode=S_IFREG|0664, st_size=7139, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/desire_interpretation.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/desire_interpretation.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/desire_interpretation.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/outcome_policy.py", {st_mode=S_IFREG|0664, st_size=4080, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/outcome_policy.py", {st_mode=S_IFREG|0664, st_size=4080, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/outcome_policy.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/outcome_policy.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/outcome_policy.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/preconditions.py", {st_mode=S_IFREG|0664, st_size=4434, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/core/preconditions.py", {st_mode=S_IFREG|0664, st_size=4434, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/preconditions.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/preconditions.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/core/__pycache__/preconditions.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/kernel.py", {st_mode=S_IFREG|0664, st_size=11586, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/kernel.py", {st_mode=S_IFREG|0664, st_size=11586, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/kernel.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/kernel.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/memory/__pycache__/kernel.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__init__.cpython-314-x86_64-linux-gnu.so", 0x7ffc2cb00b08) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__init__.abi3.so", 0x7ffc2cb00b08) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__init__.so", 0x7ffc2cb00b08) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__init__.py", {st_mode=S_IFREG|0664, st_size=1880, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__init__.py", {st_mode=S_IFREG|0664, st_size=1880, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/__init__.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/__init__.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/__init__.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", O_RDONLY|O_NONBLOCK|O_CLOEXEC|O_DIRECTORY) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/archaeologist.py", {st_mode=S_IFREG|0664, st_size=4190, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/archaeologist.py", {st_mode=S_IFREG|0664, st_size=4190, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/archaeologist.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/archaeologist.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/archaeologist.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/pressure.py", {st_mode=S_IFREG|0664, st_size=2259, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/pressure.py", {st_mode=S_IFREG|0664, st_size=2259, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/pressure.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/pressure.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/pressure.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/arcs.py", {st_mode=S_IFREG|0664, st_size=3788, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/arcs.py", {st_mode=S_IFREG|0664, st_size=3788, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/arcs.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/arcs.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/arcs.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/models.py", {st_mode=S_IFREG|0664, st_size=11680, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/models.py", {st_mode=S_IFREG|0664, st_size=11680, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/models.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/models.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/models.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/convergence.py", {st_mode=S_IFREG|0664, st_size=1915, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/convergence.py", {st_mode=S_IFREG|0664, st_size=1915, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/convergence.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/convergence.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/convergence.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/dilemma.py", {st_mode=S_IFREG|0664, st_size=3750, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/dilemma.py", {st_mode=S_IFREG|0664, st_size=3750, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/dilemma.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/dilemma.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/dilemma.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/foreshadowing.py", {st_mode=S_IFREG|0664, st_size=1778, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/foreshadowing.py", {st_mode=S_IFREG|0664, st_size=1778, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/foreshadowing.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/foreshadowing.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/foreshadowing.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/importance.py", {st_mode=S_IFREG|0664, st_size=2714, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/importance.py", {st_mode=S_IFREG|0664, st_size=2714, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/importance.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/importance.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/importance.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/information.py", {st_mode=S_IFREG|0664, st_size=4056, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/information.py", {st_mode=S_IFREG|0664, st_size=4056, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/information.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/information.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/information.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 getcwd("/home/ming/aetherium/.worktrees/m-b-ab", 1024) = 39
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/hashlib.py", {st_mode=S_IFREG|0644, st_size=9459, ...}) = 0
+774376 stat("/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/hashlib.py", {st_mode=S_IFREG|0644, st_size=9459, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/hashlib.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/hashlib.cpython-314.pyc>
+774376 close(3</home/ming/.hermes/tools/python-3.14.7+20260901-linux-x64/lib/python3.14/__pycache__/hashlib.cpython-314.pyc>) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/etc/ssl/openssl.cnf", O_RDONLY) = 3</etc/ssl/openssl.cnf>
+774376 stat("/var/lib/crypto-config/profiles/current/openssl.conf.d", 0x7ffc2cafee88) = -1 ENOENT (没有那个文件或目录)
+774376 stat("/etc/ssl/openssl.conf.d", 0x7ffc2cafee88) = -1 ENOENT (没有那个文件或目录)
+774376 close(3</etc/ssl/openssl.cnf>)   = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/rhythm.py", {st_mode=S_IFREG|0664, st_size=3836, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/rhythm.py", {st_mode=S_IFREG|0664, st_size=3836, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/rhythm.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/rhythm.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/rhythm.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/threads.py", {st_mode=S_IFREG|0664, st_size=4527, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/threads.py", {st_mode=S_IFREG|0664, st_size=4527, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/threads.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/threads.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/threads.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/structure.py", {st_mode=S_IFREG|0664, st_size=6117, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/structure.py", {st_mode=S_IFREG|0664, st_size=6117, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/structure.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/structure.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/structure.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/allocation.py", {st_mode=S_IFREG|0664, st_size=1429, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/allocation.py", {st_mode=S_IFREG|0664, st_size=1429, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/allocation.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/allocation.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/allocation.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/callbacks.py", {st_mode=S_IFREG|0664, st_size=1070, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/callbacks.py", {st_mode=S_IFREG|0664, st_size=1070, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/callbacks.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/callbacks.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/callbacks.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/completion.py", {st_mode=S_IFREG|0664, st_size=1773, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/completion.py", {st_mode=S_IFREG|0664, st_size=1773, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/completion.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/completion.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/completion.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/interleave.py", {st_mode=S_IFREG|0664, st_size=1874, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/interleave.py", {st_mode=S_IFREG|0664, st_size=1874, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/interleave.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/interleave.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/interleave.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/literary.py", {st_mode=S_IFREG|0664, st_size=6736, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/literary.py", {st_mode=S_IFREG|0664, st_size=6736, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/literary.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/literary.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/literary.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/research.py", {st_mode=S_IFREG|0664, st_size=3294, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/research.py", {st_mode=S_IFREG|0664, st_size=3294, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/research.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/research.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/research.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/quality.py", {st_mode=S_IFREG|0664, st_size=1497, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/quality.py", {st_mode=S_IFREG|0664, st_size=1497, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/quality.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/quality.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/quality.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/boundary.py", {st_mode=S_IFREG|0664, st_size=2676, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/boundary.py", {st_mode=S_IFREG|0664, st_size=2676, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/boundary.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/boundary.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/boundary.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/discovery.py", {st_mode=S_IFREG|0664, st_size=2605, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/discovery.py", {st_mode=S_IFREG|0664, st_size=2605, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/discovery.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/discovery.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/discovery.cpython-314.pyc>) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative", {st_mode=S_IFDIR|0775, st_size=4096, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/reader.py", {st_mode=S_IFREG|0664, st_size=2246, ...}) = 0
+774376 stat("/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/reader.py", {st_mode=S_IFREG|0664, st_size=2246, ...}) = 0
+774376 openat(AT_FDCWD</home/ming/aetherium/.worktrees/m-b-ab>, "/home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/reader.cpython-314.pyc", O_RDONLY|O_CLOEXEC) = 3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/reader.cpython-314.pyc>
+774376 close(3</home/ming/aetherium/.worktrees/m-b-ab/engine/narrative/__pycache__/reader.cpython-314.pyc>) = 0
+774376 write(1<pipe:[826979011]>, "done\n", 5) = 5
+774376 exit_group(0)                    = ?
+774376 +++ exited with 0 +++
